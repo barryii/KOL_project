@@ -35,13 +35,25 @@ while True:
 	playlist: list = response['items']
 	playlist.reverse()
 	
+	video_id_list = []
 	for item in playlist:
 		snippet = item[part]
 		title = snippet['title']
 		description = snippet['description']
 		video_id = snippet['resourceId']['videoId']
+		video_id_list.append(video_id)
 		published_at = snippet['publishedAt']
-		videos[video_id] = {'title': title, 'description': description, 'published_at': published_at}
+		videos[video_id] = {'title': title, 'description': description, 'publishedAt': published_at, 'stats': {}}
+
+	part2 = 'statistics'
+	stats_request = youtube.videos().list(part=part2, id=video_id_list)
+	stats_response = stats_request.execute()
+	items = stats_response['items']
+	for item in items:
+		video_id = item['id']
+		videos[video_id]['stats']['viewCount'] = item[part2]['viewCount']
+		videos[video_id]['stats']['likeCount'] = item[part2]['likeCount']
+		videos[video_id]['stats']['commentCount'] = item[part2]['commentCount']
 
 	next_page_token = response.get('nextPageToken')
 	print(next_page_token)
@@ -100,21 +112,34 @@ for video_id in videos:
 	if not videos[video_id].get('type'):
 		videos[video_id]['type'] = 'video'
 
-# print(videos)
+print(len(videos))
 
+fieldnames = ['video_id', 'title', 'description', 'publishedAt', 'type', 'likeCount', 'viewCount', 'commentCount']
 with open('Chienseating.csv', 'w', newline='', encoding='utf-8-sig') as f:
 	# 定義欄位名稱
-	fieldnames = ['video_id', 'title', 'description', 'published_at', 'type']
 	writer = csv.DictWriter(f, fieldnames=fieldnames)
 
 	# 寫入標題列
 	writer.writeheader()
-	sorted_items = sorted(videos.items(), key=lambda x: x[1]['published_at'])
+	videos = sorted(videos.items(), key=lambda x: x[1]['publishedAt'])
 	
 	# 寫入內容
-	for v_id, info in sorted_items:
-		row = {'video_id': v_id}
-		row.update(info)
+	for video_id, info in videos:
+		# 建立一個基礎的 row
+		row = {
+			'video_id': video_id,
+			'title': info['title'],
+			'description': info['description'],
+			'publishedAt': info['publishedAt'],
+			'type': info['type']
+		}
+		
+		# 2. 將 stats 字典裡的內容「扁平化」移到 row 這一層
+		stats = info['stats']
+		row['viewCount'] = stats['viewCount']
+		row['likeCount'] = stats['likeCount']
+		row['commentCount'] = stats['commentCount']
+		
 		writer.writerow(row)
 
 
