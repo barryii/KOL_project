@@ -2,6 +2,7 @@ from googleapiclient.discovery import build
 from enum import Enum, auto
 import os, dotenv
 import csv
+import isodate
 
 dotenv.load_dotenv()
 
@@ -89,17 +90,29 @@ class KOL:
 				video_id = snippet['resourceId']['videoId']
 				video_id_list.append(video_id)
 				published_at = snippet['publishedAt']
-				self.videos[video_id] = {'title': title, 'description': description, 'publishedAt': published_at, 'stats': {}}
+				self.videos[video_id] = {
+					'title': title, 
+					'description': description, 
+					'publishedAt': published_at, 
+					'stats': {}
+				}
 
-			part2 = 'statistics'
+			part2 = 'statistics,contentDetails'
+			statistics = 'statistics'
+			contentDetails = 'contentDetails'
 			stats_request = youtube.videos().list(part=part2, id=video_id_list)
 			stats_response = stats_request.execute()
 			items = stats_response['items']
 			for item in items:
 				video_id = item['id']
-				self.videos[video_id]['stats']['viewCount'] = item[part2]['viewCount']
-				self.videos[video_id]['stats']['likeCount'] = item[part2]['likeCount']
-				self.videos[video_id]['stats']['commentCount'] = item[part2]['commentCount']
+				self.videos[video_id]['stats']['viewCount'] = item[statistics]['viewCount']
+				self.videos[video_id]['stats']['likeCount'] = item[statistics]['likeCount']
+				self.videos[video_id]['stats']['commentCount'] = item[statistics]['commentCount']
+				duration = item[contentDetails]['duration']
+				duration = isodate.parse_duration(duration)
+				self.videos[video_id]['duration'] = duration
+				duration_sec = duration.total_seconds()
+				self.videos[video_id]['duration_sec'] = int(duration_sec)
 
 			self.next_page_token = response.get('nextPageToken')
 			print(self.next_page_token)
@@ -130,7 +143,7 @@ class KOL:
 
 		print(len(self.videos))
 
-		fieldnames = ['video_id', 'title', 'description', 'publishedAt', 'type', 'likeCount', 'viewCount', 'commentCount']
+		fieldnames = ['video_id', 'title', 'description', 'publishedAt', 'type', 'duration', 'duration_sec', 'likeCount', 'viewCount', 'commentCount']
 		with open(f'./Barry/{self.channel.channel_name}.csv', 'w', newline='', encoding='utf-8-sig') as f:
 			# 定義欄位名稱
 			writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -147,6 +160,8 @@ class KOL:
 					'title': info['title'],
 					'description': info['description'],
 					'publishedAt': info['publishedAt'],
+					'duration': info['duration'],
+					'duration_sec': info['duration_sec'],
 					'type': info['type']
 				}
 				
