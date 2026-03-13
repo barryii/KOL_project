@@ -3,6 +3,8 @@ from enum import Enum, auto
 import os, dotenv
 import csv
 import isodate
+import pprint
+import json
 
 dotenv.load_dotenv()
 
@@ -33,24 +35,56 @@ HowHowEat_stream_playlist_id = 'UULV' + HowHowEat_channel_id[2:]
 # playlist.reverse()
 # print(playlist)
 
-part = 'contentDetails,statistics'
-video_id = 'k-d0dKWp-X4'
-request = youtube.videos().list(
+# part = 'contentDetails,statistics'
+# video_id = 'k-d0dKWp-X4'
+# request = youtube.videos().list(
+#     part=part,
+#     id=video_id,
+#     maxResults=1, # 最大50
+#     # pageToken=next_page_token
+# )
+# response = request.execute()
+# playlist: list = response['items']
+# playlist.reverse()
+# print(playlist)
+# duration = playlist[0]['contentDetails']['duration']
+# print(duration)
+# duration = isodate.parse_duration(duration)
+# print(duration)
+# print(type(duration))
+# duration = duration.total_seconds()
+# print(duration)
+# print(type(duration))
+
+part = 'snippet'
+video_id = 'GLOsps_y-IA'
+request = youtube.commentThreads().list(
     part=part,
-    id=video_id,
-    maxResults=1, # 最大50
+    videoId=video_id,
+    maxResults=100, # 最大 100 數量暫定選10% max(100, 10%)
+    order='relevance'
     # pageToken=next_page_token
 )
 response = request.execute()
-playlist: list = response['items']
-playlist.reverse()
-print(playlist)
-duration = playlist[0]['contentDetails']['duration']
-print(duration)
-duration = isodate.parse_duration(duration)
-print(duration)
-print(type(duration))
-duration = duration.total_seconds()
-print(duration)
-print(type(duration))
+# print(response)
+# pprint.pprint(response)
+comments: list = response['items']
+for comment in comments:
+    reply_count = comment[part]['totalReplyCount']
+    if reply_count > 0: print(reply_count)
+print(len(comments))
+
+with open('./Barry/comments.json', 'w', encoding='utf-8') as f:
+    json.dump(response, f, ensure_ascii=False, indent=4)
+
+
+
+
+
+
+
+
+
+
+
 
