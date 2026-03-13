@@ -73,7 +73,7 @@ class KOL:
 			snippet = item[part]
 			video_id = snippet['resourceId']['videoId']
 			if video_id in videos:
-				videos[video_id]['type'] = type.value
+				videos[video_id]['type'] = type.name
 			else: print(f'{video_id} not in videos')
 
 	def get_all_videos(self) -> None:
