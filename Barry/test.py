@@ -57,28 +57,39 @@ HowHowEat_stream_playlist_id = 'UULV' + HowHowEat_channel_id[2:]
 # print(type(duration))
 
 part = 'snippet'
-video_id = 'GLOsps_y-IA'
-request = youtube.commentThreads().list(
+# video_id = 'GLOsps_y-IA'
+# request = youtube.commentThreads().list(
+#     part=part,
+#     videoId=video_id,
+#     maxResults=100, # 最大 100 數量暫定選10% max(100, 10%)
+#     order='relevance'
+#     # pageToken=next_page_token
+# )
+# response = request.execute()
+# print(response)
+# pprint.pprint(response)
+# comments: list = response['items']
+# for comment in comments:
+#     reply_count = comment[part]['totalReplyCount']
+#     if reply_count > 0: print(reply_count)
+# print(len(comments))
+
+# with open('./Barry/comments.json', 'w', encoding='utf-8') as f:
+#     json.dump(response, f, ensure_ascii=False, indent=4)
+
+part = 'snippet,statistics'
+request = youtube.channels().list(
     part=part,
-    videoId=video_id,
-    maxResults=100, # 最大 100 數量暫定選10% max(100, 10%)
-    order='relevance'
-    # pageToken=next_page_token
+    id=Chienseating_channel_id
 )
 response = request.execute()
 # print(response)
-# pprint.pprint(response)
-comments: list = response['items']
-for comment in comments:
-    reply_count = comment[part]['totalReplyCount']
-    if reply_count > 0: print(reply_count)
-print(len(comments))
-
-with open('./Barry/comments.json', 'w', encoding='utf-8') as f:
-    json.dump(response, f, ensure_ascii=False, indent=4)
-
-
-
+item = response['items'][0]
+subscriber_count = item['statictis']['subscriberCount']
+view_count = item['statistics']['viewCount']
+print(item['statistics']['subscriberCount'])
+print(item['statistics']['viewCount'])
+print(item['snippet']['title'])
 
 
 
