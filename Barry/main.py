@@ -1,5 +1,6 @@
 from googleapiclient.discovery import build
 from enum import Enum, auto
+from database import DBManager
 import os, dotenv
 import csv
 import isodate
@@ -55,7 +56,20 @@ class KOL:
 		self.part = 'snippet'
 		self.videos = {}
 		self.next_page_token = None
+		self.db = DBManager()
 		self.channel = channel # 傳入class
+
+	def get_channel_data(self) -> None:
+		request = youtube.channels().list(
+			part='snippet,statistics',
+			id=self.channel.channel_id
+		)
+		response = request.execute()
+		item = response['items'][0]
+		title = item['snippet']['title']
+		subscriber_count = item['statistics']['subscriberCount']
+		view_count = item['statistics']['viewCount']
+		self.db.save_channel_data(self.channel.channel_id, title, subscriber_count, view_count)
 
 	def get_playlist(self, part: str, playlist_id: str, next_page_token: str | None) -> tuple[dict, list]:
 		request = youtube.playlistItems().list(
@@ -189,8 +203,10 @@ class KOL:
 				writer.writerow(row)
 
 if __name__ == '__main__':
-	KOL(Chienseating()).get_all_videos()
-	KOL(HowHowEat()).get_all_videos()
+	KOL(Chienseating()).get_channel_data()
+	KOL(HowHowEat()).get_channel_data()
+	# KOL(Chienseating()).get_all_videos()
+	# KOL(HowHowEat()).get_all_videos()
 
 
 
