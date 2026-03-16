@@ -78,6 +78,21 @@ class KOL:
 			else: print(f'{video_id} not in videos')
 
 	def get_all_videos(self) -> None:
+		"""
+		video_id: {
+			title: str,
+			description: str,
+			published_at: datetime,
+			type: str,
+			duration: datetime,
+			duration_sec: int,
+			stats: {
+				like_count: int,
+				view_count: int,
+				comment_count: int
+			}
+		}
+		"""
 		# 抓所有影片
 		while True:
 			response, playlist = self.get_playlist(self.part, self.channel.playlist_id, self.next_page_token)
@@ -93,7 +108,7 @@ class KOL:
 				self.videos[video_id] = {
 					'title': title, 
 					'description': description, 
-					'publishedAt': published_at, 
+					'published_at': published_at, 
 					'stats': {}
 				}
 
@@ -105,9 +120,9 @@ class KOL:
 			items = stats_response['items']
 			for item in items:
 				video_id = item['id']
-				self.videos[video_id]['stats']['viewCount'] = item[statistics]['viewCount']
-				self.videos[video_id]['stats']['likeCount'] = item[statistics]['likeCount']
-				self.videos[video_id]['stats']['commentCount'] = item[statistics]['commentCount']
+				self.videos[video_id]['stats']['view_count'] = item[statistics]['viewCount']
+				self.videos[video_id]['stats']['like_count'] = item[statistics]['likeCount']
+				self.videos[video_id]['stats']['comment_count'] = item[statistics]['commentCount']
 				duration = item[contentDetails]['duration']
 				duration = isodate.parse_duration(duration)
 				self.videos[video_id]['duration'] = duration
@@ -143,14 +158,14 @@ class KOL:
 
 		print(len(self.videos))
 
-		fieldnames = ['video_id', 'title', 'description', 'publishedAt', 'type', 'duration', 'duration_sec', 'likeCount', 'viewCount', 'commentCount']
+		fieldnames = ['video_id', 'title', 'description', 'published_at', 'type', 'duration', 'duration_sec', 'like_count', 'view_count', 'comment_count']
 		with open(f'./Barry/{self.channel.channel_name}.csv', 'w', newline='', encoding='utf-8-sig') as f:
 			# 定義欄位名稱
 			writer = csv.DictWriter(f, fieldnames=fieldnames)
 
 			# 寫入標題列
 			writer.writeheader()
-			videos = sorted(self.videos.items(), key=lambda x: x[1]['publishedAt'])
+			videos = sorted(self.videos.items(), key=lambda x: x[1]['published_at'])
 			
 			# 寫入內容
 			for video_id, info in videos:
@@ -159,7 +174,7 @@ class KOL:
 					'video_id': video_id,
 					'title': info['title'],
 					'description': info['description'],
-					'publishedAt': info['publishedAt'],
+					'published_at': info['published_at'],
 					'duration': info['duration'],
 					'duration_sec': info['duration_sec'],
 					'type': info['type']
@@ -167,9 +182,9 @@ class KOL:
 				
 				# 2. 將 stats 字典裡的內容「扁平化」移到 row 這一層
 				stats = info['stats']
-				row['viewCount'] = stats['viewCount']
-				row['likeCount'] = stats['likeCount']
-				row['commentCount'] = stats['commentCount']
+				row['view_count'] = stats['view_count']
+				row['like_count'] = stats['like_count']
+				row['comment_count'] = stats['comment_count']
 				
 				writer.writerow(row)
 
