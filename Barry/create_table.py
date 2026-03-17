@@ -17,11 +17,11 @@ table_queries = [
     CREATE TABLE IF NOT EXISTS videos (
         video_id VARCHAR(11) PRIMARY KEY,
         channel_id VARCHAR(24),
-        title VARCHAR(100),
+        title VARCHAR(255),
         description TEXT,
         published_at DATETIME,
         type VARCHAR(20),
-        duration DATETIME,
+        duration TIME,
         duration_sec INT,
         view_count BIGINT,
         like_count INT,

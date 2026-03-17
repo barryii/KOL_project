@@ -1,4 +1,5 @@
 from googleapiclient.discovery import build
+from datetime import datetime
 from enum import Enum, auto
 from database import DBManager
 import os, dotenv
@@ -118,7 +119,7 @@ class KOL:
 				description = snippet['description']
 				video_id = snippet['resourceId']['videoId']
 				video_id_list.append(video_id)
-				published_at = snippet['publishedAt']
+				published_at = datetime.fromisoformat(snippet['publishedAt'])
 				self.videos[video_id] = {
 					'title': title, 
 					'description': description, 
@@ -139,14 +140,18 @@ class KOL:
 				self.videos[video_id]['stats']['comment_count'] = item[statistics]['commentCount']
 				duration = item[contentDetails]['duration']
 				duration = isodate.parse_duration(duration)
-				self.videos[video_id]['duration'] = duration
-				duration_sec = duration.total_seconds()
-				self.videos[video_id]['duration_sec'] = int(duration_sec)
+				duration_sec = int(duration.total_seconds())
+				# 轉換為 HH:MM:SS 字串格式供 MySQL TIME 欄位使用
+				hours, remainder = divmod(duration_sec, 3600)
+				minutes, seconds = divmod(remainder, 60)
+				self.videos[video_id]['duration'] = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+				self.videos[video_id]['duration_sec'] = duration_sec
 
 			self.next_page_token = response.get('nextPageToken')
 			print(self.next_page_token)
 			if not self.next_page_token:
 				break
+			# break
 
 		# 抓短片
 		while True:
@@ -170,43 +175,59 @@ class KOL:
 			if not self.videos[video_id].get('type'):
 				self.videos[video_id]['type'] = 'video'
 
+		# import pprint
+		# pprint.pprint(self.videos)
 		print(len(self.videos))
+		for video_id, info in self.videos.items():
+			self.db.save_video_data(
+				video_id,
+				self.channel.channel_id,
+				info['title'],
+				info['description'],
+				info['published_at'],
+				info['type'],
+				info['duration'],
+				info['duration_sec'],
+				info['stats']['view_count'],
+				info['stats']['like_count'],
+				info['stats']['comment_count']
+			)
 
 		fieldnames = ['video_id', 'title', 'description', 'published_at', 'type', 'duration', 'duration_sec', 'like_count', 'view_count', 'comment_count']
-		with open(f'./Barry/{self.channel.channel_name}.csv', 'w', newline='', encoding='utf-8-sig') as f:
-			# 定義欄位名稱
-			writer = csv.DictWriter(f, fieldnames=fieldnames)
+		# with open(f'./Barry/{self.channel.channel_name}.csv', 'w', newline='', encoding='utf-8-sig') as f:
+		# 	# 定義欄位名稱
+		# 	writer = csv.DictWriter(f, fieldnames=fieldnames)
 
-			# 寫入標題列
-			writer.writeheader()
-			videos = sorted(self.videos.items(), key=lambda x: x[1]['published_at'])
+		# 	# 寫入標題列
+		# 	writer.writeheader()
+		# 	videos = sorted(self.videos.items(), key=lambda x: x[1]['published_at'])
 			
-			# 寫入內容
-			for video_id, info in videos:
-				# 建立一個基礎的 row
-				row = {
-					'video_id': video_id,
-					'title': info['title'],
-					'description': info['description'],
-					'published_at': info['published_at'],
-					'duration': info['duration'],
-					'duration_sec': info['duration_sec'],
-					'type': info['type']
-				}
+		# 	# 寫入內容
+		# 	for video_id, info in videos:
+		# 		# 建立一個基礎的 row
+		# 		row = {
+		# 			'video_id': video_id,
+		# 			'title': info['title'],
+		# 			'description': info['description'],
+		# 			'published_at': info['published_at'],
+		# 			'duration': info['duration'],
+		# 			'duration_sec': info['duration_sec'],
+		# 			'type': info['type']
+		# 		}
 				
-				# 2. 將 stats 字典裡的內容「扁平化」移到 row 這一層
-				stats = info['stats']
-				row['view_count'] = stats['view_count']
-				row['like_count'] = stats['like_count']
-				row['comment_count'] = stats['comment_count']
+		# 		# 2. 將 stats 字典裡的內容「扁平化」移到 row 這一層
+		# 		stats = info['stats']
+		# 		row['view_count'] = stats['view_count']
+		# 		row['like_count'] = stats['like_count']
+		# 		row['comment_count'] = stats['comment_count']
 				
-				writer.writerow(row)
+		# 		writer.writerow(row)
 
 if __name__ == '__main__':
-	KOL(Chienseating()).get_channel_data()
-	KOL(HowHowEat()).get_channel_data()
-	# KOL(Chienseating()).get_all_videos()
-	# KOL(HowHowEat()).get_all_videos()
+	# KOL(Chienseating()).get_channel_data()
+	# KOL(HowHowEat()).get_channel_data()
+	KOL(Chienseating()).get_all_videos()
+	KOL(HowHowEat()).get_all_videos()
 
 
 
