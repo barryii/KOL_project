@@ -36,6 +36,7 @@ table_queries = [
         author_name VARCHAR(100),
         text_content TEXT,
         like_count INT,
+        reply_count INT,
         sentiment VARCHAR(20),
         topic_tag VARCHAR(50),
         published_at DATETIME,

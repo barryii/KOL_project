@@ -78,6 +78,48 @@ class DBManager:
                 cursor.execute(sql, (video_id, channel_id, title, description, published_at, type, duration, duration_sec, view_count, like_count, comment_count))
                 connection.commit()
 
+    def save_comment_data(
+        self, 
+        comment_id: str, 
+        video_id: str, 
+        author_name: str, 
+        text_content: str, 
+        like_count: int, 
+        reply_count: int, 
+        # sentiment: str, # 這兩項留給AI填
+        # topic_tag: str, 
+        published_at: datetime
+    ) -> None:
+        """
+        comment_id VARCHAR(50) PRIMARY KEY,
+        video_id VARCHAR(11),
+        author_name VARCHAR(100),
+        text_content TEXT,
+        like_count INT,
+        reply_count INT,
+        # sentiment VARCHAR(20), # 這兩項留給AI填
+        # topic_tag VARCHAR(50),
+        published_at DATETIME,
+        FOREIGN KEY (video_id) REFERENCES videos(video_id) ON DELETE CASCADE
+        """
+        with mysql_connect(**self.config) as connection:
+            with connection.cursor() as cursor:
+                sql = """
+                INSERT IGNORE INTO video_comments (
+                    comment_id, 
+                    video_id, 
+                    author_name, 
+                    text_content, 
+                    like_count, 
+                    reply_count, 
+                    published_at
+                ) VALUES (
+                    %s, %s, %s, %s, %s, %s, %s
+                )
+                """
+                cursor.execute(sql, (comment_id, video_id, author_name, text_content, like_count, reply_count, published_at))
+                connection.commit()
+
     def save_kol_data(self, kol_name: str, followers: int, engagement_rate: float) -> None:
         """存入 KOL 成效資料"""
         with mysql_connect(**self.config) as connection:
@@ -88,5 +130,23 @@ class DBManager:
 
     def get_all_kol(self):
         """讀取所有 KOL 清單"""
-        # ... 連線並 fetchall 的邏輯 ...
-        pass
+        with mysql_connect(**self.config) as connection:
+            with connection.cursor() as cursor:
+                sql = "SELECT * FROM kol_stats"
+                cursor.execute(sql)
+                return cursor.fetchall()
+
+    def get_videos_by_channel_id(self, channel_id: str, data: str='*') -> list[tuple[str]]:
+        """
+        讀取所有影片清單
+        data: 欲查詢的欄位，預設為*（所有欄位）
+        範例: data='video_id, title, view_count'
+        """
+        with mysql_connect(**self.config) as connection:
+            with connection.cursor() as cursor:
+                sql = f"SELECT {data} FROM videos where channel_id = %s"
+                cursor.execute(sql, (channel_id,))
+                return cursor.fetchall()
+
+# videos = DBManager().get_all_video()
+# print(videos)

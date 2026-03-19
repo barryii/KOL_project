@@ -5,6 +5,7 @@ from database import DBManager
 import os, dotenv
 import csv
 import isodate
+import time
 
 dotenv.load_dotenv()
 
@@ -54,9 +55,8 @@ class VideoType(Enum):
 
 class KOL:
 	def __init__(self, channel: Chienseating | HowHowEat):
-		self.part = 'snippet'
+		self.SNIPPET = 'snippet'
 		self.videos = {}
-		self.next_page_token = None
 		self.db = DBManager()
 		self.channel = channel # 傳入class
 
@@ -92,7 +92,60 @@ class KOL:
 				videos[video_id]['type'] = type.name
 			else: print(f'{video_id} not in videos')
 
-	def get_all_videos(self) -> None:
+	def get_comments(self) -> list[tuple[str]]:
+		videos = self.db.get_videos_by_channel_id(self.channel.channel_id, 'video_id, comment_count')
+		for video in videos:
+			print(video)
+			video_id = video[0]
+			comment_count = video[1]
+			next_page_token = None
+			while comment_count > 0:
+				""" 補充
+				在 videos().list 中使用 statistics 獲得的 comment count 是原本沒過濾的留言總數
+				而這邊 order 選 relevence 的話會過濾掉部分被判定為垃圾留言的留言 可能導致數量與上面的 comment count 不符
+				選 time 或不設定的話則不會過濾
+				所以 maxResults 傳入的 comment_count 可能會大於使用 relevence 取得的留言數
+				這樣的話最後會取得重複的留言 但 SQL 輸入時是使用 INSERT IGNORE 所以不影響
+				"""
+				request = youtube.commentThreads().list(
+					part=self.SNIPPET,
+					videoId=video_id,
+					maxResults=comment_count, # 最大 100
+					order='relevance',
+					pageToken=next_page_token
+				)
+				response = request.execute()
+				comments: list = response['items']
+				for comment in comments:
+					top_level_comment = comment['snippet']['topLevelComment']
+					snippet = top_level_comment['snippet']
+					comment_id = top_level_comment['id']
+					author_name = snippet['authorDisplayName']
+					like_count = snippet['likeCount']
+					reply_count = comment['snippet']['totalReplyCount']
+					published_at = snippet['publishedAt']
+					comment_content = snippet['textOriginal']
+					# print(comment_id)
+					# print(author_name)
+					# print(like_count)
+					# print(reply_count)
+					# print(published_at)
+					# print(comment_content)
+					# print()
+					self.db.save_comment_data(
+						comment_id, 
+						video_id, 
+						author_name, 
+						comment_content, 
+						like_count, 
+						reply_count, 
+						published_at
+					)
+				comment_count -= 100
+				next_page_token = response.get('nextPageToken')
+				print(next_page_token)
+
+	def get_videos(self) -> None:
 		"""
 		video_id: {
 			title: str,
@@ -109,12 +162,12 @@ class KOL:
 		}
 		"""
 		# 抓所有影片
+		next_page_token = None
 		while True:
-			response, playlist = self.get_playlist(self.part, self.channel.playlist_id, self.next_page_token)
-			
+			response, playlist = self.get_playlist(self.SNIPPET, self.channel.playlist_id, next_page_token)
 			video_id_list = []
 			for item in playlist:
-				snippet = item[self.part]
+				snippet = item[self.SNIPPET]
 				title = snippet['title']
 				description = snippet['description']
 				video_id = snippet['resourceId']['videoId']
@@ -147,28 +200,30 @@ class KOL:
 				self.videos[video_id]['duration'] = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 				self.videos[video_id]['duration_sec'] = duration_sec
 
-			self.next_page_token = response.get('nextPageToken')
-			print(self.next_page_token)
-			if not self.next_page_token:
+			next_page_token = response.get('nextPageToken')
+			print(next_page_token)
+			if not next_page_token:
 				break
 			# break
 
 		# 抓短片
+		next_page_token = None
 		while True:
-			response, playlist = self.get_playlist(self.part, self.channel.playlist_id_shorts, self.next_page_token)
-			self.video_type(self.part, playlist, self.videos, VideoType.shorts)
-			self.next_page_token = response.get('nextPageToken')
-			print(self.next_page_token)
-			if not self.next_page_token:
+			response, playlist = self.get_playlist(self.SNIPPET, self.channel.playlist_id_shorts, next_page_token)
+			self.video_type(self.SNIPPET, playlist, self.videos, VideoType.shorts)
+			next_page_token = response.get('nextPageToken')
+			print(next_page_token)
+			if not next_page_token:
 				break
 
 		# 抓直播
+		next_page_token = None
 		while True:
-			response, playlist = self.get_playlist(self.part, self.channel.playlist_id_stream, self.next_page_token)
-			self.video_type(self.part, playlist, self.videos, VideoType.stream)
-			self.next_page_token = response.get('nextPageToken')
-			print(self.next_page_token)
-			if not self.next_page_token:
+			response, playlist = self.get_playlist(self.SNIPPET, self.channel.playlist_id_stream, next_page_token)
+			self.video_type(self.SNIPPET, playlist, self.videos, VideoType.stream)
+			next_page_token = response.get('nextPageToken')
+			print(next_page_token)
+			if not next_page_token:
 				break
 
 		for video_id in self.videos:
@@ -226,8 +281,13 @@ class KOL:
 if __name__ == '__main__':
 	# KOL(Chienseating()).get_channel_data()
 	# KOL(HowHowEat()).get_channel_data()
-	KOL(Chienseating()).get_all_videos()
-	KOL(HowHowEat()).get_all_videos()
+	# KOL(Chienseating()).get_videos()
+	# KOL(HowHowEat()).get_videos()
+	# KOL(Chienseating()).get_video_from_channel_id()
+	# KOL(HowHowEat()).get_video_from_channel_id()
+	KOL(Chienseating()).get_comments()
+	# KOL(HowHowEat()).get_comments()
+
 
 
 
