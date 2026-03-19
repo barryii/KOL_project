@@ -35,18 +35,19 @@ HowHowEat_stream_playlist_id = 'UULV' + HowHowEat_channel_id[2:]
 # playlist.reverse()
 # print(playlist)
 
-# part = 'contentDetails,statistics'
-# video_id = 'k-d0dKWp-X4'
-# request = youtube.videos().list(
-#     part=part,
-#     id=video_id,
-#     maxResults=1, # 最大50
-#     # pageToken=next_page_token
-# )
-# response = request.execute()
-# playlist: list = response['items']
-# playlist.reverse()
-# print(playlist)
+part = 'contentDetails,statistics'
+part = 'statistics'
+video_id = 'UWMiLBAQKgc'
+request = youtube.videos().list(
+    part=part,
+    id=video_id,
+    maxResults=1, # 最大50
+    # pageToken=next_page_token
+)
+response = request.execute()
+playlist: list = response['items']
+playlist.reverse()
+print(playlist)
 # duration = playlist[0]['contentDetails']['duration']
 # print(duration)
 # duration = isodate.parse_duration(duration)
@@ -57,39 +58,59 @@ HowHowEat_stream_playlist_id = 'UULV' + HowHowEat_channel_id[2:]
 # print(type(duration))
 
 part = 'snippet'
-# video_id = 'GLOsps_y-IA'
-# request = youtube.commentThreads().list(
-#     part=part,
-#     videoId=video_id,
-#     maxResults=100, # 最大 100 數量暫定選10% max(100, 10%)
-#     order='relevance'
-#     # pageToken=next_page_token
-# )
-# response = request.execute()
+video_id = 'UWMiLBAQKgc'
+request = youtube.commentThreads().list(
+    part=part,
+    videoId=video_id,
+    maxResults=100, # 最大 100 數量暫定選10% max(100, 10%)
+    order='time'
+    # pageToken=next_page_token
+)
+response = request.execute()
 # print(response)
 # pprint.pprint(response)
-# comments: list = response['items']
+comments: list = response['items']
+total_reply_count = 0
+for comment in comments:
+    top_level_comment = comment['snippet']['topLevelComment']
+    snippet = top_level_comment['snippet']
+    comment_id = top_level_comment['id']
+    author_display_name = snippet['authorDisplayName']
+    like_count = snippet['likeCount']
+    reply_count = comment['snippet']['totalReplyCount']
+    published_at = snippet['publishedAt']
+    comment_content = snippet['textOriginal']
+    # print(comment_id)
+    # print(author_display_name)
+    # print(like_count)
+    # print(reply_count)
+    # print(published_at)
+    # print(comment_content)
+    total_reply_count += reply_count
+    # break
+print(total_reply_count)
+    
 # for comment in comments:
 #     reply_count = comment[part]['totalReplyCount']
 #     if reply_count > 0: print(reply_count)
 # print(len(comments))
 
-# with open('./Barry/comments.json', 'w', encoding='utf-8') as f:
-#     json.dump(response, f, ensure_ascii=False, indent=4)
+with open('./Barry/comments.json', 'w', encoding='utf-8') as f:
+    json.dump(response, f, ensure_ascii=False, indent=4)
 
-part = 'snippet,statistics'
-request = youtube.channels().list(
-    part=part,
-    id=Chienseating_channel_id
-)
-response = request.execute()
-# print(response)
-item = response['items'][0]
-subscriber_count = item['statictis']['subscriberCount']
-view_count = item['statistics']['viewCount']
-print(item['statistics']['subscriberCount'])
-print(item['statistics']['viewCount'])
-print(item['snippet']['title'])
+# part = 'snippet,statistics'
+# request = youtube.channels().list(
+#     part=part,
+#     id=Chienseating_channel_id
+# )
+# response = request.execute()
+# # print(response)
+# item = response['items'][0]
+# subscriber_count = item['statictis']['subscriberCount']
+# view_count = item['statistics']['viewCount']
+# print(item['statistics']['subscriberCount'])
+# print(item['statistics']['viewCount'])
+# print(item['snippet']['title'])
 
 
 
