@@ -254,32 +254,18 @@ class KOL:
 				)
 				response = request.execute()
 				comments: list = response['items']
-				comment_data = []
-				for comment in comments:
-					top_level_comment = comment['snippet']['topLevelComment']
-					snippet = top_level_comment['snippet']
-					comment_id = top_level_comment['id']
-					author_name = snippet['authorDisplayName']
-					like_count = snippet['likeCount']
-					reply_count = comment['snippet']['totalReplyCount']
-					published_at = snippet['publishedAt']
-					comment_content = snippet['textOriginal']
-					# print(comment_id)
-					# print(author_name)
-					# print(like_count)
-					# print(reply_count)
-					# print(published_at)
-					# print(comment_content)
-					# print()
-					comment_data.append((
-						comment_id, 
-						video_id, 
-						author_name, 
-						comment_content, 
-						like_count, 
-						reply_count, 
-						published_at
-					))
+				comment_data = [
+					(
+						comment['id'],
+						video_id,
+						comment['snippet']['topLevelComment']['snippet']['authorDisplayName'],
+						comment['snippet']['topLevelComment']['snippet']['textOriginal'],
+						comment['snippet']['topLevelComment']['snippet']['likeCount'],
+						comment['snippet']['totalReplyCount'],
+						comment['snippet']['topLevelComment']['snippet']['publishedAt']
+					)
+					for comment in comments
+				]
 				self.db.save_comment_batch(comment_data)
 				comment_count -= 100
 				next_page_token = response.get('nextPageToken')
