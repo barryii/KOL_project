@@ -92,66 +92,6 @@ class KOL:
 				videos[video_id]['type'] = type.name
 			else: print(f'{video_id} not in videos')
 
-	def get_comments(self) -> list[tuple[str]]:
-		videos = self.db.get_videos_by_channel_id(self.channel.channel_id, 'video_id, comment_count')
-		start_time = datetime.now()
-		print(f'start time: {start_time}')
-		for video in videos:
-			print(video)
-			video_id = video[0]
-			comment_count = video[1]
-			next_page_token = None
-			while comment_count > 0:
-				""" 補充
-				在 videos().list 中使用 statistics 獲得的 comment count 是原本沒過濾的留言總數
-				而這邊 order 選 relevence 的話會過濾掉部分被判定為垃圾留言的留言 可能導致數量與上面的 comment count 不符
-				選 time 或不設定的話則不會過濾
-				所以 maxResults 傳入的 comment_count 可能會大於使用 relevence 取得的留言數
-				這樣的話最後會取得重複的留言 但 SQL 輸入時是使用 INSERT IGNORE 所以不影響
-				"""
-				request = youtube.commentThreads().list(
-					part=self.SNIPPET,
-					videoId=video_id,
-					maxResults=comment_count, # 最大 100
-					order='relevance',
-					pageToken=next_page_token
-				)
-				response = request.execute()
-				comments: list = response['items']
-				comment_data = []
-				for comment in comments:
-					top_level_comment = comment['snippet']['topLevelComment']
-					snippet = top_level_comment['snippet']
-					comment_id = top_level_comment['id']
-					author_name = snippet['authorDisplayName']
-					like_count = snippet['likeCount']
-					reply_count = comment['snippet']['totalReplyCount']
-					published_at = snippet['publishedAt']
-					comment_content = snippet['textOriginal']
-					# print(comment_id)
-					# print(author_name)
-					# print(like_count)
-					# print(reply_count)
-					# print(published_at)
-					# print(comment_content)
-					# print()
-					comment_data.append((
-						comment_id, 
-						video_id, 
-						author_name, 
-						comment_content, 
-						like_count, 
-						reply_count, 
-						published_at
-					))
-				self.db.save_comment_batch(comment_data)
-				comment_count -= 100
-				next_page_token = response.get('nextPageToken')
-				print(next_page_token)
-		end_time = datetime.now()
-		print(f'end time: {end_time}')
-		print(f'duration: {end_time - start_time}')
-
 	def get_videos(self) -> None:
 		"""
 		video_id: {
@@ -284,6 +224,66 @@ class KOL:
 		# 		row['comment_count'] = stats['comment_count']
 				
 		# 		writer.writerow(row)
+
+	def get_comments(self) -> list[tuple[str]]:
+		videos = self.db.get_videos_by_channel_id(self.channel.channel_id, 'video_id, comment_count')
+		start_time = datetime.now()
+		print(f'start time: {start_time}')
+		for video in videos:
+			print(video)
+			video_id = video[0]
+			comment_count = video[1]
+			next_page_token = None
+			while comment_count > 0:
+				""" 補充
+				在 videos().list 中使用 statistics 獲得的 comment count 是原本沒過濾的留言總數
+				而這邊 order 選 relevence 的話會過濾掉部分被判定為垃圾留言的留言 可能導致數量與上面的 comment count 不符
+				選 time 或不設定的話則不會過濾
+				所以 maxResults 傳入的 comment_count 可能會大於使用 relevence 取得的留言數
+				這樣的話最後會取得重複的留言 但 SQL 輸入時是使用 INSERT IGNORE 所以不影響
+				"""
+				request = youtube.commentThreads().list(
+					part=self.SNIPPET,
+					videoId=video_id,
+					maxResults=comment_count, # 最大 100
+					order='relevance',
+					pageToken=next_page_token
+				)
+				response = request.execute()
+				comments: list = response['items']
+				comment_data = []
+				for comment in comments:
+					top_level_comment = comment['snippet']['topLevelComment']
+					snippet = top_level_comment['snippet']
+					comment_id = top_level_comment['id']
+					author_name = snippet['authorDisplayName']
+					like_count = snippet['likeCount']
+					reply_count = comment['snippet']['totalReplyCount']
+					published_at = snippet['publishedAt']
+					comment_content = snippet['textOriginal']
+					# print(comment_id)
+					# print(author_name)
+					# print(like_count)
+					# print(reply_count)
+					# print(published_at)
+					# print(comment_content)
+					# print()
+					comment_data.append((
+						comment_id, 
+						video_id, 
+						author_name, 
+						comment_content, 
+						like_count, 
+						reply_count, 
+						published_at
+					))
+				self.db.save_comment_batch(comment_data)
+				comment_count -= 100
+				next_page_token = response.get('nextPageToken')
+				print(next_page_token)
+		end_time = datetime.now()
+		print(f'end time: {end_time}')
+		print(f'duration: {end_time - start_time}')
 
 if __name__ == '__main__':
 	# KOL(Chienseating()).get_channel_data()
