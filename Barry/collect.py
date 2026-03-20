@@ -102,8 +102,8 @@ class KOL:
 			duration: datetime,
 			duration_sec: int,
 			stats: {
-				like_count: int,
 				view_count: int,
+				like_count: int,
 				comment_count: int
 			}
 		}
@@ -198,7 +198,7 @@ class KOL:
 		]
 		self.db.save_video_batch(video_data)
 
-		fieldnames = ['video_id', 'title', 'description', 'published_at', 'type', 'duration', 'duration_sec', 'like_count', 'view_count', 'comment_count']
+		fieldnames = ['video_id', 'title', 'description', 'published_at', 'type', 'duration', 'duration_sec', 'view_count', 'like_count', 'comment_count']
 		# with open(f'./Barry/{self.channel.channel_name}.csv', 'w', newline='', encoding='utf-8-sig') as f:
 		# 	# 定義欄位名稱
 		# 	writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -277,12 +277,12 @@ class KOL:
 if __name__ == '__main__':
 	# KOL(Chienseating()).get_channel_data()
 	# KOL(HowHowEat()).get_channel_data()
-	# KOL(Chienseating()).get_videos()
-	# KOL(HowHowEat()).get_videos()
+	KOL(Chienseating()).get_videos()
+	KOL(HowHowEat()).get_videos()
 	# KOL(Chienseating()).get_video_from_channel_id()
 	# KOL(HowHowEat()).get_video_from_channel_id()
 	# KOL(Chienseating()).get_comments()
-	KOL(HowHowEat()).get_comments()
+	# KOL(HowHowEat()).get_comments()
 
 
 
