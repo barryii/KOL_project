@@ -28,21 +28,12 @@ class DBManager:
                 cursor.execute(sql, (channel_id, channel_name, subscriber_count, view_count))
                 connection.commit()
 
-    def save_video_data(
-        self, 
-        video_id: str, 
-        channel_id: str, 
-        title: str, 
-        description: str, 
-        published_at: datetime, 
-        type: str, 
-        duration: str, 
-        duration_sec: int, 
-        view_count: int, 
-        like_count: int, 
-        comment_count: int
-    ) -> None:
+    def save_video_batch(self, video_data: list[tuple[str, str, str, str, datetime, str, str, int, int, int, int]]) -> None:
         """
+        video_data = [
+            (video_id, channel_id, title, description, published_at, type, duration, duration_sec, view_count, like_count, comment_count),
+            ...
+        ]
         video_id VARCHAR(11) PRIMARY KEY,
         channel_id VARCHAR(24),
         title VARCHAR(255),
@@ -78,7 +69,7 @@ class DBManager:
                     like_count = VALUES(like_count),
                     comment_count = VALUES(comment_count)
                 """
-                cursor.execute(sql, (video_id, channel_id, title, description, published_at, type, duration, duration_sec, view_count, like_count, comment_count))
+                cursor.executemany(sql, video_data)
                 connection.commit()
 
     def save_comment_batch(self, comment_data: list[tuple[str, str, str, str, int, int, datetime]]) -> None:

@@ -180,8 +180,8 @@ class KOL:
 		# import pprint
 		# pprint.pprint(self.videos)
 		print(len(self.videos))
-		for video_id, info in self.videos.items():
-			self.db.save_video_data(
+		video_data = [
+			(
 				video_id,
 				self.channel.channel_id,
 				info['title'],
@@ -194,6 +194,9 @@ class KOL:
 				info['stats']['like_count'],
 				info['stats']['comment_count']
 			)
+			for video_id, info in self.videos.items()
+		]
+		self.db.save_video_batch(video_data)
 
 		fieldnames = ['video_id', 'title', 'description', 'published_at', 'type', 'duration', 'duration_sec', 'like_count', 'view_count', 'comment_count']
 		# with open(f'./Barry/{self.channel.channel_name}.csv', 'w', newline='', encoding='utf-8-sig') as f:
