@@ -248,7 +248,7 @@ class KOL:
 				request = youtube.commentThreads().list(
 					part=self.SNIPPET,
 					videoId=video_id,
-					maxResults=comment_count, # 最大 100
+					maxResults=min(100, comment_count), # 最大 100
 					order='relevance',
 					pageToken=next_page_token
 				)
@@ -262,7 +262,7 @@ class KOL:
 						comment['snippet']['topLevelComment']['snippet']['textOriginal'],
 						comment['snippet']['topLevelComment']['snippet']['likeCount'],
 						comment['snippet']['totalReplyCount'],
-						comment['snippet']['topLevelComment']['snippet']['publishedAt']
+						datetime.fromisoformat(comment['snippet']['topLevelComment']['snippet']['publishedAt'])
 					)
 					for comment in comments
 				]
@@ -281,8 +281,8 @@ if __name__ == '__main__':
 	# KOL(HowHowEat()).get_videos()
 	# KOL(Chienseating()).get_video_from_channel_id()
 	# KOL(HowHowEat()).get_video_from_channel_id()
-	KOL(Chienseating()).get_comments()
-	# KOL(HowHowEat()).get_comments()
+	# KOL(Chienseating()).get_comments()
+	KOL(HowHowEat()).get_comments()
 
 
 
