@@ -94,6 +94,8 @@ class KOL:
 
 	def get_comments(self) -> list[tuple[str]]:
 		videos = self.db.get_videos_by_channel_id(self.channel.channel_id, 'video_id, comment_count')
+		start_time = datetime.now()
+		print(f'start time: {start_time}')
 		for video in videos:
 			print(video)
 			video_id = video[0]
@@ -146,6 +148,9 @@ class KOL:
 				comment_count -= 100
 				next_page_token = response.get('nextPageToken')
 				print(next_page_token)
+		end_time = datetime.now()
+		print(f'end time: {end_time}')
+		print(f'duration: {end_time - start_time}')
 
 	def get_videos(self) -> None:
 		"""
