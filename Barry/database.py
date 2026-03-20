@@ -78,19 +78,12 @@ class DBManager:
                 cursor.execute(sql, (video_id, channel_id, title, description, published_at, type, duration, duration_sec, view_count, like_count, comment_count))
                 connection.commit()
 
-    def save_comment_data(
-        self, 
-        comment_id: str, 
-        video_id: str, 
-        author_name: str, 
-        text_content: str, 
-        like_count: int, 
-        reply_count: int, 
-        # sentiment: str, # 這兩項留給AI填
-        # topic_tag: str, 
-        published_at: datetime
-    ) -> None:
+    def save_comment_batch(self, comment_data: list[tuple[str, str, str, str, int, int, datetime]]) -> None:
         """
+        comment_data = [
+            (comment_id, video_id, author_name, text_content, like_count, reply_count, published_at),
+            ...
+        ]
         comment_id VARCHAR(50) PRIMARY KEY,
         video_id VARCHAR(11),
         author_name VARCHAR(100),
@@ -117,7 +110,7 @@ class DBManager:
                     %s, %s, %s, %s, %s, %s, %s
                 )
                 """
-                cursor.execute(sql, (comment_id, video_id, author_name, text_content, like_count, reply_count, published_at))
+                cursor.executemany(sql, comment_data)
                 connection.commit()
 
     def save_kol_data(self, kol_name: str, followers: int, engagement_rate: float) -> None:
