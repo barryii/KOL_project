@@ -41,6 +41,8 @@ table_queries = [
         sentiment VARCHAR(20),
         topic_tag VARCHAR(50),
         published_at DATETIME,
+        INDEX idx_new_video_id (video_id),
+        INDEX idx_new_channel_id (channel_id),
         FOREIGN KEY (video_id) REFERENCES videos(video_id) ON DELETE CASCADE
     )
     """
