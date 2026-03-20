@@ -1,6 +1,7 @@
 from googleapiclient.discovery import build
 from datetime import datetime
 from enum import Enum, auto
+from youtuber_info import Chienseating, HowHowEat
 from database import DBManager
 import os, dotenv
 import csv
@@ -14,39 +15,39 @@ dotenv.load_dotenv()
 YT_API_KEY = os.getenv('YT_API_KEY')
 youtube = build('youtube', 'v3', developerKey=YT_API_KEY)
 
-class Chienseating:
-	@property
-	def channel_name(self) -> str:
-		return 'Chienseating'
-	@property
-	def channel_id(self) -> str:
-		return 'UC9i2Qgd5lizhVgJrdnxunKw'
-	@property
-	def playlist_id(self) -> str:
-		return 'UU' + self.channel_id[2:]
-	@property
-	def playlist_id_shorts(self) -> str:
-		return 'UUSH' + self.channel_id[2:]
-	@property
-	def playlist_id_stream(self) -> str:
-		return 'UULV' + self.channel_id[2:]
+# class Chienseating:
+# 	@property
+# 	def channel_name(self) -> str:
+# 		return 'Chienseating'
+# 	@property
+# 	def channel_id(self) -> str:
+# 		return 'UC9i2Qgd5lizhVgJrdnxunKw'
+# 	@property
+# 	def playlist_id(self) -> str:
+# 		return 'UU' + self.channel_id[2:]
+# 	@property
+# 	def playlist_id_shorts(self) -> str:
+# 		return 'UUSH' + self.channel_id[2:]
+# 	@property
+# 	def playlist_id_stream(self) -> str:
+# 		return 'UULV' + self.channel_id[2:]
 
-class HowHowEat:
-	@property
-	def channel_name(self) -> str:
-		return 'HowHowEat'
-	@property
-	def channel_id(self) -> str:
-		return 'UCa2YiSXNTkmOA-QTKdzzbSQ'
-	@property
-	def playlist_id(self) -> str:
-		return 'UU' + self.channel_id[2:]
-	@property
-	def playlist_id_shorts(self) -> str:
-		return 'UUSH' + self.channel_id[2:]
-	@property
-	def playlist_id_stream(self) -> str:
-		return 'UULV' + self.channel_id[2:]
+# class HowHowEat:
+# 	@property
+# 	def channel_name(self) -> str:
+# 		return 'HowHowEat'
+# 	@property
+# 	def channel_id(self) -> str:
+# 		return 'UCa2YiSXNTkmOA-QTKdzzbSQ'
+# 	@property
+# 	def playlist_id(self) -> str:
+# 		return 'UU' + self.channel_id[2:]
+# 	@property
+# 	def playlist_id_shorts(self) -> str:
+# 		return 'UUSH' + self.channel_id[2:]
+# 	@property
+# 	def playlist_id_stream(self) -> str:
+# 		return 'UULV' + self.channel_id[2:]
 
 class VideoType(Enum):
 	video = auto()
@@ -277,12 +278,12 @@ class KOL:
 if __name__ == '__main__':
 	# KOL(Chienseating()).get_channel_data()
 	# KOL(HowHowEat()).get_channel_data()
-	KOL(Chienseating()).get_videos()
-	KOL(HowHowEat()).get_videos()
+	# KOL(Chienseating()).get_videos()
+	# KOL(HowHowEat()).get_videos()
 	# KOL(Chienseating()).get_video_from_channel_id()
 	# KOL(HowHowEat()).get_video_from_channel_id()
 	# KOL(Chienseating()).get_comments()
-	# KOL(HowHowEat()).get_comments()
+	KOL(HowHowEat()).get_comments()
 
 
 
