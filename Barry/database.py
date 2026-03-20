@@ -59,13 +59,13 @@ class DBManager:
         with mysql_connect(**self.config) as connection:
             with connection.cursor() as cursor:
                 sql = """
-                INSERT IGNORE INTO videos (
+                INSERT INTO videos (
                     video_id, 
                     channel_id, 
                     title, 
                     description, 
                     published_at, 
-                    type, 
+                    `type`, 
                     duration, 
                     duration_sec, 
                     view_count, 
@@ -73,7 +73,10 @@ class DBManager:
                     comment_count
                 ) VALUES (
                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-                )
+                ) ON DUPLICATE KEY UPDATE 
+                    view_count = VALUES(view_count),
+                    like_count = VALUES(like_count),
+                    comment_count = VALUES(comment_count)
                 """
                 cursor.execute(sql, (video_id, channel_id, title, description, published_at, type, duration, duration_sec, view_count, like_count, comment_count))
                 connection.commit()
