@@ -33,6 +33,7 @@ table_queries = [
     CREATE TABLE IF NOT EXISTS video_comments (
         comment_id VARCHAR(50) PRIMARY KEY,
         video_id VARCHAR(11),
+        channel_id VARCHAR(24),
         author_name VARCHAR(100),
         text_content TEXT,
         like_count INT,
