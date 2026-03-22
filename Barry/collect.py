@@ -244,7 +244,7 @@ class KOL:
 				而這邊 order 選 relevence 的話會過濾掉部分被判定為垃圾留言的留言 可能導致數量與上面的 comment count 不符
 				選 time 或不設定的話則不會過濾
 				所以 maxResults 傳入的 comment_count 可能會大於使用 relevence 取得的留言數
-				這樣的話最後會取得重複的留言 但 SQL 輸入時是使用 INSERT IGNORE 所以不影響
+				這樣的話最後會取得重複的留言 但 SQL 輸入時是使用 UPDATE ON DUPLICATE 所以不影響
 				"""
 				request = youtube.commentThreads().list(
 					part=self.SNIPPET,
