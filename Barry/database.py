@@ -1,9 +1,8 @@
 from mysql.connector import connect as mysql_connect
 from datetime import datetime
-from dotenv import load_dotenv
-import os
+import os, dotenv
 
-load_dotenv()
+dotenv.load_dotenv()
 
 class DBManager:
     def __init__(self):

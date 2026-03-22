@@ -2,11 +2,10 @@ from mysql.connector import connect as mysql_connect
 from youtuber_info import Chienseating, HowHowEat
 from googleapiclient.discovery import build
 from datetime import datetime
-from dotenv import load_dotenv
 from decimal import Decimal
-import os, json, csv
+import os, dotenv, json, csv
 
-load_dotenv()
+dotenv.load_dotenv()
 
 YT_API_KEY = os.getenv('YT_API_KEY')
 youtube = build('youtube', 'v3', developerKey=YT_API_KEY)
