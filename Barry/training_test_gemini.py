@@ -47,8 +47,8 @@ def generate_tags_in_batches(channel_id, batch_size=30, output_file='video_tags_
 
         請直接回傳 JSON 陣列格式，格式如下：
         [
-            {"video_id": "ID1", "tags": ["標籤A", "標籤B"]},
-            {"video_id": "ID2", "tags": ["標籤C", "標籤D"]}
+            {{"video_id": "ID1", "tags": ["標籤A", "標籤B"]}},
+            {{"video_id": "ID2", "tags": ["標籤C", "標籤D"]}}
         ]
         """
         try:
@@ -72,13 +72,13 @@ def generate_tags_in_batches(channel_id, batch_size=30, output_file='video_tags_
             # 將這批結果「擴充」進總容器中 (注意這裡是 extend 不是 append)
             all_videos_tags.extend(batch_result)
             print("✅ 本批次處理成功！")
-            time.sleep(4)
+            time.sleep(10)
             
         except Exception as e:
             print(f'❌ 處理失敗 ({title}): {str(e)}')
 
-    with open(output_file, 'r+', encoding='utf-8-sig') as f:
-        json.dump(final_results, f, ensure_ascii=False, indent=4)
+    with open(output_file, 'w', encoding='utf-8-sig') as f:
+        json.dump(all_videos_tags, f, ensure_ascii=False, indent=4)
         
     print(f"\n🎉 執行完畢！結果已儲存至 {output_file}")
 
