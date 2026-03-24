@@ -10,7 +10,7 @@ dotenv.load_dotenv()
 # 初始化 Gemini Client
 client = genai.Client()
 
-def generate_tags_in_batches(channel_id, batch_size=30, output_file='video_tags_result.json'):
+def generate_tags_in_batches(channel_id, batch_size=30, output_file='./Barry/video_tags_result.json'):
     db = mysql.connector.connect(
         host='dv108.aiturn.fun',
         user='barry',
@@ -28,27 +28,17 @@ def generate_tags_in_batches(channel_id, batch_size=30, output_file='video_tags_
     for i in range(0, len(videos), batch_size):
         batch = videos[i:i+batch_size]
         print(f"正在處理第 {i + 1} 到 {i + len(batch)} 筆...")
+        prompt = "你是一個專業的 YouTube 內容標籤分類員。請閱讀以下影片資料，為每部影片產生 5-8 個標籤。\n\n"
         for v in batch:
-            title = v['title']
             # 說明欄一樣取前段即可，節省 Token 與避免雜訊
             desc = v['description'][:150] if v['description'] else ''
-
-        prompt = f"""
-        你是一個專業的 YouTube 內容標籤分類員。
-        請根據以下影片標題與說明，產生 5 到 8 個精確的標籤。
-        
-        規則：
-        1. 標籤必須是標準化的名詞（例如：拉麵、吃到飽、日本、開箱、大胃王）。
-        2. 不要包含無意義的動詞或形容詞（如：超好吃、去吃）。
-        3. 如果影片具備明顯的情境，可以推論出標籤（例如半夜吃東西就是「消夜」）。
-        
-        影片標題：{title}
-        影片說明：{desc}
-
-        請直接回傳 JSON 陣列格式，格式如下：
+            prompt += f"影片ID: {v['video_id']}\n標題: {v['title']}\n說明: {desc}\n---\n"
+        prompt += """
+        規則：標籤必須是標準化的名詞（例如：拉麵、大胃王、日本），不要動詞與形容詞。
+        請直接回傳純 JSON 陣列格式，不要包含任何 Markdown 標記，格式如下：
         [
-            {{"video_id": "ID1", "tags": ["標籤A", "標籤B"]}},
-            {{"video_id": "ID2", "tags": ["標籤C", "標籤D"]}}
+            {"video_id": "ID1", "tags": ["標籤A", "標籤B"]},
+            {"video_id": "ID2", "tags": ["標籤C", "標籤D"]}
         ]
         """
         try:
@@ -73,9 +63,10 @@ def generate_tags_in_batches(channel_id, batch_size=30, output_file='video_tags_
             all_videos_tags.extend(batch_result)
             print("✅ 本批次處理成功！")
             time.sleep(10)
-            
+        except json.JSONDecodeError as e:
+            print(f"❌ JSON 解析失敗，這批次的原始回傳為：\n{raw_text}")
         except Exception as e:
-            print(f'❌ 處理失敗 ({title}): {str(e)}')
+            print(f"❌ 發生錯誤：{str(e)}")
 
     with open(output_file, 'w', encoding='utf-8-sig') as f:
         json.dump(all_videos_tags, f, ensure_ascii=False, indent=4)
