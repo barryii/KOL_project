@@ -7,4 +7,5 @@ HH:MM:SS 的格式要存成 mysql 的 TIME 而不是 DATETIME
 留言量太龐大 需要處理 不然超久
 YT內建的標籤無參考性
 在video comment中新增user id
+分析發片頻率 周更、月更
 
