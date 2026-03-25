@@ -27,6 +27,7 @@ table_queries = [
         like_count INT,
         comment_count INT,
         actual_comment_count INT,
+        cluster_label INT,
         INDEX idx_actual_comments ON videos(actual_comment_count),
         FOREIGN KEY (channel_id) REFERENCES channels(channel_id) ON DELETE CASCADE
     )
