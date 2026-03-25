@@ -74,11 +74,13 @@ class DBManager:
     def save_comment_batch(self, comment_data: list[tuple[str, str, str, str, int, int, datetime]]) -> None:
         """
         comment_data = [
-            (comment_id, video_id, author_name, text_content, like_count, reply_count, published_at),
+            (comment_id, video_id, channel_id, author_id, author_name, text_content, like_count, reply_count, published_at),
             ...
         ]
         comment_id VARCHAR(50) PRIMARY KEY,
         video_id VARCHAR(11),
+        channel_id VARCHAR(24),
+        author_id VARCHAR(24),
         author_name VARCHAR(100),
         text_content TEXT,
         like_count INT,
@@ -94,13 +96,15 @@ class DBManager:
                 INSERT INTO video_comments (
                     comment_id, 
                     video_id, 
+                    channel_id, 
+                    author_id, 
                     author_name, 
                     text_content, 
                     like_count, 
                     reply_count, 
                     published_at
                 ) VALUES (
-                    %s, %s, %s, %s, %s, %s, %s
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s
                 ) ON DUPLICATE KEY UPDATE 
                     like_count = VALUES(like_count),
                     reply_count = VALUES(reply_count)
@@ -115,6 +119,22 @@ class DBManager:
                 sql = "INSERT INTO kol_stats (name, followers, engagement) VALUES (%s, %s, %s)"
                 cursor.execute(sql, (kol_name, followers, engagement_rate))
                 connection.commit()
+
+    def get_all_videos(self):
+        """讀取所有影片清單"""
+        with mysql_connect(**self.config) as connection:
+            with connection.cursor() as cursor:
+                sql = "SELECT * FROM videos"
+                cursor.execute(sql)
+                return cursor.fetchall()
+
+    def get_all_video_comments(self):
+        """讀取所有影片清單"""
+        with mysql_connect(**self.config) as connection:
+            with connection.cursor() as cursor:
+                sql = "SELECT * FROM video_comments"
+                cursor.execute(sql)
+                return cursor.fetchall()
 
     def get_all_kol(self):
         """讀取所有 KOL 清單"""
@@ -136,5 +156,3 @@ class DBManager:
                 cursor.execute(sql, (channel_id,))
                 return cursor.fetchall()
 
-# videos = DBManager().get_all_video()
-# print(videos)
