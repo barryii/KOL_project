@@ -44,6 +44,8 @@ class DBManager:
         view_count BIGINT,
         like_count INT,
         comment_count INT,
+        actual_comment_count INT,
+        cluster_label INT, # 不從這存
         FOREIGN KEY (channel_id) REFERENCES channels(channel_id) ON DELETE CASCADE
         """
         with mysql_connect(**self.config) as connection:
@@ -60,13 +62,38 @@ class DBManager:
                     duration_sec, 
                     view_count, 
                     like_count, 
-                    comment_count
+                    comment_count,
+                    actual_comment_count
                 ) VALUES (
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                 ) ON DUPLICATE KEY UPDATE 
                     view_count = VALUES(view_count),
                     like_count = VALUES(like_count),
-                    comment_count = VALUES(comment_count)
+                    comment_count = VALUES(comment_count),
+                    actual_comment_count = VALUES(actual_comment_count)
+                """
+                cursor.executemany(sql, video_data)
+                connection.commit()
+
+    def save_video_batch_cluster(self, video_data: list[tuple[str, int]]) -> None:
+        """
+        video_data = [
+            (video_id, cluster_label),
+            ...
+        ]
+        video_id VARCHAR(11) PRIMARY KEY,
+        cluster_label INT
+        """
+        with mysql_connect(**self.config) as connection:
+            with connection.cursor() as cursor:
+                sql = """
+                INSERT INTO videos (
+                    video_id, 
+                    cluster_label
+                ) VALUES (
+                    %s, %s
+                ) ON DUPLICATE KEY UPDATE
+                    cluster_label = VALUES(cluster_label)
                 """
                 cursor.executemany(sql, video_data)
                 connection.commit()
