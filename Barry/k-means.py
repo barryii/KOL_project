@@ -3,12 +3,14 @@ import pandas as pd
 import mysql.connector
 import matplotlib.pyplot as plt
 import seaborn as sns
+from enum import Enum
+from database import DBManager
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from youtuber_info import Chienseating, HowHowEat
-from enum import Enum
 
 dotenv.load_dotenv()
+db = DBManager()
 
 class VideoType(Enum):
     VIDEO = 'video'
@@ -19,7 +21,7 @@ class VideoType(Enum):
 plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei'] 
 plt.rcParams['axes.unicode_minus'] = False # 解決負號顯示問題
 
-def preview_kmeans_results(channel: Chienseating | HowHowEat, type: str = VideoType.VIDEO.value):
+def preview_kmeans_results(channel: Chienseating | HowHowEat, video_type: str = VideoType.VIDEO.value):
     conn = mysql.connector.connect(
         host='dv108.aiturn.fun',
         user='barry',
@@ -32,7 +34,7 @@ def preview_kmeans_results(channel: Chienseating | HowHowEat, type: str = VideoT
         FROM videos 
         WHERE channel_id = %s and type = %s
     '''
-    df = pd.read_sql(query, conn, params=(channel.channel_id, type))
+    df = pd.read_sql(query, conn, params=(channel.channel_id, video_type))
     conn.close()
     
     if df.empty:
@@ -53,7 +55,7 @@ def preview_kmeans_results(channel: Chienseating | HowHowEat, type: str = VideoT
         VideoType.SHORTS.value: 3,
         VideoType.STREAM.value: 3
     }    
-    n_clusters = n[type]
+    n_clusters = n[video_type]
     if len(df) < n_clusters: n_clusters = len(df)
     kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
     df['cluster_label'] = kmeans.fit_predict(X_scaled)
@@ -123,21 +125,21 @@ def preview_kmeans_results(channel: Chienseating | HowHowEat, type: str = VideoT
     # 調整整體佈局，避免標籤互相重疊
     plt.tight_layout()
     print('正在產生圖，請查看彈出視窗...')
-    plt.show()
+    # plt.show()
 
     # 印出分析結果供你檢視
     print('================ K-Means 分群預覽 ================')
 
     # 統計各群的影片數量
-    print('【各群影片數量分佈】')
-    print(df['cluster_label'].value_counts().sort_index())
-    print('-' * 50)
+    # print('【各群影片數量分佈】')
+    # print(df['cluster_label'].value_counts().sort_index())
+    # print('-' * 50)
 
-    # 計算各群在原始數據上的平均值 (幫助你定義這群是什麼屬性)
-    print('【各群平均數據表現】')
-    cluster_means = df.groupby('cluster_label')[features].mean().round(0).astype(int)
-    print(cluster_means)
-    print('-' * 50)
+    # # 計算各群在原始數據上的平均值 (幫助你定義這群是什麼屬性)
+    # print('【各群平均數據表現】')
+    # cluster_means = df.groupby('cluster_label')[features].mean().round(0).astype(int)
+    # print(cluster_means)
+    # print('-' * 50)
 
     # 隨機抽樣幾筆影片看看是否符合該群的特徵
     # print('【各群影片抽樣預覽 (每群最多顯示 5 筆)】')
@@ -147,6 +149,14 @@ def preview_kmeans_results(channel: Chienseating | HowHowEat, type: str = VideoT
     #     # 調整 pandas 輸出格式讓標題不會被截斷
     #     pd.set_option('display.max_colwidth', 50) 
     #     print(sample_df)
+
+    # 存進資料庫
+    for i in range(n_clusters):
+        print(f'\n>>> 群組 {i} 的影片：')
+        sample_df: pd.Series = df[df['cluster_label'] == i]['video_id']
+        print(sample_df)
+        video_data: list[tuple[str, int]] = [(video_id, i) for video_id in sample_df]
+        db.save_video_batch_cluster(video_data)
 
 if __name__ == '__main__':
     preview_kmeans_results(Chienseating())
