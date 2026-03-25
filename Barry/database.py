@@ -120,20 +120,28 @@ class DBManager:
                 cursor.execute(sql, (kol_name, followers, engagement_rate))
                 connection.commit()
 
-    def get_all_videos(self):
+    def get_db_videos(self, channel_id: str = None):
         """讀取所有影片清單"""
         with mysql_connect(**self.config) as connection:
             with connection.cursor() as cursor:
-                sql = "SELECT * FROM videos"
-                cursor.execute(sql)
+                if channel_id:
+                    sql = "SELECT * FROM videos WHERE channel_id = %s"
+                    cursor.execute(sql, (channel_id,))
+                else:
+                    sql = "SELECT * FROM videos"
+                    cursor.execute(sql)
                 return cursor.fetchall()
 
-    def get_all_video_comments(self):
+    def get_db_video_comments(self, channel_id: str = None):
         """讀取所有影片清單"""
         with mysql_connect(**self.config) as connection:
             with connection.cursor() as cursor:
-                sql = "SELECT * FROM video_comments"
-                cursor.execute(sql)
+                if channel_id:
+                    sql = "SELECT * FROM video_comments WHERE channel_id = %s"
+                    cursor.execute(sql, (channel_id,))
+                else:
+                    sql = "SELECT * FROM video_comments"
+                    cursor.execute(sql)
                 return cursor.fetchall()
 
     def get_all_kol(self):
