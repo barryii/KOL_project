@@ -9,7 +9,7 @@ if __name__ == '__main__':
         data = db.get_db_videos(kol.channel_id)
         with open(f'./Barry/{kol.channel_name}_videos.csv', 'w', newline='', encoding='utf-8-sig') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow(['video_id', 'channel_id', 'title', 'description', 'published_at', 'type', 'duration', 'duration_sec', 'view_count', 'like_count', 'comment_count', 'actual_comment_count'])
+            writer.writerow(['video_id', 'channel_id', 'title', 'description', 'topic_tag', 'published_at', 'type', 'duration', 'duration_sec', 'view_count', 'like_count', 'comment_count', 'actual_comment_count', 'cluster_label'])
             writer.writerows(data)
 
         data = db.get_db_video_comments(kol.channel_id)
