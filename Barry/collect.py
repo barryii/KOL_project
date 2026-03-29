@@ -3,6 +3,7 @@ from datetime import datetime
 from enum import Enum, auto
 from youtuber_info import Chienseating, HowHowEat
 from database import DBManager
+import pandas as pd
 import os, dotenv
 import csv
 import isodate
@@ -233,10 +234,17 @@ class KOL:
 		videos = self.db.get_videos_by_channel_id(self.channel.channel_id, 'video_id, comment_count')
 		start_time = datetime.now()
 		print(f'start time: {start_time}')
-		for video in videos:
+		videos_df = pd.DataFrame(videos, columns=['video_id', 'comment_count'])
+		# 如果跑到一半中斷 在這邊打中斷時的影片id 就可以從那個video id再開始抓
+		target_video_id = None
+		# target_video_id = 'VzzJ5g0a52E'
+		if target_video_id:
+			match_idx = videos_df[videos_df['video_id'] == target_video_id].index[0]
+			videos_df = videos_df.iloc[match_idx:]
+		for video in videos_df.itertuples():
 			print(video)
-			video_id = video[0]
-			comment_count = video[1]
+			video_id = video.video_id
+			comment_count = video.comment_count
 			next_page_token = None
 			while comment_count > 0:
 				""" 補充
@@ -259,6 +267,8 @@ class KOL:
 					(
 						comment['id'],
 						video_id,
+						self.channel.channel_id,
+						comment['snippet']['topLevelComment']['snippet']['authorChannelId']['value'],
 						comment['snippet']['topLevelComment']['snippet']['authorDisplayName'],
 						comment['snippet']['topLevelComment']['snippet']['textOriginal'],
 						comment['snippet']['topLevelComment']['snippet']['likeCount'],
@@ -270,7 +280,7 @@ class KOL:
 				self.db.save_comment_batch(comment_data)
 				comment_count -= 100
 				next_page_token = response.get('nextPageToken')
-				print(next_page_token)
+				# print(next_page_token)
 		end_time = datetime.now()
 		print(f'end time: {end_time}')
 		print(f'duration: {end_time - start_time}')
