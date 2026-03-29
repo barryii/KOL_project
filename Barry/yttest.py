@@ -36,9 +36,9 @@ HowHowEat_stream_playlist_id = 'UULV' + HowHowEat_channel_id[2:]
 # print(playlist)
 
 part = 'contentDetails,statistics'
-part = 'statistics'
 part = 'topicDetails'
-video_id = 'KViuRVZ6Hng'
+part = 'statistics'
+video_id = '7URYi1ULvrQ'
 request = youtube.videos().list(
     part=part,
     id=video_id,
@@ -49,11 +49,11 @@ response = request.execute()
 playlist: list = response['items']
 playlist.reverse()
 print(playlist)
-for item in playlist:
-    topic_catagories = item[part]['topicCategories']
-    print(topic_catagories)
-    for topic_catagory in topic_catagories:
-        print(topic_catagory)
+# for item in playlist:
+#     topic_catagories = item[part]['topicCategories']
+#     print(topic_catagories)
+#     for topic_catagory in topic_catagories:
+#         print(topic_catagory)
 # duration = playlist[0]['contentDetails']['duration']
 # print(duration)
 # duration = isodate.parse_duration(duration)
@@ -119,6 +119,46 @@ part = 'snippet'
 # print(item['statistics']['viewCount'])
 # print(item['snippet']['title'])
 
+# comment_id = 'Ugw3IhbArwpE6zjUjyR4AaABAg'
+# request = youtube.comments().list(
+#     part=part,
+#     id=comment_id
+# )
+# response = request.execute()
+# print(response)
+
+from mysql.connector import connect as mysql_connect
+config = {
+    'host': 'dv108.aiturn.fun',
+    'user': 'barry',
+    'password': os.getenv('KOL_DB_PW'),
+    'database': 'db_kol'
+}
+with mysql_connect(**config) as connection:
+    with connection.cursor(dictionary=True) as cursor:
+        cursor.execute('select comment_id from video_comments where author_id is null')
+        comment_ids = cursor.fetchall()
+        print(comment_ids)
+        for comment_id in comment_ids:
+            print(comment_id['comment_id'])
+            print(type(comment_id['comment_id']))
+            comment_id = comment_id['comment_id']
+            request = youtube.comments().list(
+                part=part,
+                id=comment_id
+            )
+            response = request.execute()
+            print(response)
+            if response['items']:
+                comment_snippet = response['items'][0][part]
+                # 這裡就是該留言者的 YouTube Channel ID
+                author_id = comment_snippet['authorChannelId']['value'] 
+                author_name = comment_snippet['authorDisplayName']
+                print(f'留言者 ID: {author_id}, 暱稱: {author_name}')
+                cursor.execute('update video_comments set author_id = %s where comment_id = %s', (author_id, comment_id))
+                connection.commit()
+            else:
+                print('找不到該留言 (可能已被刪除)')
 
 
 
