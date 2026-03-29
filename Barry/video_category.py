@@ -7,22 +7,22 @@ import re, os, dotenv
 dotenv.load_dotenv()
 
 # 1. 初始化 KeyBERT 多語言模型 (初次執行會下載約 400MB 的模型)
-kw_model = KeyBERT(model='paraphrase-multilingual-MiniLM-L12-v2')
+kw_model = KeyBERT(model='all-MiniLM-L6-v2')
 
 # 2. 針對你的 KOL 專案，強制加入一些不該被切斷的專有名詞
-word_list = ['大胃王', '吃到飽', '開箱', '葉配']
-for words in word_list:
-    jieba.add_word(words)
+# word_list = ['大胃王', '吃到飽', '開箱', '葉配']
+# for words in word_list:
+#     jieba.add_word(words)
 
 def clean_text(text):
     if not text:
-        return ""
+        return ''
     # 去除網址與常見的社群雜訊
     text = re.sub(r'https?://\S+|www\.\S+', '', text)
     text = re.sub(r'(facebook|instagram|ig|fb|youtube|訂閱|按讚|分享|千千|豪豪|google)', '', text, flags=re.IGNORECASE)
     return text
 
-def extract_video_tags(channel_id, limit=5):
+def extract_video_tags(channel_id, limit=10):
     # 連線到資料庫
     db = mysql.connector.connect(
         host='dv108.aiturn.fun',
@@ -33,19 +33,21 @@ def extract_video_tags(channel_id, limit=5):
     cursor = db.cursor(dictionary=True)
     
     # 撈取測試用的影片 (先抓 5 筆測試效果)
-    cursor.execute("SELECT video_id, title, description FROM videos WHERE channel_id = %s LIMIT %s", (channel_id, limit))
+    cursor.execute('SELECT video_id, title, description FROM videos WHERE channel_id = %s LIMIT %s', (channel_id, limit))
     videos = cursor.fetchall()
     
-    for v in videos:
+    for video in videos:
         # 3. 組合文字 (標題放兩次增加權重，說明欄只取前 150 字避免雜訊)
-        title = clean_text(v['title'])
-        raw_text = f"{title} {title} {clean_text(v['description'])[:150]}"
-        raw_text = f"{title} {title} {clean_text(v['description'])}"
+        title = clean_text(video['title'])
+        raw_text = f'{title} {title} {clean_text(video['description'])[:150]}'
+        raw_text = f'{title} {title} {clean_text(video['description'])}'
+        raw_text = title
+        remove_words = ['千千', '進食', '豪豪', 'google', 'map', '超', '千則', '評論']
         
         # 4. 關鍵步驟：使用 jieba 斷詞並用空白連接
         # 過濾掉長度只有 1 的單字 (如：的、了、是)
         seg_list = [word for word in jieba.cut(raw_text) if len(word) > 1]
-        spaced_text = " ".join(seg_list)
+        spaced_text = ' '.join(seg_list)
         
         # 5. 使用 KeyBERT 提取標籤
         # keyphrase_ngram_range=(1, 2) 代表允許單詞 (大胃王) 或雙詞組合 (大胃王 挑戰)
@@ -53,9 +55,9 @@ def extract_video_tags(channel_id, limit=5):
         keywords = kw_model.extract_keywords(
             spaced_text, 
             keyphrase_ngram_range=(1, 1), 
-            stop_words=None, 
-            top_n=5,
-            use_mmr=True,      # 開啟 MMR 多樣性過濾
+            stop_words=remove_words, 
+            top_n=6,
+            # use_mmr=True,      # 開啟 MMR 多樣性過濾
             # diversity=0.7      # 多樣性程度 (0.0 到 1.0，數值越高標籤差異越大)
         )
         
@@ -63,11 +65,12 @@ def extract_video_tags(channel_id, limit=5):
         # 我們只需要文字部分
         tags = [kw[0] for kw in keywords]
         
-        print(f"影片標題: {v['title']}")
-        print(f"提取標籤: {tags}\n")
-        print("-" * 40)
+        print(f'影片標題: {video['title']}')
+        print(f'原始標籤: {keywords}')
+        print(f'提取標籤: {tags}\n')
+        print('-' * 40)
         
     db.close()
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     extract_video_tags(Chienseating().channel_id, limit=5)
