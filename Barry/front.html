@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="zh-Hant">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>METRIC.EYE - 粉絲社群分析</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "tertiary-fixed": "#f6d9ff",
+                        "on-error": "#690005",
+                        "on-tertiary-container": "#460066",
+                        "secondary-fixed": "#9cf0ff",
+                        "surface-container-highest": "#2d3449",
+                        "surface-bright": "#31394d",
+                        "on-background": "#dae2fd",
+                        "on-tertiary": "#510074",
+                        "on-secondary-fixed": "#001f24",
+                        "on-primary-fixed": "#410000",
+                        "surface-container-lowest": "#060e20",
+                        "surface-container-low": "#131b2e",
+                        "surface-container-high": "#222a3d",
+                        "tertiary-fixed-dim": "#e9b3ff",
+                        "primary-container": "#ff5540",
+                        "on-surface-variant": "#ebbbb4",
+                        "on-primary-fixed-variant": "#930100",
+                        "tertiary-container": "#c863fb",
+                        "inverse-on-surface": "#283044",
+                        "surface-variant": "#2d3449",
+                        "secondary": "#bdf4ff",
+                        "primary-fixed": "#ffdad4",
+                        "inverse-surface": "#dae2fd",
+                        "surface-container": "#171f33",
+                        "primary": "#ffb4a8",
+                        "surface-tint": "#ffb4a8",
+                        "secondary-fixed-dim": "#00daf3",
+                        "on-primary": "#690100",
+                        "on-primary-container": "#5c0000",
+                        "on-secondary": "#00363d",
+                        "error-container": "#93000a",
+                        "on-secondary-container": "#00616d",
+                        "on-error-container": "#ffdad6",
+                        "background": "#0b1326",
+                        "on-surface": "#dae2fd",
+                        "tertiary": "#e9b3ff",
+                        "on-tertiary-fixed": "#310048",
+                        "inverse-primary": "#c00100",
+                        "surface-dim": "#0b1326",
+                        "error": "#ffb4ab",
+                        "surface": "#0b1326",
+                        "outline-variant": "#603e39",
+                        "on-secondary-fixed-variant": "#004f58",
+                        "primary-fixed-dim": "#ffb4a8",
+                        "secondary-container": "#00e3fd",
+                        "outline": "#b18780",
+                        "on-tertiary-fixed-variant": "#7200a3"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .glass-panel {
+            background: rgba(45, 52, 73, 0.6);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+</head>
+
+<body class="bg-background text-on-surface font-body selection:bg-primary/30">
+    <!-- TopNavBar -->
+    <nav
+        class="fixed top-0 w-full z-50 bg-slate-950/60 backdrop-blur-xl flex justify-between items-center px-8 h-16 w-full shadow-[0px_32px_32px_rgba(218,226,253,0.06)]">
+        <div class="text-2xl font-black tracking-tighter text-red-500 font-headline">METRIC.EYE</div>
+        <div class="hidden md:flex space-x-8 items-center font-headline tracking-tight font-bold">
+            <a class="text-slate-400 hover:text-slate-200 transition-colors" href="#">Growth</a>
+            <a class="text-slate-400 hover:text-slate-200 transition-colors" href="#">Engagement</a>
+            <a class="text-red-400 border-b-2 border-red-500 pb-1" href="#">Audience</a>
+        </div>
+        <div class="flex items-center space-x-4">
+            <button
+                class="text-slate-400 hover:bg-slate-800/50 transition-all p-2 rounded-full active:scale-95 duration-200">
+                <span class="material-symbols-outlined">notifications</span>
+            </button>
+            <button
+                class="text-slate-400 hover:bg-slate-800/50 transition-all p-2 rounded-full active:scale-95 duration-200">
+                <span class="material-symbols-outlined">settings</span>
+            </button>
+            <div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/20">
+                <img alt="Creator Profile"
+                    data-alt="Creator profile picture showing a smiling professional man in high-key studio lighting"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuCu4fD-yk3g-brX_SqsA311oS-AmG71OYYNNFoTDXtebrk8RyAW6bGuy2qDnlMVVyU2_oFP4UnSUMUIKO4HfyZLcMAoDP7eaaxgxmtdiYePcpI2jaPRYjABaTNancPjq8wBLVcZ7StsQ3JYZX8Ph9FraeTBqXzfB5DkRD-qX5a78FY3DqbME1pH9xYYNbETDOOJdbxuJ307KhGxNhhCkEt8kauzNd8rHjVnNqhvHcAtv-XDmPpdXSheuJYiQ9_FNb51o-8iOEXG20l4" />
+            </div>
+        </div>
+    </nav>
+    <!-- SideNavBar -->
+    <aside
+        class="h-screen w-64 fixed left-0 top-0 z-40 bg-slate-900 flex flex-col py-6 border-r border-slate-800/50 hidden lg:flex pt-20">
+        <div class="px-6 mb-8">
+            <h2 class="text-lg font-bold text-slate-100 font-headline">The Cinematic Metric</h2>
+            <p class="text-xs text-slate-400 uppercase tracking-widest">Creator Command</p>
+        </div>
+        <nav class="flex-1 px-4 space-y-2">
+            <a class="flex items-center space-x-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-slate-200 rounded-lg transition-all duration-300 active:translate-x-1"
+                href="#">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span class="font-medium text-sm">Dashboard</span>
+            </a>
+            <a class="flex items-center space-x-3 px-4 py-3 bg-red-500/10 text-red-400 border-r-4 border-red-500 rounded-l-lg transition-all duration-300"
+                href="#">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">groups</span>
+                <span class="font-medium text-sm">Channels</span>
+            </a>
+            <a class="flex items-center space-x-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-slate-200 rounded-lg transition-all duration-300 active:translate-x-1"
+                href="#">
+                <span class="material-symbols-outlined">payments</span>
+                <span class="font-medium text-sm">Revenue</span>
+            </a>
+            <a class="flex items-center space-x-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-slate-200 rounded-lg transition-all duration-300 active:translate-x-1"
+                href="#">
+                <span class="material-symbols-outlined">movie</span>
+                <span class="font-medium text-sm">Content</span>
+            </a>
+            <a class="flex items-center space-x-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-slate-200 rounded-lg transition-all duration-300 active:translate-x-1"
+                href="#">
+                <span class="material-symbols-outlined">assessment</span>
+                <span class="font-medium text-sm">Reports</span>
+            </a>
+        </nav>
+        <div class="mt-auto px-4 pt-4 border-t border-slate-800/50 space-y-2">
+            <button
+                class="w-full bg-primary-container text-on-primary-container py-3 rounded-lg font-bold text-sm mb-4 active:scale-95 transition-transform">New
+                Analysis</button>
+            <a class="flex items-center space-x-3 px-4 py-2 text-slate-400 hover:bg-slate-800 hover:text-slate-200 rounded-lg text-sm transition-all"
+                href="#">
+                <span class="material-symbols-outlined text-sm">help</span>
+                <span>Help</span>
+            </a>
+            <a class="flex items-center space-x-3 px-4 py-2 text-slate-400 hover:bg-slate-800 hover:text-slate-200 rounded-lg text-sm transition-all"
+                href="#">
+                <span class="material-symbols-outlined text-sm">logout</span>
+                <span>Logout</span>
+            </a>
+        </div>
+    </aside>
+    <!-- Main Content -->
+    <main class="lg:ml-64 pt-24 px-6 pb-12 min-h-screen">
+        <!-- Hero Header -->
+        <header class="mb-10">
+            <div class="flex items-end space-x-4 mb-2">
+                <h1 class="text-4xl font-black font-headline tracking-tighter text-on-surface">粉絲社群分析</h1>
+                <span
+                    class="px-3 py-1 bg-secondary-container/20 text-secondary-fixed-dim text-xs font-bold rounded-full mb-1">LIVE
+                    DATA</span>
+            </div>
+            <p class="text-on-surface-variant max-w-2xl">深入洞察核心粉絲的互動模式，優化社群黏著度與內容策略。</p>
+        </header>
+        <!-- Bento Grid Layout -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+            <!-- Left: Top N Fans List (4 columns) -->
+            <section class="md:col-span-4 bg-surface-container-low rounded-lg p-6 shadow-xl flex flex-col">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-headline font-bold text-lg">核心粉絲排行 Top 10</h3>
+                    <span class="material-symbols-outlined text-primary">military_tech</span>
+                </div>
+                <div class="space-y-4 flex-1">
+                    <!-- Fan Item 1 -->
+                    <div
+                        class="flex items-center p-3 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors group">
+                        <div class="relative">
+                            <img class="w-10 h-10 rounded-full object-cover border-2 border-primary-container"
+                                data-alt="close-up portrait of a young person with vibrant colored hair and stylish glasses in neon lighting"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRf_DsALTtEZzmKnBM8SyTlUQ3_1uUaZckUAHATDOhqijGbLh4HFqy-xqgs-QEDOR25EeMWA1bfM2gHxxMmGn_JHFSpvpzWKgMWiwYWS9wBOt48q0CFStIiUpUwW6ARvIXfm44UAWYE3UFxZXber6vmznzsw-o9BiJSyf5EMWWEQEaydJYvWQjstoNYLfcNck78j5tL9_U-W_TZmzi2GnmMf1Dh5yvVP8jXH4gQqWp4FX4p6M2DbMa0O9bhD2wxhplhChcowuMLJWa" />
+                            <span
+                                class="absolute -top-1 -right-1 bg-primary text-on-primary text-[10px] font-bold px-1 rounded">1</span>
+                        </div>
+                        <div class="ml-4 flex-1">
+                            <p class="text-sm font-bold">CyberNomad_99</p>
+                            <p class="text-xs text-on-surface-variant">482 則留言</p>
+                        </div>
+                        <span
+                            class="material-symbols-outlined text-secondary-fixed-dim opacity-0 group-hover:opacity-100 transition-opacity">trending_up</span>
+                    </div>
+                    <!-- Fan Item 2 -->
+                    <div
+                        class="flex items-center p-3 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors group">
+                        <div class="relative">
+                            <img class="w-10 h-10 rounded-full object-cover"
+                                data-alt="portrait of a young woman with a warm smile wearing professional attire in soft natural light"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAtXKKw9q78spt4SEPRf4pChQp3TBpVakgt2WxgUhAhL8Zrw9-XFNgBHsmECXoYunexQqLybStC_16-xRqwoHCclRCsPfLQWDPKuvHoIFI36XO12GClQXeBRn7txFkg8x7HuEwKO7XyOXLNXslYFRs2NqI78T1TmHSKWNpsAdygP-g8pNRvGyhbtnsd9lAoX5kPMCabxaJjqUppwZ5KGPXaxmgl4maa1JtzvEi3KQB9XmmzuB61kqP4Z3AH7updPxlyknrMYok8KoS0" />
+                            <span
+                                class="absolute -top-1 -right-1 bg-surface-container-highest text-on-surface text-[10px] font-bold px-1 rounded">2</span>
+                        </div>
+                        <div class="ml-4 flex-1">
+                            <p class="text-sm font-bold">Lumina_Flow</p>
+                            <p class="text-xs text-on-surface-variant">356 則留言</p>
+                        </div>
+                        <span
+                            class="material-symbols-outlined text-secondary-fixed-dim opacity-0 group-hover:opacity-100 transition-opacity">trending_up</span>
+                    </div>
+                    <!-- Fan Item 3 -->
+                    <div
+                        class="flex items-center p-3 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors group">
+                        <div class="relative">
+                            <img class="w-10 h-10 rounded-full object-cover"
+                                data-alt="candid shot of a man with beard and casual clothing in a modern urban street setting"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyvCi95M7CCKccpLFS4Syj86zqIaTNR_SkbASS51nIrVzosCSAzCNdENbotSxIJopwewR7w4EI4WXcUxse-Pf4Z8Pmw04t5pbauefzJGOAvXKBubx4ior6lDGCXe1Ysk-aRdWkW7OIW-7sy7jmtEgZ1duVRselaEm7v7h5a-SN-hze4XZg8v-Py-Kg2ThdTCqMPYf-AmwYqOmaG9y64aEdMD7Cv4gAN3RLrPMGSffTfP3p1A-p4miXiq2qrTx92WYEzsp83Co4dUmh" />
+                            <span
+                                class="absolute -top-1 -right-1 bg-surface-container-highest text-on-surface text-[10px] font-bold px-1 rounded">3</span>
+                        </div>
+                        <div class="ml-4 flex-1">
+                            <p class="text-sm font-bold">Echo_Pixel</p>
+                            <p class="text-xs text-on-surface-variant">291 則留言</p>
+                        </div>
+                        <span
+                            class="material-symbols-outlined text-error opacity-0 group-hover:opacity-100 transition-opacity">trending_down</span>
+                    </div>
+                    <!-- Fan Item 4 -->
+                    <div
+                        class="flex items-center p-3 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors group">
+                        <img class="w-10 h-10 rounded-full object-cover"
+                            data-alt="portrait of a middle-aged man with sharp features and thoughtful expression in dramatic lighting"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzoOs8VDEWS4ZKYYLcn2WRgHFAUtjzBlQtL-Xs9ZqgZK8j7MUVXXuCtjZz2JAoeaje78cZaCI5ETE9g_kXVQQoKHXQd1x8iRVMPedPZ4_HJ7K7QIhIlRpQo3CJhny41dOMYN36WrHF4CLjY9vhI7e9BWvM6UMknHdBrgFZ-VVtLaFp0vVeFnIhCHMkjxsTbkObIaD6Da7EEGPD8RugcPBZTlcX17mTrrZriXo__N0jcTg5sjcFZAhP_40NS979EQHksAjN8eE5Dnyf" />
+                        <div class="ml-4 flex-1">
+                            <p class="text-sm font-bold">RetroVibe_Master</p>
+                            <p class="text-xs text-on-surface-variant">244 則留言</p>
+                        </div>
+                    </div>
+                    <!-- Fan Item 5 -->
+                    <div
+                        class="flex items-center p-3 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors group">
+                        <img class="w-10 h-10 rounded-full object-cover"
+                            data-alt="joyful young woman laughing with flowing hair against a bright outdoor background"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuABQEyvo_u3G5fZ3xRD7C3Z8pKkAbmZzYsM-2D1hiVOoQenhYu1hKoK2hdcJKwdNsDeIkMnJ3Skx6UdbWe7y940dXLal5aBf8neDP67oLPe3jpVlUVmzY34VRF8IpyWG9XKRDr9DjlD-xCdeI-3Mld1LfjKGKMjdVSp5RxsqGOdcr7TB3A1czikqQZfZFb-CR7P8EYvgFWHOOuLIJJHl4tU7RFNLFpBp31w6PxUV3ljWcpQzZSPZy8COQkJVQbeFsrCYOpAPD-ysgqf" />
+                        <div class="ml-4 flex-1">
+                            <p class="text-sm font-bold">Neon_Dreamer</p>
+                            <p class="text-xs text-on-surface-variant">210 則留言</p>
+                        </div>
+                    </div>
+                </div>
+                <button
+                    class="mt-6 text-sm font-bold text-primary-container hover:underline self-center">查看完整清單</button>
+            </section>
+            <!-- Right Top: Heatmap (8 columns) -->
+            <section class="md:col-span-8 bg-surface-container-low rounded-lg p-6 shadow-xl">
+                <div class="flex justify-between items-start mb-8">
+                    <div>
+                        <h3 class="font-headline font-bold text-lg mb-1">留言頻率熱力圖</h3>
+                        <p class="text-xs text-on-surface-variant">核心粉絲過去 30 天的活躍時段分佈</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <div class="flex items-center space-x-1">
+                            <div class="w-2 h-2 rounded-sm bg-surface-container-highest"></div>
+                            <span class="text-[10px] text-on-surface-variant">Low</span>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <div class="w-2 h-2 rounded-sm bg-primary/40"></div>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <div class="w-2 h-2 rounded-sm bg-primary/80"></div>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <div class="w-2 h-2 rounded-sm bg-primary"></div>
+                            <span class="text-[10px] text-on-surface-variant">High</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Heatmap Grid -->
+                <div class="grid grid-cols-24 gap-1">
+                    <!-- Generating a sample 7x24 grid (simplified representation) -->
+                    <!-- Weekdays Labels -->
+                    <div
+                        class="col-span-1 flex flex-col justify-between py-2 text-[10px] text-on-surface-variant font-bold h-48">
+                        <span>Mon</span>
+                        <span>Wed</span>
+                        <span>Fri</span>
+                        <span>Sun</span>
+                    </div>
+                    <div class="col-span-23 grid grid-cols-24 grid-rows-7 gap-1 h-48">
+                        <!-- Example high activity cells with primary-container -->
+                        <div class="bg-surface-container-highest rounded-sm"></div>
+                        <div class="bg-surface-container-highest rounded-sm"></div>
+                        <div class="bg-primary/20 rounded-sm"></div>
+                        <div class="bg-surface-container-highest rounded-sm"></div>
+                        <div class="bg-primary/40 rounded-sm"></div>
+                        <div class="bg-primary/60 rounded-sm"></div>
+                        <div class="bg-primary rounded-sm shadow-[0_0_8px_rgba(255,85,64,0.4)]"></div>
+                        <div class="bg-primary/80 rounded-sm"></div>
+                        <div class="bg-surface-container-highest rounded-sm"></div>
+                        <div class="bg-surface-container-highest rounded-sm"></div>
+                        <div class="bg-primary/20 rounded-sm"></div>
+                        <div class="bg-surface-container-highest rounded-sm"></div>
+                        <div class="bg-primary/30 rounded-sm"></div>
+                        <div class="bg-primary/10 rounded-sm"></div>
+                        <div class="bg-surface-container-highest rounded-sm"></div>
+                        <div class="bg-surface-container-highest rounded-sm"></div>
+                        <div class="bg-surface-container-highest rounded-sm"></div>
+                        <div class="bg-primary/50 rounded-sm"></div>
+                        <div class="bg-primary/90 rounded-sm shadow-[0_0_8px_rgba(255,85,64,0.3)]"></div>
+                        <div class="bg-primary/40 rounded-sm"></div>
+                        <!-- ... repeating blocks to simulate a full map ... -->
+                        <div
+                            class="bg-surface-container-highest rounded-sm col-span-24 row-span-4 grid grid-cols-24 gap-1">
+                            <!-- Loop simulation -->
+                            <div class="bg-primary/10 rounded-sm"></div>
+                            <div class="bg-surface-container-highest rounded-sm"></div>
+                            <div class="bg-surface-container-highest rounded-sm"></div>
+                            <div class="bg-primary/60 rounded-sm"></div>
+                            <div class="bg-primary rounded-sm"></div>
+                            <div class="bg-primary/80 rounded-sm"></div>
+                            <div class="bg-surface-container-highest rounded-sm"></div>
+                            <div class="bg-surface-container-highest rounded-sm"></div>
+                            <div class="bg-primary/20 rounded-sm"></div>
+                            <div class="bg-surface-container-highest rounded-sm"></div>
+                            <div class="bg-surface-container-highest rounded-sm"></div>
+                            <div class="bg-surface-container-highest rounded-sm"></div>
+                            <div class="bg-primary/40 rounded-sm"></div>
+                            <div class="bg-primary/70 rounded-sm"></div>
+                            <div class="bg-primary/30 rounded-sm"></div>
+                            <div class="bg-surface-container-highest rounded-sm"></div>
+                            <div class="bg-primary/10 rounded-sm"></div>
+                            <div class="bg-surface-container-highest rounded-sm"></div>
+                            <div class="bg-surface-container-highest rounded-sm"></div>
+                            <div class="bg-primary/90 rounded-sm"></div>
+                            <div class="bg-primary/50 rounded-sm"></div>
+                            <div class="bg-surface-container-highest rounded-sm"></div>
+                            <div class="bg-surface-container-highest rounded-sm"></div>
+                            <div class="bg-primary/20 rounded-sm"></div>
+                            <div class="bg-surface-container-highest rounded-sm"></div>
+                            <div class="bg-primary/30 rounded-sm"></div>
+                            <div class="bg-primary/60 rounded-sm"></div>
+                            <div class="bg-primary/10 rounded-sm"></div>
+                            <div class="bg-surface-container-highest rounded-sm"></div>
+                            <div class="bg-surface-container-highest rounded-sm"></div>
+                            <div class="bg-primary/80 rounded-sm"></div>
+                            <div class="bg-primary rounded-sm shadow-[0_0_10px_rgba(255,85,64,0.4)]"></div>
+                            <div class="bg-primary/90 rounded-sm"></div>
+                            <div class="bg-primary/20 rounded-sm"></div>
+                            <div class="bg-surface-container-highest rounded-sm"></div>
+                            <div class="bg-surface-container-highest rounded-sm"></div>
+                            <div class="bg-primary/10 rounded-sm"></div>
+                            <div class="bg-surface-container-highest rounded-sm"></div>
+                            <div class="bg-surface-container-highest rounded-sm"></div>
+                            <div class="bg-primary/40 rounded-sm"></div>
+                            <div class="bg-primary/60 rounded-sm"></div>
+                            <div class="bg-primary/20 rounded-sm"></div>
+                            <div class="bg-surface-container-highest rounded-sm"></div>
+                            <div class="bg-surface-container-highest rounded-sm"></div>
+                            <div class="bg-primary/50 rounded-sm"></div>
+                            <div class="bg-primary/80 rounded-sm"></div>
+                            <div class="bg-primary/10 rounded-sm"></div>
+                            <div class="bg-surface-container-highest rounded-sm"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 flex justify-between px-8 text-[10px] text-on-surface-variant font-medium">
+                    <span>12 AM</span><span>4 AM</span><span>8 AM</span><span>12 PM</span><span>4 PM</span><span>8
+                        PM</span><span>11 PM</span>
+                </div>
+            </section>
+            <!-- Right Bottom: Interaction Trend (8 columns) -->
+            <section class="md:col-span-8 bg-surface-container-low rounded-lg p-6 shadow-xl relative overflow-hidden">
+                <!-- Decorative Glow -->
+                <div class="absolute -top-20 -right-20 w-64 h-64 bg-secondary/10 rounded-full blur-[100px]"></div>
+                <div class="flex justify-between items-center mb-10">
+                    <div>
+                        <h3 class="font-headline font-bold text-lg mb-1">互動頻率趨勢</h3>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-2xl font-black text-secondary-fixed-dim font-headline">+24.8%</span>
+                            <span class="text-xs text-on-surface-variant">vs 上月</span>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button
+                            class="px-3 py-1 rounded-full bg-surface-container-high text-xs font-bold text-on-surface border border-outline-variant/10">7D</button>
+                        <button
+                            class="px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container text-xs font-bold">30D</button>
+                    </div>
+                </div>
+                <!-- Custom SVG Chart Simulation -->
+                <div class="w-full h-40 relative mt-4">
+                    <svg class="w-full h-full" viewbox="0 0 400 100">
+                        <!-- Grid Lines -->
+                        <line stroke="#603e39" stroke-opacity="0.1" x1="0" x2="400" y1="20" y2="20"></line>
+                        <line stroke="#603e39" stroke-opacity="0.1" x1="0" x2="400" y1="50" y2="50"></line>
+                        <line stroke="#603e39" stroke-opacity="0.1" x1="0" x2="400" y1="80" y2="80"></line>
+                        <!-- Area Gradient -->
+                        <defs>
+                            <lineargradient id="chartGradient" x1="0%" x2="0%" y1="0%" y2="100%">
+                                <stop offset="0%" stop-color="#00daf3" stop-opacity="0.3"></stop>
+                                <stop offset="100%" stop-color="#00daf3" stop-opacity="0"></stop>
+                            </lineargradient>
+                        </defs>
+                        <path d="M0,80 Q50,70 80,40 T150,55 T220,30 T300,45 T400,10 L400,100 L0,100 Z"
+                            fill="url(#chartGradient)"></path>
+                        <!-- Line -->
+                        <path d="M0,80 Q50,70 80,40 T150,55 T220,30 T300,45 T400,10" fill="none" stroke="#00daf3"
+                            stroke-linecap="round" stroke-width="3"></path>
+                        <!-- Highlight Point -->
+                        <circle cx="220" cy="30" fill="#00daf3" r="4"></circle>
+                        <circle cx="220" cy="30" fill="#00daf3" fill-opacity="0.3" r="8"></circle>
+                    </svg>
+                    <!-- Floating Data Tooltip -->
+                    <div
+                        class="absolute top-0 left-[55%] glass-panel px-3 py-2 rounded-lg border border-outline-variant/20 shadow-2xl">
+                        <p class="text-[10px] text-on-surface-variant">Nov 18, 2023</p>
+                        <p class="text-sm font-black text-secondary-fixed-dim">1.2K 互動量</p>
+                    </div>
+                </div>
+                <div class="flex justify-between mt-4 text-[10px] text-on-surface-variant font-bold px-2">
+                    <span>1 NOV</span>
+                    <span>8 NOV</span>
+                    <span>15 NOV</span>
+                    <span>22 NOV</span>
+                    <span>30 NOV</span>
+                </div>
+            </section>
+            <!-- Bottom: Engagement Metrics Cards -->
+            <div class="md:col-span-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-surface-container rounded-lg p-5 border-l-4 border-primary shadow-lg">
+                    <p class="text-on-surface-variant text-xs mb-1 font-bold tracking-wider uppercase">平均回訪率</p>
+                    <div class="flex items-baseline space-x-2">
+                        <span class="text-2xl font-black font-headline text-on-surface">82%</span>
+                        <span class="text-xs text-primary font-bold">↑ 5%</span>
+                    </div>
+                </div>
+                <div class="bg-surface-container rounded-lg p-5 border-l-4 border-secondary-fixed-dim shadow-lg">
+                    <p class="text-on-surface-variant text-xs mb-1 font-bold tracking-wider uppercase">核心粉絲互動佔比</p>
+                    <div class="flex items-baseline space-x-2">
+                        <span class="text-2xl font-black font-headline text-on-surface">45.2%</span>
+                        <span class="text-xs text-secondary-fixed-dim font-bold">↑ 12%</span>
+                    </div>
+                </div>
+                <div class="bg-surface-container rounded-lg p-5 border-l-4 border-tertiary shadow-lg">
+                    <p class="text-on-surface-variant text-xs mb-1 font-bold tracking-wider uppercase">單人最高留言數</p>
+                    <div class="flex items-baseline space-x-2">
+                        <span class="text-2xl font-black font-headline text-on-surface">1.4K</span>
+                        <span class="text-xs text-tertiary font-bold">New Record</span>
+                    </div>
+                </div>
+                <div class="bg-surface-container rounded-lg p-5 border-l-4 border-on-surface shadow-lg">
+                    <p class="text-on-surface-variant text-xs mb-1 font-bold tracking-wider uppercase">社群情緒指數</p>
+                    <div class="flex items-baseline space-x-2">
+                        <span class="text-2xl font-black font-headline text-on-surface">Positive</span>
+                        <span class="material-symbols-outlined text-secondary-fixed-dim text-lg">mood</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <!-- Floating Action Button -->
+    <button
+        class="fixed bottom-8 right-8 w-14 h-14 bg-primary-container text-on-primary-container rounded-full shadow-[0_8px_32px_rgba(255,85,64,0.4)] flex items-center justify-center active:scale-90 transition-transform z-50">
+        <span class="material-symbols-outlined">chat</span>
+    </button>
+</body>
+
+</html>

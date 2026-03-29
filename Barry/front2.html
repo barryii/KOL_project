@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <title>YouTuber 數據儀表板</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+
+        .tabs {
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            background: #fff;
+        }
+
+        .tab-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .tab-content {
+            display: none;
+            background: #fff;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .chart-container {
+            width: 80%;
+            max-width: 1000px;
+            margin: auto;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>YouTuber 頻道數據比對</h2>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('overview')">整體表現</button>
+        <button class="tab-btn" onclick="switchTab('interaction')">互動指標</button>
+        <button class="tab-btn" onclick="switchTab('audience')">觀眾輪廓</button>
+    </div>
+
+    <div id="overview" class="tab-content active">
+        <h3>每月發片量與平均觀看數</h3>
+        <div class="chart-container">
+            <canvas id="overviewChart"></canvas>
+        </div>
+    </div>
+
+    <div id="interaction" class="tab-content">
+        <h3>互動指標建設中...</h3>
+    </div>
+    <div id="audience" class="tab-content">
+        <h3>觀眾輪廓建設中...</h3>
+    </div>
+
+    <script>
+        // 分頁切換邏輯
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // 載入整體表現數據並繪製圖表
+        async function loadOverviewData() {
+            try {
+                // 呼叫 FastAPI 端點
+                const response = await fetch('http://localhost:8000/api/overview');
+                const data = await response.json();
+
+                const ctx = document.getElementById('overviewChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar', // 預設型態為長條圖
+                    data: {
+                        labels: data.months,
+                        datasets: [
+                            // YouTuber A 發片量 (長條圖，左 Y 軸)
+                            {
+                                label: `${data.youtuber_A.name} 發片量`,
+                                data: data.youtuber_A.video_counts,
+                                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                                yAxisID: 'y'
+                            },
+                            // YouTuber B 發片量 (長條圖，左 Y 軸)
+                            {
+                                label: `${data.youtuber_B.name} 發片量`,
+                                data: data.youtuber_B.video_counts,
+                                backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                                yAxisID: 'y'
+                            },
+                            // YouTuber A 平均觀看 (折線圖，右 Y 軸)
+                            {
+                                label: `${data.youtuber_A.name} 平均觀看`,
+                                data: data.youtuber_A.avg_views,
+                                type: 'line',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                backgroundColor: 'rgba(54, 162, 235, 1)',
+                                yAxisID: 'y1',
+                                tension: 0.3
+                            },
+                            // YouTuber B 平均觀看 (折線圖，右 Y 軸)
+                            {
+                                label: `${data.youtuber_B.name} 平均觀看`,
+                                data: data.youtuber_B.avg_views,
+                                type: 'line',
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                backgroundColor: 'rgba(255, 99, 132, 1)',
+                                yAxisID: 'y1',
+                                tension: 0.3
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: { display: true, text: '發片量 (支)' }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                grid: { drawOnChartArea: false }, // 避免網格線重疊混亂
+                                title: { display: true, text: '平均觀看數 (次)' }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error("無法載入數據:", error);
+            }
+        }
+
+        // 頁面載入時執行
+        loadOverviewData();
+    </script>
+</body>
+
+</html>
