@@ -44,7 +44,7 @@ class DBManager:
         view_count BIGINT,
         like_count INT,
         comment_count INT,
-        actual_comment_count INT,
+        actual_comment_count INT, # 不從這存
         cluster_label INT, # 不從這存
         FOREIGN KEY (channel_id) REFERENCES channels(channel_id) ON DELETE CASCADE
         """
@@ -62,15 +62,13 @@ class DBManager:
                     duration_sec, 
                     view_count, 
                     like_count, 
-                    comment_count,
-                    actual_comment_count
+                    comment_count
                 ) VALUES (
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                 ) ON DUPLICATE KEY UPDATE 
                     view_count = VALUES(view_count),
                     like_count = VALUES(like_count),
-                    comment_count = VALUES(comment_count),
-                    actual_comment_count = VALUES(actual_comment_count)
+                    comment_count = VALUES(comment_count)
                 """
                 cursor.executemany(sql, video_data)
                 connection.commit()
@@ -112,8 +110,8 @@ class DBManager:
         text_content TEXT,
         like_count INT,
         reply_count INT,
-        # sentiment VARCHAR(20), # 這兩項留給AI填
-        # topic_tag VARCHAR(50),
+        sentiment VARCHAR(20), # 這兩項留給AI填
+        topic_tag VARCHAR(50),
         published_at DATETIME,
         FOREIGN KEY (video_id) REFERENCES videos(video_id) ON DELETE CASCADE
         """
@@ -133,6 +131,7 @@ class DBManager:
                 ) VALUES (
                     %s, %s, %s, %s, %s, %s, %s, %s, %s
                 ) ON DUPLICATE KEY UPDATE 
+                    author_id = VALUES(author_id),
                     like_count = VALUES(like_count),
                     reply_count = VALUES(reply_count)
                 """
