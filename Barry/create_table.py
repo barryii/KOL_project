@@ -19,6 +19,7 @@ table_queries = [
         channel_id VARCHAR(24),
         title VARCHAR(255),
         description TEXT,
+        topic_tag TEXT,
         published_at DATETIME,
         type VARCHAR(20),
         duration TIME,

@@ -12,6 +12,9 @@ class DBManager:
             'password': os.getenv('KOL_DB_PW'),
             'database': 'db_kol'
         }
+    
+    def connect_to_db(self):
+        return mysql_connect(**self.config)
 
     def save_channel_data(self, channel_id: str, channel_name: str, subscriber_count: int, view_count: int) -> None:
         """
@@ -37,6 +40,7 @@ class DBManager:
         channel_id VARCHAR(24),
         title VARCHAR(255),
         description TEXT,
+        topic_tag TEXT, # 不從這存
         published_at DATETIME,
         type VARCHAR(20),
         duration TIME,
