@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube 頻道數據儀表板</title>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f2;
+            color: #1a1a1a;
+            min-height: 100vh;
+            padding: 24px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111;
+        }
+
+        .legend {
+            display: flex;
+            gap: 18px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #555;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e0ddd6;
+            margin-bottom: 24px;
+            overflow-x: auto;
+            background: #fff;
+            border-radius: 10px 10px 0 0;
+            padding: 0 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        .tab-btn {
+            flex-shrink: 0;
+            background: none;
+            border: none;
+            border-bottom: 2.5px solid transparent;
+            padding: 12px 18px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 400;
+            color: #888;
+            transition: all 0.15s;
+            font-family: inherit;
+        }
+
+        .tab-btn:hover {
+            color: #333;
+        }
+
+        .tab-btn.active {
+            border-bottom-color: #378ADD;
+            color: #111;
+            font-weight: 500;
+        }
+
+        .panel {
+            display: none;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .channel-card {
+            background: #fff;
+            border: 1px solid #e8e5de;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .card-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #111;
+        }
+
+        .card-year {
+            font-size: 11px;
+            color: #aaa;
+            margin-left: auto;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .stat-box {
+            background: #f8f7f4;
+            border-radius: 8px;
+            padding: 10px 12px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 4px;
+        }
+
+        .stat-val {
+            font-size: 20px;
+            font-weight: 600;
+            color: #111;
+            line-height: 1;
+        }
+
+        .chart-section {
+            background: #fff;
+            border: 1px solid #e8e5de;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .chart-label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 12px;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+
+        .chart-wrap {
+            position: relative;
+            height: 200px;
+        }
+
+        .inline-legend {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            background: #fff;
+            padding: 14px 18px;
+            border-radius: 10px;
+            border: 1px solid #e8e5de;
+        }
+
+        .slider-row label {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .slider-row input[type=range] {
+            width: 120px;
+            accent-color: #378ADD;
+        }
+
+        .slider-val {
+            font-size: 14px;
+            font-weight: 600;
+            color: #111;
+        }
+
+        .top-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .top-card {
+            background: #fff;
+            border: 1px solid #e8e5de;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .top-card-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .top-card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #111;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <div class="header">
+            <h1>YouTube 頻道數據儀表板</h1>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="dot" style="background:#378ADD;"></div>頻道 A
+                </div>
+                <div class="legend-item">
+                    <div class="dot" style="background:#D85A30;"></div>頻道 B
+                </div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('overview',this)">總覽</button>
+            <button class="tab-btn" onclick="switchTab('monthly',this)">每月數據</button>
+            <button class="tab-btn" onclick="switchTab('engagement',this)">觀眾互動</button>
+            <button class="tab-btn" onclick="switchTab('commenters',this)">留言排行</button>
+        </div>
+
+        <!-- 總覽 -->
+        <div id="panel-overview" class="panel active">
+            <div class="cards-grid">
+                <div class="channel-card" style="border-top: 3px solid #378ADD;">
+                    <div class="card-header">
+                        <div class="card-dot" style="background:#378ADD;"></div>
+                        <span class="card-title">頻道 A</span>
+                        <span class="card-year">2024 全年</span>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">總發片數</div>
+                            <div id="sa-uploads" class="stat-val">—</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">總觀看數</div>
+                            <div id="sa-views" class="stat-val">—</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">均觀看 / 片</div>
+                            <div id="sa-avgv" class="stat-val">—</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">總留言數</div>
+                            <div id="sa-comments" class="stat-val">—</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">均留言 / 片</div>
+                            <div id="sa-avgc" class="stat-val">—</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">讚 / 留比</div>
+                            <div id="sa-liker" class="stat-val">—</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="channel-card" style="border-top: 3px solid #D85A30;">
+                    <div class="card-header">
+                        <div class="card-dot" style="background:#D85A30;"></div>
+                        <span class="card-title">頻道 B</span>
+                        <span class="card-year">2024 全年</span>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">總發片數</div>
+                            <div id="sb-uploads" class="stat-val">—</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">總觀看數</div>
+                            <div id="sb-views" class="stat-val">—</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">均觀看 / 片</div>
+                            <div id="sb-avgv" class="stat-val">—</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">總留言數</div>
+                            <div id="sb-comments" class="stat-val">—</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">均留言 / 片</div>
+                            <div id="sb-avgc" class="stat-val">—</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">讚 / 留比</div>
+                            <div id="sb-liker" class="stat-val">—</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 每月數據 -->
+        <div id="panel-monthly" class="panel">
+            <div class="inline-legend">
+                <div class="legend-item">
+                    <div class="dot" style="background:#378ADD;"></div>頻道 A
+                </div>
+                <div class="legend-item">
+                    <div class="dot" style="background:#D85A30;"></div>頻道 B
+                </div>
+            </div>
+            <div class="chart-section">
+                <div class="chart-label">每月發片量</div>
+                <div class="chart-wrap"><canvas id="chart-uploads"></canvas></div>
+            </div>
+            <div class="chart-section">
+                <div class="chart-label">每月平均觀看數（每片）</div>
+                <div class="chart-wrap"><canvas id="chart-avgv"></canvas></div>
+            </div>
+        </div>
+
+        <!-- 觀眾互動 -->
+        <div id="panel-engagement" class="panel">
+            <div class="inline-legend">
+                <div class="legend-item">
+                    <div class="dot" style="background:#378ADD;"></div>頻道 A
+                </div>
+                <div class="legend-item">
+                    <div class="dot" style="background:#D85A30;"></div>頻道 B
+                </div>
+            </div>
+            <div class="chart-section">
+                <div class="chart-label">每月平均留言數（每片）</div>
+                <div class="chart-wrap"><canvas id="chart-avgc"></canvas></div>
+            </div>
+            <div class="chart-section">
+                <div class="chart-label">按讚 / 留言比（讚數 ÷ 留言數）</div>
+                <div class="chart-wrap"><canvas id="chart-liker"></canvas></div>
+            </div>
+        </div>
+
+        <!-- 留言排行 -->
+        <div id="panel-commenters" class="panel">
+            <div class="slider-row">
+                <label>顯示前</label>
+                <input type="range" id="slider-n" min="3" max="10" value="5" step="1" oninput="updateTopN()">
+                <span class="slider-val"><span id="n-val">5</span> 名觀眾</span>
+            </div>
+            <div class="top-grid">
+                <div class="top-card">
+                    <div class="top-card-header">
+                        <div class="dot" style="background:#378ADD;"></div><span class="top-card-title">頻道 A 留言排行</span>
+                    </div>
+                    <div id="wrap-ta" style="position:relative;height:280px;"><canvas id="chart-ta"></canvas></div>
+                </div>
+                <div class="top-card">
+                    <div class="top-card-header">
+                        <div class="dot" style="background:#D85A30;"></div><span class="top-card-title">頻道 B 留言排行</span>
+                    </div>
+                    <div id="wrap-tb" style="position:relative;height:280px;"><canvas id="chart-tb"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    <script>
+        const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+        const tc = '#999', gc = 'rgba(0,0,0,0.07)', ytc = '#444';
+
+        const cA = {
+            uploads: [8, 7, 9, 6, 8, 10, 11, 9, 8, 7, 9, 10],
+            avgViews: [120000, 130000, 115000, 140000, 125000, 135000, 150000, 145000, 138000, 128000, 142000, 155000],
+            avgComments: [450, 480, 420, 510, 470, 530, 580, 555, 495, 460, 520, 590],
+            likeRatio: [8.2, 8.8, 8.1, 9.2, 8.6, 8.9, 9.4, 9.1, 8.7, 8.4, 9.0, 9.5],
+            top: [{ n: '王大明', v: 52 }, { n: '小花', v: 48 }, { n: '阿強', v: 41 }, { n: '林宇晨', v: 38 }, { n: '超帥帥', v: 35 }, { n: '黑糖奶茶', v: 30 }, { n: '張小花', v: 28 }, { n: '哈哈哈', v: 25 }, { n: '彩虹', v: 22 }, { n: '小白兔', v: 19 }]
+        };
+        const cB = {
+            uploads: [4, 5, 4, 6, 5, 4, 5, 6, 5, 4, 5, 6],
+            avgViews: [280000, 310000, 295000, 320000, 300000, 285000, 330000, 315000, 298000, 305000, 325000, 340000],
+            avgComments: [820, 850, 800, 910, 870, 830, 900, 885, 845, 825, 895, 940],
+            likeRatio: [14.5, 15.2, 14.1, 16.0, 15.0, 14.3, 15.8, 15.4, 14.8, 14.6, 15.6, 16.2],
+            top: [{ n: '美美子', v: 68 }, { n: '珊珊', v: 61 }, { n: '小米', v: 55 }, { n: '愛看直播', v: 49 }, { n: '星星', v: 44 }, { n: '甜甜圈', v: 40 }, { n: '可可', v: 36 }, { n: '巧克力', v: 33 }, { n: '蘋果派', v: 29 }, { n: '糖糖', v: 25 }]
+        };
+
+        function fmt(n) { if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M'; if (n >= 1000) return (n / 1000).toFixed(0) + 'K'; return Math.round(n) + ''; }
+        function avg(a) { return a.reduce((s, v) => s + v, 0) / a.length; }
+        function calcStats(c) {
+            return {
+                totalUploads: c.uploads.reduce((a, b) => a + b, 0),
+                totalViews: c.uploads.reduce((s, v, i) => s + v * c.avgViews[i], 0),
+                totalComments: c.uploads.reduce((s, v, i) => s + v * c.avgComments[i], 0),
+                avgViews: avg(c.avgViews),
+                avgComments: avg(c.avgComments),
+                avgLikeRatio: avg(c.likeRatio)
+            };
+        }
+        const sA = calcStats(cA), sB = calcStats(cB);
+        function fill(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
+        fill('sa-uploads', sA.totalUploads); fill('sa-views', fmt(sA.totalViews)); fill('sa-avgv', fmt(sA.avgViews));
+        fill('sa-comments', fmt(sA.totalComments)); fill('sa-avgc', Math.round(sA.avgComments)); fill('sa-liker', sA.avgLikeRatio.toFixed(1) + ':1');
+        fill('sb-uploads', sB.totalUploads); fill('sb-views', fmt(sB.totalViews)); fill('sb-avgv', fmt(sB.avgViews));
+        fill('sb-comments', fmt(sB.totalComments)); fill('sb-avgc', Math.round(sB.avgComments)); fill('sb-liker', sB.avgLikeRatio.toFixed(1) + ':1');
+
+        const done = {};
+        function switchTab(id, btn) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('panel-' + id).classList.add('active');
+            btn.classList.add('active');
+            if (!done[id]) { done[id] = true; if (id === 'monthly') initMonthly(); if (id === 'engagement') initEngagement(); if (id === 'commenters') updateTopN(); }
+        }
+
+        const xO = { grid: { color: gc }, ticks: { font: { size: 11 }, color: tc, autoSkip: false, maxRotation: 0 } };
+        const yO = { grid: { color: gc }, ticks: { font: { size: 11 }, color: tc } };
+
+        function initMonthly() {
+            new Chart(document.getElementById('chart-uploads'), {
+                type: 'bar',
+                data: {
+                    labels: months, datasets: [
+                        { label: '頻道 A', data: cA.uploads, backgroundColor: '#378ADD', borderRadius: 4 },
+                        { label: '頻道 B', data: cB.uploads, backgroundColor: '#D85A30', borderRadius: 4 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                    scales: { x: xO, y: { grid: { color: gc }, ticks: { font: { size: 11 }, color: tc }, title: { display: true, text: '影片數', color: tc, font: { size: 11 } } } }
+                }
+            });
+            new Chart(document.getElementById('chart-avgv'), {
+                type: 'line',
+                data: {
+                    labels: months, datasets: [
+                        { label: '頻道 A', data: cA.avgViews, borderColor: '#378ADD', backgroundColor: 'rgba(55,138,221,0.1)', tension: 0.3, fill: true, pointRadius: 3, borderWidth: 2 },
+                        { label: '頻道 B', data: cB.avgViews, borderColor: '#D85A30', backgroundColor: 'rgba(216,90,48,0.1)', tension: 0.3, fill: true, pointRadius: 3, borderWidth: 2 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                    scales: { x: xO, y: { grid: { color: gc }, ticks: { font: { size: 11 }, color: tc, callback: v => fmt(v) } } }
+                }
+            });
+        }
+
+        function initEngagement() {
+            new Chart(document.getElementById('chart-avgc'), {
+                type: 'line',
+                data: {
+                    labels: months, datasets: [
+                        { label: '頻道 A', data: cA.avgComments, borderColor: '#378ADD', backgroundColor: 'rgba(55,138,221,0.1)', tension: 0.3, fill: true, pointRadius: 3, borderWidth: 2 },
+                        { label: '頻道 B', data: cB.avgComments, borderColor: '#D85A30', backgroundColor: 'rgba(216,90,48,0.1)', tension: 0.3, fill: true, pointRadius: 3, borderWidth: 2 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: xO, y: yO } }
+            });
+            new Chart(document.getElementById('chart-liker'), {
+                type: 'line',
+                data: {
+                    labels: months, datasets: [
+                        { label: '頻道 A', data: cA.likeRatio, borderColor: '#378ADD', backgroundColor: 'rgba(55,138,221,0.08)', tension: 0.3, fill: true, pointRadius: 3, borderWidth: 2 },
+                        { label: '頻道 B', data: cB.likeRatio, borderColor: '#D85A30', backgroundColor: 'rgba(216,90,48,0.08)', tension: 0.3, fill: true, pointRadius: 3, borderWidth: 2 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                    scales: { x: xO, y: { grid: { color: gc }, ticks: { font: { size: 11 }, color: tc, callback: v => v.toFixed(1) + ':1' } } }
+                }
+            });
+        }
+
+        let cTA, cTB;
+        function updateTopN() {
+            const n = parseInt(document.getElementById('slider-n').value);
+            document.getElementById('n-val').textContent = n;
+            const h = n * 44 + 60;
+            document.getElementById('wrap-ta').style.height = h + 'px';
+            document.getElementById('wrap-tb').style.height = h + 'px';
+            if (cTA) cTA.destroy(); if (cTB) cTB.destroy();
+            const tA = cA.top.slice(0, n), tB = cB.top.slice(0, n);
+            const opts = {
+                responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } },
+                scales: { x: { grid: { color: gc }, ticks: { font: { size: 11 }, color: tc } }, y: { grid: { display: false }, ticks: { font: { size: 12 }, color: ytc } } }
+            };
+            cTA = new Chart(document.getElementById('chart-ta'), { type: 'bar', data: { labels: tA.map(c => c.n), datasets: [{ data: tA.map(c => c.v), backgroundColor: 'rgba(55,138,221,0.85)', borderRadius: 3 }] }, options: opts });
+            cTB = new Chart(document.getElementById('chart-tb'), { type: 'bar', data: { labels: tB.map(c => c.n), datasets: [{ data: tB.map(c => c.v), backgroundColor: 'rgba(216,90,48,0.85)', borderRadius: 3 }] }, options: opts });
+        }
+    </script>
+</body>
+
+</html>
