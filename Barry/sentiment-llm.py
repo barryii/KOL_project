@@ -113,7 +113,7 @@ def process_channel(channel, limit):
         # if processed_count % 10000 == 0:
         if not last_time: last_time = start_time
         mid_time = datetime.now()
-        print(f'[{channel_name}] {mid_time} - {processed_count} / {len(comments)} ({processed_count / len(comments)}%) ({mid_time - last_time})')
+        print(f'[{channel_name}] {mid_time} - {processed_count} / {len(comments)} ({processed_count / len(comments) * 100:.4f}%) ({mid_time - last_time})')
         last_time = mid_time
         
     end_time = datetime.now()
