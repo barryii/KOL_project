@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YouTube 頻道數據儀表板</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f2; color: #1a1a1a; min-height: 100vh; padding: 24px 20px; }
+  .container { max-width: 900px; margin: 0 auto; }
+  .header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+  h1 { font-size: 18px; font-weight: 600; color: #111; }
+  .legend { display: flex; gap: 18px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #555; }
+  .dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+  #loading-msg { padding: 3rem; text-align: center; color: #999; font-size: 14px; }
+  #loading-spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid #ddd; border-top-color: #378ADD; border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 8px; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #error-msg { display: none; padding: 14px 18px; background: #fff0f0; color: #b00; border-radius: 10px; margin-bottom: 20px; font-size: 13px; border: 1px solid #f5c6c6; }
+  #error-msg button { margin-left: 12px; font-size: 12px; padding: 3px 10px; border: 1px solid #c00; border-radius: 6px; background: none; color: #b00; cursor: pointer; }
+  #dashboard { display: none; }
+  .tabs { display: flex; border-bottom: 1px solid #e0ddd6; margin-bottom: 24px; overflow-x: auto; background: #fff; border-radius: 10px 10px 0 0; padding: 0 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .tab-btn { flex-shrink: 0; background: none; border: none; border-bottom: 2.5px solid transparent; padding: 12px 18px; cursor: pointer; font-size: 13px; font-weight: 400; color: #888; transition: all 0.15s; font-family: inherit; }
+  .tab-btn:hover { color: #333; }
+  .tab-btn.active { border-bottom-color: #378ADD; color: #111; font-weight: 500; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .channel-card { background: #fff; border: 1px solid #e8e5de; border-radius: 12px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+  .card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+  .card-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .card-title { font-size: 14px; font-weight: 600; color: #111; }
+  .card-range { font-size: 11px; color: #aaa; margin-left: auto; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat-box { background: #f8f7f4; border-radius: 8px; padding: 10px 12px; }
+  .stat-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+  .stat-val { font-size: 20px; font-weight: 600; color: #111; line-height: 1; }
+  .chart-section { background: #fff; border: 1px solid #e8e5de; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+  .chart-label { font-size: 12px; color: #888; margin-bottom: 12px; font-weight: 500; letter-spacing: 0.02em; }
+  .chart-wrap { position: relative; height: 200px; }
+  .inline-legend { display: flex; gap: 16px; margin-bottom: 16px; }
+  .slider-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; background: #fff; padding: 14px 18px; border-radius: 10px; border: 1px solid #e8e5de; }
+  .slider-row label { font-size: 13px; color: #666; }
+  .slider-row input[type=range] { width: 120px; accent-color: #378ADD; }
+  .slider-val { font-size: 14px; font-weight: 600; color: #111; }
+  .top-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+  .top-card { background: #fff; border: 1px solid #e8e5de; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+  .top-card-header { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
+  .top-card-title { font-size: 13px; font-weight: 600; color: #111; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div id="loading-msg"><span id="loading-spinner"></span>資料載入中…</div>
+  <div id="error-msg">
+    <span id="error-text"></span>
+    <button onclick="loadData()">重試</button>
+  </div>
+
+  <div id="dashboard">
+    <div class="header">
+      <h1>YouTube 頻道數據儀表板</h1>
+      <div class="legend">
+        <div class="legend-item"><div class="dot" style="background:#378ADD;"></div><span id="legend-a">頻道 A</span></div>
+        <div class="legend-item"><div class="dot" style="background:#D85A30;"></div><span id="legend-b">頻道 B</span></div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button id="btn-overview"   class="tab-btn active" onclick="switchTab('overview',this)">總覽</button>
+      <button id="btn-monthly"    class="tab-btn"        onclick="switchTab('monthly',this)">每月數據</button>
+      <button id="btn-engagement" class="tab-btn"        onclick="switchTab('engagement',this)">觀眾互動</button>
+      <button id="btn-commenters" class="tab-btn"        onclick="switchTab('commenters',this)">留言排行</button>
+    </div>
+
+    <!-- 總覽 -->
+    <div id="panel-overview" class="panel active">
+      <div class="cards-grid">
+        <div class="channel-card" style="border-top:3px solid #378ADD;">
+          <div class="card-header">
+            <div class="card-dot" style="background:#378ADD;"></div>
+            <span id="card-title-a" class="card-title">頻道 A</span>
+            <span id="card-range-a" class="card-range">—</span>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-box"><div class="stat-label">總發片數</div><div id="sa-uploads"  class="stat-val">—</div></div>
+            <div class="stat-box"><div class="stat-label">總觀看數</div><div id="sa-views"    class="stat-val">—</div></div>
+            <div class="stat-box"><div class="stat-label">均觀看 / 片</div><div id="sa-avgv"  class="stat-val">—</div></div>
+            <div class="stat-box"><div class="stat-label">總留言數</div><div id="sa-comments" class="stat-val">—</div></div>
+            <div class="stat-box"><div class="stat-label">均留言 / 片</div><div id="sa-avgc"  class="stat-val">—</div></div>
+            <div class="stat-box"><div class="stat-label">讚 / 留比</div><div id="sa-liker"   class="stat-val">—</div></div>
+          </div>
+        </div>
+        <div class="channel-card" style="border-top:3px solid #D85A30;">
+          <div class="card-header">
+            <div class="card-dot" style="background:#D85A30;"></div>
+            <span id="card-title-b" class="card-title">頻道 B</span>
+            <span id="card-range-b" class="card-range">—</span>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-box"><div class="stat-label">總發片數</div><div id="sb-uploads"  class="stat-val">—</div></div>
+            <div class="stat-box"><div class="stat-label">總觀看數</div><div id="sb-views"    class="stat-val">—</div></div>
+            <div class="stat-box"><div class="stat-label">均觀看 / 片</div><div id="sb-avgv"  class="stat-val">—</div></div>
+            <div class="stat-box"><div class="stat-label">總留言數</div><div id="sb-comments" class="stat-val">—</div></div>
+            <div class="stat-box"><div class="stat-label">均留言 / 片</div><div id="sb-avgc"  class="stat-val">—</div></div>
+            <div class="stat-box"><div class="stat-label">讚 / 留比</div><div id="sb-liker"   class="stat-val">—</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 每月數據 -->
+    <div id="panel-monthly" class="panel">
+      <div class="inline-legend">
+        <div class="legend-item"><div class="dot" style="background:#378ADD;"></div><span id="ml-a">頻道 A</span></div>
+        <div class="legend-item"><div class="dot" style="background:#D85A30;"></div><span id="ml-b">頻道 B</span></div>
+      </div>
+      <div class="chart-section">
+        <div class="chart-label">每月發片量</div>
+        <div class="chart-wrap"><canvas id="chart-uploads"></canvas></div>
+      </div>
+      <div class="chart-section">
+        <div class="chart-label">每月平均觀看數（每片）</div>
+        <div class="chart-wrap"><canvas id="chart-avgv"></canvas></div>
+      </div>
+    </div>
+
+    <!-- 觀眾互動 -->
+    <div id="panel-engagement" class="panel">
+      <div class="inline-legend">
+        <div class="legend-item"><div class="dot" style="background:#378ADD;"></div><span id="el-a">頻道 A</span></div>
+        <div class="legend-item"><div class="dot" style="background:#D85A30;"></div><span id="el-b">頻道 B</span></div>
+      </div>
+      <div class="chart-section">
+        <div class="chart-label">每月平均留言數（每片）</div>
+        <div class="chart-wrap"><canvas id="chart-avgc"></canvas></div>
+      </div>
+      <div class="chart-section">
+        <div class="chart-label">按讚 / 留言比（讚數 ÷ 留言數）</div>
+        <div class="chart-wrap"><canvas id="chart-liker"></canvas></div>
+      </div>
+    </div>
+
+    <!-- 留言排行 -->
+    <div id="panel-commenters" class="panel">
+      <div class="slider-row">
+        <label>顯示前</label>
+        <input type="range" id="slider-n" min="3" max="10" value="5" step="1" oninput="updateTopN()">
+        <span class="slider-val"><span id="n-val">5</span> 名觀眾</span>
+      </div>
+      <div class="top-grid">
+        <div class="top-card">
+          <div class="top-card-header"><div class="dot" style="background:#378ADD;"></div><span id="top-title-a" class="top-card-title">頻道 A 留言排行</span></div>
+          <div id="wrap-ta" style="position:relative;height:280px;"><canvas id="chart-ta"></canvas></div>
+        </div>
+        <div class="top-card">
+          <div class="top-card-header"><div class="dot" style="background:#D85A30;"></div><span id="top-title-b" class="top-card-title">頻道 B 留言排行</span></div>
+          <div id="wrap-tb" style="position:relative;height:280px;"><canvas id="chart-tb"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /#dashboard -->
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ══════════════════════════════════════════════
+// ① 設定區：只需改這裡
+// ══════════════════════════════════════════════
+const CONFIG = {
+  API_BASE:      'http://localhost:8000',
+  CHANNEL1_ID:   'UC9i2Qgd5lizhVgJrdnxunKw',
+  CHANNEL2_ID:   'UCa2YiSXNTkmOA-QTKdzzbSQ',
+  CHANNEL1_NAME: '千千進食中',
+  CHANNEL2_NAME: 'HowHow吃播',
+};
+
+// ══════════════════════════════════════════════
+// ② 全域資料
+// ══════════════════════════════════════════════
+let gMonths = [], gCA = {}, gCB = {};
+
+// ══════════════════════════════════════════════
+// ③ 主流程：同時打兩支 API
+// ══════════════════════════════════════════════
+async function loadData() {
+  setLoading(true);
+  setError(null);
+  const { API_BASE, CHANNEL1_ID, CHANNEL2_ID } = CONFIG;
+  const qs = `channel1_id=${CHANNEL1_ID}&channel2_id=${CHANNEL2_ID}`;
+  try {
+    const [ovRes, cmRes] = await Promise.all([
+      fetch(`${API_BASE}/api/overview?${qs}`),
+      fetch(`${API_BASE}/api/top_commenters?${qs}&top_n=10`)
+    ]);
+    if (!ovRes.ok) throw new Error(`overview 回傳 ${ovRes.status}`);
+    if (!cmRes.ok) throw new Error(`top_commenters 回傳 ${cmRes.status}`);
+
+    const ov = await ovRes.json();
+    const cm = await cmRes.json();
+
+    gMonths = ov.months;   // ["2024-01", "2024-02", ...]
+    const d1 = ov[CHANNEL1_ID];
+    const d2 = ov[CHANNEL2_ID];
+
+    // 讚/留比逐月計算（留言為 0 時補 0）
+    const likeRatio = (likes, comments) =>
+      likes.map((l, i) => comments[i] ? +(l / comments[i]).toFixed(2) : 0);
+
+    gCA = {
+      uploads:       d1.video_counts,
+      avgViews:      d1.avg_views,
+      avgComments:   d1.avg_comments,
+      likeRatio:     likeRatio(d1.avg_likes, d1.avg_comments),
+      totalViews:    d1.total_views,
+      totalComments: d1.total_comments,
+      top: cm[CHANNEL1_ID].names.map((n, i) => ({ n, v: cm[CHANNEL1_ID].counts[i] }))
+    };
+    gCB = {
+      uploads:       d2.video_counts,
+      avgViews:      d2.avg_views,
+      avgComments:   d2.avg_comments,
+      likeRatio:     likeRatio(d2.avg_likes, d2.avg_comments),
+      totalViews:    d2.total_views,
+      totalComments: d2.total_comments,
+      top: cm[CHANNEL2_ID].names.map((n, i) => ({ n, v: cm[CHANNEL2_ID].counts[i] }))
+    };
+
+    initDashboard();
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+// ══════════════════════════════════════════════
+// ④ 初始化儀表板
+// ══════════════════════════════════════════════
+function initDashboard() {
+  const { CHANNEL1_NAME: nA, CHANNEL2_NAME: nB } = CONFIG;
+
+  // 頻道名稱
+  [['legend-a','ml-a','el-a'], ['legend-b','ml-b','el-b']].forEach(([...ids], idx) => {
+    const name = idx === 0 ? nA : nB;
+    ids.forEach(id => fill(id, name));
+  });
+  fill('card-title-a', nA);  fill('card-title-b', nB);
+  fill('top-title-a', `${nA} 留言排行`);
+  fill('top-title-b', `${nB} 留言排行`);
+
+  // 資料時間範圍
+  if (gMonths.length) {
+    const range = `${gMonths[0]} ～ ${gMonths[gMonths.length - 1]}`;
+    fill('card-range-a', range);
+    fill('card-range-b', range);
+  }
+
+  // 總覽數字
+  const sA = calcStats(gCA), sB = calcStats(gCB);
+  fill('sa-uploads',  sA.totalUploads);         fill('sb-uploads',  sB.totalUploads);
+  fill('sa-views',    fmt(sA.totalViews));       fill('sb-views',    fmt(sB.totalViews));
+  fill('sa-avgv',     fmt(sA.avgViews));         fill('sb-avgv',     fmt(sB.avgViews));
+  fill('sa-comments', fmt(sA.totalComments));    fill('sb-comments', fmt(sB.totalComments));
+  fill('sa-avgc',     Math.round(sA.avgComments)); fill('sb-avgc', Math.round(sB.avgComments));
+  fill('sa-liker',    sA.avgLikeRatio.toFixed(2) + ':1');
+  fill('sb-liker',    sB.avgLikeRatio.toFixed(2) + ':1');
+
+  // 顯示儀表板、重置已繪圖旗標
+  document.getElementById('dashboard').style.display = 'block';
+  Object.keys(chartDone).forEach(k => delete chartDone[k]);
+  switchTab('overview', document.getElementById('btn-overview'));
+}
+
+// ══════════════════════════════════════════════
+// ⑤ 工具函式
+// ══════════════════════════════════════════════
+function fmt(n) {
+  if (n == null) return '—';
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+  if (n >= 1_000)     return (n / 1_000).toFixed(0) + 'K';
+  return Math.round(n) + '';
+}
+function avg(a) { return a.length ? a.reduce((s, v) => s + (v || 0), 0) / a.length : 0; }
+function fill(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
+
+function calcStats(c) {
+  return {
+    totalUploads:  c.uploads.reduce((a, b) => a + (b || 0), 0),
+    // 優先用 API 給的 total_views / total_comments（直接加總各月）
+    totalViews:    c.totalViews
+      ? c.totalViews.reduce((a, b) => a + (b || 0), 0)
+      : c.uploads.reduce((s, v, i) => s + v * (c.avgViews[i] || 0), 0),
+    totalComments: c.totalComments
+      ? c.totalComments.reduce((a, b) => a + (b || 0), 0)
+      : c.uploads.reduce((s, v, i) => s + v * (c.avgComments[i] || 0), 0),
+    avgViews:      avg(c.avgViews),
+    avgComments:   avg(c.avgComments),
+    avgLikeRatio:  avg(c.likeRatio),
+  };
+}
+
+// "2024-01" → "1月"（x 軸標籤較簡潔）
+function monthLabels() {
+  return gMonths.map(m => {
+    const p = m.split('-');
+    return p.length === 2 ? `${parseInt(p[1])}月` : m;
+  });
+}
+
+// ══════════════════════════════════════════════
+// ⑥ UI 狀態
+// ══════════════════════════════════════════════
+function setLoading(on) {
+  document.getElementById('loading-msg').style.display = on ? 'block' : 'none';
+}
+function setError(msg) {
+  const el = document.getElementById('error-msg');
+  if (msg) {
+    document.getElementById('error-text').textContent = '載入失敗：' + msg;
+    el.style.display = 'block';
+    document.getElementById('dashboard').style.display = 'none';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+// ══════════════════════════════════════════════
+// ⑦ Tab 切換
+// ══════════════════════════════════════════════
+const chartDone = {};
+function switchTab(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (!chartDone[id]) {
+    chartDone[id] = true;
+    if (id === 'monthly')    initMonthly();
+    if (id === 'engagement') initEngagement();
+    if (id === 'commenters') updateTopN();
+  }
+}
+
+// ══════════════════════════════════════════════
+// ⑧ Chart.js 圖表
+// ══════════════════════════════════════════════
+const tc = '#999', gc = 'rgba(0,0,0,0.07)', ytc = '#444';
+const xO = { grid: { color: gc }, ticks: { font: { size: 11 }, color: tc, autoSkip: false, maxRotation: 45 } };
+const yO = { grid: { color: gc }, ticks: { font: { size: 11 }, color: tc } };
+
+function initMonthly() {
+  const labels = monthLabels();
+  new Chart(document.getElementById('chart-uploads'), {
+    type: 'bar',
+    data: { labels, datasets: [
+      { label: CONFIG.CHANNEL1_NAME, data: gCA.uploads, backgroundColor: '#378ADD', borderRadius: 4 },
+      { label: CONFIG.CHANNEL2_NAME, data: gCB.uploads, backgroundColor: '#D85A30', borderRadius: 4 }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: xO, y: { ...yO, title: { display: true, text: '影片數', color: tc, font: { size: 11 } } } } }
+  });
+  new Chart(document.getElementById('chart-avgv'), {
+    type: 'line',
+    data: { labels, datasets: [
+      { label: CONFIG.CHANNEL1_NAME, data: gCA.avgViews, borderColor: '#378ADD', backgroundColor: 'rgba(55,138,221,0.1)', tension: 0.3, fill: true, pointRadius: 3, borderWidth: 2 },
+      { label: CONFIG.CHANNEL2_NAME, data: gCB.avgViews, borderColor: '#D85A30', backgroundColor: 'rgba(216,90,48,0.1)',  tension: 0.3, fill: true, pointRadius: 3, borderWidth: 2 }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: xO, y: { ...yO, ticks: { ...yO.ticks, callback: v => fmt(v) } } } }
+  });
+}
+
+function initEngagement() {
+  const labels = monthLabels();
+  new Chart(document.getElementById('chart-avgc'), {
+    type: 'line',
+    data: { labels, datasets: [
+      { label: CONFIG.CHANNEL1_NAME, data: gCA.avgComments, borderColor: '#378ADD', backgroundColor: 'rgba(55,138,221,0.1)', tension: 0.3, fill: true, pointRadius: 3, borderWidth: 2 },
+      { label: CONFIG.CHANNEL2_NAME, data: gCB.avgComments, borderColor: '#D85A30', backgroundColor: 'rgba(216,90,48,0.1)',  tension: 0.3, fill: true, pointRadius: 3, borderWidth: 2 }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } }, scales: { x: xO, y: yO } }
+  });
+  new Chart(document.getElementById('chart-liker'), {
+    type: 'line',
+    data: { labels, datasets: [
+      { label: CONFIG.CHANNEL1_NAME, data: gCA.likeRatio, borderColor: '#378ADD', backgroundColor: 'rgba(55,138,221,0.08)', tension: 0.3, fill: true, pointRadius: 3, borderWidth: 2 },
+      { label: CONFIG.CHANNEL2_NAME, data: gCB.likeRatio, borderColor: '#D85A30', backgroundColor: 'rgba(216,90,48,0.08)', tension: 0.3, fill: true, pointRadius: 3, borderWidth: 2 }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: xO, y: { ...yO, ticks: { ...yO.ticks, callback: v => v.toFixed(1) + ':1' } } } }
+  });
+}
+
+let cTA, cTB;
+function updateTopN() {
+  const n = parseInt(document.getElementById('slider-n').value);
+  document.getElementById('n-val').textContent = n;
+  const h = n * 44 + 60;
+  document.getElementById('wrap-ta').style.height = h + 'px';
+  document.getElementById('wrap-tb').style.height = h + 'px';
+  if (cTA) cTA.destroy();
+  if (cTB) cTB.destroy();
+  const tA = gCA.top.slice(0, n), tB = gCB.top.slice(0, n);
+  const opts = {
+    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: gc }, ticks: { font: { size: 11 }, color: tc } },
+      y: { grid: { display: false }, ticks: { font: { size: 12 }, color: ytc } }
+    }
+  };
+  cTA = new Chart(document.getElementById('chart-ta'), {
+    type: 'bar',
+    data: { labels: tA.map(c => c.n), datasets: [{ data: tA.map(c => c.v), backgroundColor: 'rgba(55,138,221,0.85)', borderRadius: 3 }] },
+    options: opts
+  });
+  cTB = new Chart(document.getElementById('chart-tb'), {
+    type: 'bar',
+    data: { labels: tB.map(c => c.n), datasets: [{ data: tB.map(c => c.v), backgroundColor: 'rgba(216,90,48,0.85)', borderRadius: 3 }] },
+    options: opts
+  });
+}
+
+// ══════════════════════════════════════════════
+// ⑨ 啟動
+// ══════════════════════════════════════════════
+loadData();
+</script>
+</body>
+</html>
