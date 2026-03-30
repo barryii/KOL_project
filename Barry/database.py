@@ -12,9 +12,19 @@ class DBManager:
             'password': os.getenv('KOL_DB_PW'),
             'database': 'db_kol'
         }
+        self.config_backup = {
+            'host': '136.113.125.99',
+            'user': 'nick',
+            'password': os.getenv('KOL_DB_PW_BACKUP'),
+            'database': 'db_kol'
+        }
     
     def connect_to_db(self):
-        return mysql_connect(**self.config)
+        try:
+            return mysql_connect(**self.config)
+        except Exception as e:
+            print(f'主資料庫連線失敗 ({e})，正在嘗試切換至備用庫...')
+            return mysql_connect(**self.config_backup)
 
     def save_channel_data(self, channel_id: str, channel_name: str, subscriber_count: int, view_count: int) -> None:
         """
