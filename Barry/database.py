@@ -124,8 +124,9 @@ class DBManager:
         text_content TEXT,
         like_count INT,
         reply_count INT,
-        sentiment VARCHAR(20), # 這兩項留給AI填
-        topic_tag VARCHAR(50),
+        sentiment VARCHAR(20), # 留給AI填
+        sentiment_score INT, # 留給AI填
+        topic_tag VARCHAR(50), # 留給AI填
         published_at DATETIME,
         FOREIGN KEY (video_id) REFERENCES videos(video_id) ON DELETE CASCADE
         """

@@ -44,6 +44,7 @@ table_queries = [
         like_count INT,
         reply_count INT,
         sentiment VARCHAR(20),
+        sentiment_score INT,
         topic_tag VARCHAR(50),
         published_at DATETIME,
         INDEX idx_new_video_id (video_id),
