@@ -206,7 +206,7 @@ def get_top_commenters_by_likes(
                     "names": [row['author_name'] for row in channel1_results],
                     "total_likes": [int(row['total_likes'] or 0) for row in channel1_results],
                     "comment_counts": [row['comment_count'] for row in channel1_results],
-                    "details": channel1_results 
+                    "details": channel1_results
                 },
                 channel2_id: {
                     "names": [row['author_name'] for row in channel2_results],
@@ -217,4 +217,53 @@ def get_top_commenters_by_likes(
             }
     finally:
         conn.close()
+
+# http://localhost:8000/api/top_videos?channel1_id=UC9i2Qgd5lizhVgJrdnxunKw&channel2_id=UCa2YiSXNTkmOA-QTKdzzbSQ
+@app.get("/api/top_videos")
+def get_top_videos(
+    channel1_id: str = Query(..., description="第一個頻道的 ID"),
+    channel2_id: str = Query(..., description="第二個頻道的 ID"),
+    top_n: int = Query(5, description="取歷史表現最好 (最高觀看) 的前 N 部影片")
+):
+    conn = DBManager().connect_to_db()
+    try:
+        with conn.cursor(dictionary=True) as cursor:
+            # 依觀看數排序影片
+            sql = """
+                SELECT 
+                    channel_id,
+                    video_id,
+                    title,
+                    view_count,
+                    like_count,
+                    comment_count,
+                    DATE_FORMAT(published_at, '%%Y-%%m-%%d') AS published_date
+                FROM videos
+                WHERE channel_id = %s
+                ORDER BY view_count DESC
+                LIMIT %s
+            """
+            
+            cursor.execute(sql, (channel1_id, top_n))
+            channel1_results = cursor.fetchall()
+            
+            cursor.execute(sql, (channel2_id, top_n))
+            channel2_results = cursor.fetchall()
+            
+            return {
+                channel1_id: channel1_results,
+                channel2_id: channel2_results
+            }
+    finally:
+        conn.close()
+
+# http://localhost:8000/api/channel_info
+@app.get("/api/channel_info")
+def get_channel_info():
+    c1 = Chienseating()
+    c2 = HowHowEat()
+    return {
+        c1.channel_id: c1.channel_display_name,
+        c2.channel_id: c2.channel_display_name
+    }
 
