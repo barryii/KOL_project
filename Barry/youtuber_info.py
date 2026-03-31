@@ -1,5 +1,8 @@
 class Chienseating:
 	@property
+	def channel_display_name(self) -> str:
+		return '千千進食中'
+	@property
 	def channel_name(self) -> str:
 		return 'Chienseating'
 	@property
@@ -16,6 +19,9 @@ class Chienseating:
 		return 'UULV' + self.channel_id[2:]
 
 class HowHowEat:
+	@property
+	def channel_display_name(self) -> str:
+		return '吃貨豪豪HowHowEat'
 	@property
 	def channel_name(self) -> str:
 		return 'HowHowEat'
