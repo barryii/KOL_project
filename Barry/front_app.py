@@ -48,8 +48,7 @@ def get_channel_overview(
     channel2_id: str = Query(..., description="第二個頻道的 ID"),
     # video_type: str = Query(..., description="影片類型")
 ):
-    conn = DBManager().connect_to_db()
-    try:
+    with DBManager().connect_to_db() as conn:
         with conn.cursor(dictionary=True) as cursor:
             # 撈取每月發片量與平均觀看數
             sql = """
@@ -114,8 +113,6 @@ def get_channel_overview(
                     processed_data[c_id]["total_comments"].append(month_data["total_comments"])
 
             return processed_data
-    finally:
-        conn.close()
 
 # http://localhost:8000/api/top_commenters?channel1_id=UC9i2Qgd5lizhVgJrdnxunKw&channel2_id=UCa2YiSXNTkmOA-QTKdzzbSQ
 @app.get("/api/top_commenters")
@@ -124,8 +121,7 @@ def get_top_commenters(
     channel2_id: str = Query(..., description="第二個頻道的 ID"),
     top_n: int = Query(10, description="取前 N 名活躍觀眾") # 預設抓前 10 名
 ):
-    conn = DBManager().connect_to_db()
-    try:
+    with DBManager().connect_to_db() as conn:
         with conn.cursor(dictionary=True) as cursor:
             # SQL 邏輯：依 author_id 分組計算留言數，降冪排序後取前 N 筆
             # 使用 MAX(author_name) 是為了解決同一 author_id 可能有改過名字的問題
@@ -165,8 +161,6 @@ def get_top_commenters(
                     "details": channel2_results
                 }
             }
-    finally:
-        conn.close()
 
 # http://localhost:8000/api/top_commenters_by_likes?channel1_id=UC9i2Qgd5lizhVgJrdnxunKw&channel2_id=UCa2YiSXNTkmOA-QTKdzzbSQ
 @app.get("/api/top_commenters_by_likes")
@@ -175,8 +169,7 @@ def get_top_commenters_by_likes(
     channel2_id: str = Query(..., description="第二個頻道的 ID"),
     top_n: int = Query(20, description="取前 N 名獲讚最多的觀眾"),
 ):
-    conn = DBManager().connect_to_db()
-    try:
+    with DBManager().connect_to_db() as conn:
         with conn.cursor(dictionary=True) as cursor:
             # SQL 邏輯：加入 SUM(like_count) 計算總按讚數，並以此作為主要排序依據
             # 若按讚數相同，則以留言數較多者優先 (ORDER BY total_likes DESC, comment_count DESC)
@@ -215,8 +208,6 @@ def get_top_commenters_by_likes(
                     "details": channel2_results
                 }
             }
-    finally:
-        conn.close()
 
 # http://localhost:8000/api/top_videos?channel1_id=UC9i2Qgd5lizhVgJrdnxunKw&channel2_id=UCa2YiSXNTkmOA-QTKdzzbSQ
 @app.get("/api/top_videos")
@@ -225,8 +216,7 @@ def get_top_videos(
     channel2_id: str = Query(..., description="第二個頻道的 ID"),
     top_n: int = Query(5, description="取歷史表現最好 (最高觀看) 的前 N 部影片")
 ):
-    conn = DBManager().connect_to_db()
-    try:
+    with DBManager().connect_to_db() as conn:
         with conn.cursor(dictionary=True) as cursor:
             # 依觀看數排序影片
             sql = """
@@ -254,8 +244,6 @@ def get_top_videos(
                 channel1_id: channel1_results,
                 channel2_id: channel2_results
             }
-    finally:
-        conn.close()
 
 # http://localhost:8000/api/channel_info
 @app.get("/api/channel_info")
