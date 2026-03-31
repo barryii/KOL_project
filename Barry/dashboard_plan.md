@@ -1,35 +1,25 @@
-# Dashboard UX 改版計畫 (Sidebar 與分頁切換)
+# Dashboard 堆疊直條圖與版面優化計畫
 
-根據您的最新需求，我們將進一步向 `front.html` 的完整版面靠攏，並解決「畫面太長、全部擠在一起」的問題。
+根據您的最新回覆，我們將捨棄「單點切換只看一種」的做法，而是直接將三種影片類型（一般影片、Shorts 短片、直播）**同時呈現在直條圖上（堆疊長條圖 Stacked Bar Chart）**，讓您可以一眼看出它們對流量與觀看數的「比例貢獻」。
+
+## Proposed Changes
+
+### [MODIFY] `youtuber_comparison_dashboard.html`
+- **版面全寬 (Full Width)**：將首頁最下方兩張主圖表（每月總觀看、每月平均觀看）的外層網格改為 `grid-cols-1`，讓每一張大圖表都能霸佔一整個橫排，提升視覺壯闊感。
+- **堆疊直條圖 (Stacked Bar Chart) 實作**：
+  - 將各大直條圖（以及最上方的四大張迷你卡片直條圖中的「總數分析」）升級為 **「堆疊比例圖」**。
+  - 圖表上將同時疊加 `Video (深色)`、`Shorts (亮色)`、`Stream (特別色)`，滑鼠放上去時能看見各自類型的貢獻數字。
+
+### [MODIFY] `front_app.py`
+為了讓前端能畫出三種比例，我必須將後端主要計算數據的引擎升級。
+- **改寫 `/api/overview` 結構**：
+  原本 SQL 只有 `GROUP BY channel_id, month`，我會擴充為 `GROUP BY channel_id, type, month`。
+  JSON 格式將會分支出 `video`, `shorts`, `stream` 三個維度，將三個種類的數據平行傳送給前端畫圖。
 
 ## User Review Required
 
 > [!IMPORTANT]
-> 請確認以下重構計畫是否符合您的期待：
-> 1. **移除手動輸入框**：我會將頂部的「Channel ID 搜尋框」與「開始分析」按鈕全部移除，並將頻道 ID 寫死在背景自動載入，讓畫面更清爽。
-> 2. **引入側邊欄 (SideNavBar)**：我會將 `front.html` 左側的黑色導覽列 (Dashboard, Channels, Content... 等目錄) 完整移植過來。
-> 3. **實作「分頁切換」功能 (解決全擠在同一頁的問題)**：我會讓左側的側邊選單具備切換功能，將目前的圖表與資料拆分成三個不同的畫面 (Tabs)：
->    - 📊 **Dashboard (數據總覽)**：只顯示 4 張總覽卡片與觀看數走勢圖。
->    - 👥 **Audience (粉絲互動)**：只顯示按讚/留言互動圖表與「Top 10 鐵粉留言者」。
->    - 🎬 **Content (內容表現)**：只顯示發片頻率圖表與「Top 5 熱門影片清單」。
-> 這樣可以確保不會把所有圖表跟表格硬塞在同一個捲動視窗中！
+> - **關於總覽迷你圖**：最上面那 4 張總覽小直條圖（累積觀看、平均觀看、總互動、互動率），因為「累加類 (Sum)」的數據很適合畫堆疊長條圖（看的出 Shorts 佔了總觀看多少比例），但是「平均觀看 (Avg)」和「互動率 (Rate)」從數學上不適合直接相加疊合在一起。因此這兩張平均相關的卡片我會維持目前單一柱狀的顯示形式，可以接受嗎？
+> - **關於資料結構大改**：這將會徹底改變原本 `API` 的傳輸資料格式（從純月份陣列變成巢狀型別物件），前台的 Chart.js 也會被大量重構。如果您後悔了，到時候我們得透過 Git 退版 (Rollback)。
 
-## Proposed Changes
-
-### [MODIFY] [youtuber_comparison_dashboard.html](file:///c:/Users/a5020877/Documents/github/KOL_project/Barry/youtuber_comparison_dashboard.html)
-- **HTML Layout 結構調整**：
-  - 加入 `<aside>` 作為側邊欄，並與 `front.html` 共用相同的類別 (`h-screen w-64 fixed left-0 top-0...`)。
-  - 主內容區加回 `lg:ml-64` 以留出側邊欄空間。
-- **UI 移除**：刪除 Header 中的 `<div class="glass-panel p-4... search form">`。
-- **Javascript 邏輯擴充**：
-  - 進入網頁時自動執行 `fetchAndRenderDashboard()` 取得所有資料。
-  - 新增 `switchTab(tabId)` 函數，透過點擊側邊欄來隱藏/顯示對應區塊 (Dashboard / Audience / Content)。
-
-## Open Questions
-
-> [!QUESTION]
-> 這個「引入側邊欄並透過點擊來切換不同圖表頁面」的作法，就是您所期望的『不要全部都在同個畫面』嗎？確認後我馬上動手改寫！
-
-## Verification Plan
-1. 修改 `youtuber_comparison_dashboard.html` 的 HTML 與 JS。
-2. 讓您重新開啟網頁，測試點擊側邊欄選單是否能順利切換不同的數據頁面。
+請問我們確定要往這個「一眼看透三種類型比例」的方向前進嗎？確認後我就開始大修囉！
