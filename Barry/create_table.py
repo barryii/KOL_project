@@ -29,6 +29,7 @@ table_queries = [
         comment_count INT,
         actual_comment_count INT,
         cluster_label INT,
+        INDEX channel_id ON videos(channel_id),
         INDEX idx_actual_comments ON videos(actual_comment_count),
         FOREIGN KEY (channel_id) REFERENCES channels(channel_id) ON DELETE CASCADE
     )
@@ -52,7 +53,27 @@ table_queries = [
         INDEX idx_new_author_id (author_id),
         FOREIGN KEY (video_id) REFERENCES videos(video_id) ON DELETE CASCADE
     )
+    """,
     """
+    CREATE TABLE IF NOT EXISTS topN_comments (
+        comment_id VARCHAR(50) PRIMARY KEY,
+        video_id VARCHAR(11),
+        channel_id VARCHAR(24),
+        author_id VARCHAR(24),
+        author_name VARCHAR(100),
+        text_content TEXT,
+        like_count INT,
+        reply_count INT,
+        sentiment VARCHAR(20),
+        sentiment_score INT,
+        topic_tag VARCHAR(50),
+        published_at DATETIME,
+        INDEX idx_new_video_id (video_id),
+        INDEX idx_new_channel_id (channel_id),
+        INDEX idx_new_author_id (author_id),
+        FOREIGN KEY (video_id) REFERENCES videos(video_id) ON DELETE CASCADE
+    )
+    """,
 ]
 config = {
     'host': 'dv108.aiturn.fun',
