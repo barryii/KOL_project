@@ -54,6 +54,7 @@ def get_channel_overview(
             sql = """
                 SELECT 
                     v.channel_id,
+                    v.type AS video_type,
                     DATE_FORMAT(v.published_at, '%Y-%m') AS month,
                     COUNT(v.video_id) AS video_count,
                     AVG(v.view_count) AS avg_views,
@@ -64,53 +65,72 @@ def get_channel_overview(
                     SUM(v.comment_count) AS total_comments
                 FROM videos v
                 WHERE v.channel_id IN (%s, %s)
-                GROUP BY v.channel_id, month
+                GROUP BY v.channel_id, v.type, month
                 ORDER BY month ASC
             """
             cursor.execute(sql, (channel1_id, channel2_id))
             results = cursor.fetchall()
-            # 1. 抓出存在的月份並找出頭尾
+            
             existing_months = sorted(list(set(row['month'] for row in results if row['month'])))
-            
-            # 如果沒有任何資料，直接回傳空結構
             if not existing_months:
-                return {"months": [], channel1_id: {"video_counts": [], "avg_views": []}, channel2_id: {"video_counts": [], "avg_views": []}}
+                return {"months": []}
             
-            # 2. 生成連續的月份列表 (解決空月缺漏問題)
             all_months = generate_month_range(existing_months[0], existing_months[-1])
 
-            # 2. 初始化資料結構
-            processed_data = {
-                "months": all_months,
-                channel1_id: {"video_counts": [], "avg_views": [], "total_views": [], "avg_likes": [], "total_likes": [], "avg_comments": [], "total_comments": []},
-                channel2_id: {"video_counts": [], "avg_views": [], "total_views": [], "avg_likes": [], "total_likes": [], "avg_comments": [], "total_comments": []}
-            }
+            processed_data = {"months": all_months}
             
-            # 建立一個查詢字典方便填入資料
-            data_dict = defaultdict(lambda: defaultdict(dict))
+            video_types = ['video', 'shorts', 'stream', 'all']
+            for c_id in [channel1_id, channel2_id]:
+                processed_data[c_id] = {}
+                for vt in video_types:
+                    processed_data[c_id][vt] = {
+                        "video_counts": [], "avg_views": [], "total_views": [], 
+                        "avg_likes": [], "total_likes": [], "avg_comments": [], "total_comments": []
+                    }
+                    
+            # 建立 data_dict[month][c_id][v_type]
+            from collections import defaultdict
+            data_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: {
+                "video_count": 0, "total_views": 0, "total_likes": 0, "total_comments": 0
+            })))
+            
             for row in results:
-                if row['month']:
-                    data_dict[row['month']][row['channel_id']] = {
+                m = row['month']
+                c = row['channel_id']
+                t = row['video_type'] or 'video' # fallback
+                if m:
+                    data_dict[m][c][t] = {
                         "video_count": row['video_count'],
-                        "avg_views": round(row['avg_views'] or 0),
-                        "total_views": row['total_views'],
-                        "avg_likes": round(row['avg_likes'] or 0),
-                        "total_likes": row['total_likes'],
-                        "avg_comments": round(row['avg_comments'] or 0),
-                        "total_comments": row['total_comments']
+                        "total_views": row['total_views'] or 0,
+                        "total_likes": row['total_likes'] or 0,
+                        "total_comments": row['total_comments'] or 0
                     }
 
-            # 3. 確保每個月份都有數據 (若該月沒發片則補 0)
             for m in all_months:
                 for c_id in [channel1_id, channel2_id]:
-                    month_data = data_dict[m].get(c_id, {"video_count": 0, "avg_views": 0, "total_views": 0, "avg_likes": 0, "total_likes": 0, "avg_comments": 0, "total_comments": 0})
-                    processed_data[c_id]["video_counts"].append(month_data["video_count"])
-                    processed_data[c_id]["avg_views"].append(month_data["avg_views"])
-                    processed_data[c_id]["total_views"].append(month_data["total_views"])
-                    processed_data[c_id]["avg_likes"].append(month_data["avg_likes"])
-                    processed_data[c_id]["total_likes"].append(month_data["total_likes"])
-                    processed_data[c_id]["avg_comments"].append(month_data["avg_comments"])
-                    processed_data[c_id]["total_comments"].append(month_data["total_comments"])
+                    # 計算 'all' 總和
+                    total_v = sum(data_dict[m][c_id][t]["video_count"] for t in ['video', 'shorts', 'stream'])
+                    total_views = sum(data_dict[m][c_id][t]["total_views"] for t in ['video', 'shorts', 'stream'])
+                    total_likes = sum(data_dict[m][c_id][t]["total_likes"] for t in ['video', 'shorts', 'stream'])
+                    total_comments = sum(data_dict[m][c_id][t]["total_comments"] for t in ['video', 'shorts', 'stream'])
+                    
+                    data_dict[m][c_id]['all'] = {
+                        "video_count": total_v, "total_views": total_views, 
+                        "total_likes": total_likes, "total_comments": total_comments
+                    }
+                    
+                    for vt in video_types:
+                        vd = data_dict[m][c_id][vt]
+                        vc = vd["video_count"]
+                        processed_data[c_id][vt]["video_counts"].append(vc)
+                        processed_data[c_id][vt]["total_views"].append(vd["total_views"])
+                        processed_data[c_id][vt]["total_likes"].append(vd["total_likes"])
+                        processed_data[c_id][vt]["total_comments"].append(vd["total_comments"])
+                        
+                        # 計算平均
+                        processed_data[c_id][vt]["avg_views"].append(round(vd["total_views"] / vc) if vc > 0 else 0)
+                        processed_data[c_id][vt]["avg_likes"].append(round(vd["total_likes"] / vc) if vc > 0 else 0)
+                        processed_data[c_id][vt]["avg_comments"].append(round(vd["total_comments"] / vc) if vc > 0 else 0)
 
             return processed_data
 
