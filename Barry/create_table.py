@@ -56,22 +56,13 @@ table_queries = [
     """,
     """
     CREATE TABLE IF NOT EXISTS topN_comments (
-        comment_id VARCHAR(50) PRIMARY KEY,
-        video_id VARCHAR(11),
         channel_id VARCHAR(24),
         author_id VARCHAR(24),
         author_name VARCHAR(100),
-        text_content TEXT,
-        like_count INT,
-        reply_count INT,
-        sentiment VARCHAR(20),
-        sentiment_score INT,
-        topic_tag VARCHAR(50),
-        published_at DATETIME,
-        INDEX idx_new_video_id (video_id),
-        INDEX idx_new_channel_id (channel_id),
-        INDEX idx_new_author_id (author_id),
-        FOREIGN KEY (video_id) REFERENCES videos(video_id) ON DELETE CASCADE
+        comment_count INT,               -- 總留言數量
+        total_likes INT,                 -- 獲得的總讚數
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- 記錄更新時間
+        PRIMARY KEY (channel_id, author_id)  -- 將這兩個欄位設為複合主鍵！
     )
     """,
 ]
