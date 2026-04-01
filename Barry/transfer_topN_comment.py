@@ -1,8 +1,8 @@
 from youtuber_info import Chienseating, HowHowEat
 from database import DBManager
 
-with DBManager().connect_to_db() as conn:
-    with conn.cursor() as cursor:
+with DBManager().connect_to_db() as connection:
+    with connection.cursor() as cursor:
         N = 1100
         # 單純以留言數排序的前N名
         sql = """

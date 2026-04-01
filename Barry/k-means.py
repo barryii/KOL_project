@@ -22,7 +22,7 @@ plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei']
 plt.rcParams['axes.unicode_minus'] = False # 解決負號顯示問題
 
 def preview_kmeans_results(channel: Chienseating | HowHowEat, video_type: str = VideoType.VIDEO.value):
-    conn = mysql.connector.connect(
+    connection = mysql.connector.connect(
         host='dv108.aiturn.fun',
         user='barry',
         password=os.getenv('KOL_DB_PW'),
@@ -34,8 +34,8 @@ def preview_kmeans_results(channel: Chienseating | HowHowEat, video_type: str = 
         FROM videos 
         WHERE channel_id = %s and type = %s
     '''
-    df = pd.read_sql(query, conn, params=(channel.channel_id, video_type))
-    conn.close()
+    df = pd.read_sql(query, connection, params=(channel.channel_id, video_type))
+    connection.close()
     
     if df.empty:
         print('資料庫中沒有可用的影片資料。')

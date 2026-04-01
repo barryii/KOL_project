@@ -20,7 +20,7 @@ plt.rcParams['ytick.color'] = 'white'
 def run_prophet_forecasting(channel: Chienseating | HowHowEat, video_type: str = VideoType.VIDEO.value):
     # 1. 撈取資料
     print("1. 正在從資料庫撈取時間與觀看數據...")
-    conn = mysql.connector.connect(
+    connection = mysql.connector.connect(
         host='dv108.aiturn.fun', user='barry',
         password=os.getenv('KOL_DB_PW'), database='db_kol'
     )
@@ -30,8 +30,8 @@ def run_prophet_forecasting(channel: Chienseating | HowHowEat, video_type: str =
         FROM videos 
         WHERE channel_id = %s and type = %s
     """
-    df = pd.read_sql(query, conn, params=(channel.channel_id, video_type))
-    conn.close()
+    df = pd.read_sql(query, connection, params=(channel.channel_id, video_type))
+    connection.close()
 
     if df.empty:
         print("沒有足夠的資料可以進行預測。")

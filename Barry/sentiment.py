@@ -18,8 +18,8 @@ sentiment_pipeline = pipeline(
 # model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 
 try:
-    with DBManager().connect_to_db() as conn:
-        with conn.cursor(dictionary=True) as cursor:
+    with DBManager().connect_to_db() as connection:
+        with connection.cursor(dictionary=True) as cursor:
             cursor.execute('SELECT * FROM video_comments WHERE sentiment IS NULL LIMIT 20')
             results = cursor.fetchall()
 except Exception as e:

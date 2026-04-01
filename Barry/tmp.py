@@ -1,8 +1,8 @@
 from youtuber_info import Chienseating, HowHowEat
 from database import DBManager
 
-with DBManager().connect_to_db() as conn:
-    with conn.cursor() as cursor:
+with DBManager().connect_to_db() as connection:
+    with connection.cursor() as cursor:
         for channel in [Chienseating(), HowHowEat()]:
             N = 20
             sql = """

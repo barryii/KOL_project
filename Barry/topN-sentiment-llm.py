@@ -12,8 +12,8 @@ dotenv.load_dotenv()
 
 def data(channel: Chienseating | HowHowEat):
     try:
-        with DBManager().connect_to_db() as conn:
-            with conn.cursor(dictionary=True) as cursor:
+        with DBManager().connect_to_db() as connection:
+            with connection.cursor(dictionary=True) as cursor:
                 sql = """
                     SELECT 
                         t.author_name,       -- 作者名稱
@@ -119,11 +119,11 @@ def process_channel(channel, limit):
         # 寫回 MySQL (已加入 sentiment_score)
         if updates:
             try:
-                with DBManager().connect_to_db() as conn:
-                    with conn.cursor() as cursor:
+                with DBManager().connect_to_db() as connection:
+                    with connection.cursor() as cursor:
                         sql = "UPDATE video_comments SET sentiment = %s, sentiment_score = %s WHERE comment_id = %s"
                         cursor.executemany(sql, updates)
-                        conn.commit()
+                        connection.commit()
             except Exception as e:
                 print(f"[{channel_name}] 寫入資料庫失敗: {e}")
                 
