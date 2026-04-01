@@ -1,10 +1,10 @@
 import os, dotenv
 import pandas as pd
-import mysql.connector
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import mean_absolute_error, r2_score
+from database import DBManager
 from youtuber_info import Chienseating, HowHowEat
 from xgboost import XGBRegressor
 from video_type import VideoType
@@ -23,17 +23,13 @@ plt.rcParams['ytick.color'] = 'white'
 def run_xgboost_with_momentum(channel: Chienseating | HowHowEat, video_type: str = VideoType.VIDEO.value):
     # 1. 撈取資料 (加入 channel_id 以防未來有多個頻道混在一起算錯)
     print("1. 正在從資料庫撈取資料...")
-    connection = mysql.connector.connect(
-        host='dv108.aiturn.fun', user='barry',
-        password=os.getenv('KOL_DB_PW'), database='db_kol'
-    )
-    query = """
-        SELECT channel_id, view_count, published_at, duration_sec
-        FROM videos 
-        WHERE channel_id = %s and type = %s
-    """
-    df = pd.read_sql(query, connection, params=(channel.channel_id, video_type))
-    connection.close()
+    with DBManager().connect_to_db() as connection:
+        query = """
+            SELECT channel_id, view_count, published_at, duration_sec
+            FROM videos 
+            WHERE channel_id = %s and type = %s
+        """
+        df = pd.read_sql(query, connection, params=(channel.channel_id, video_type))
 
     if df.empty:
         print("沒有足夠的資料可以訓練模型。")

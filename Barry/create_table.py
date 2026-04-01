@@ -1,4 +1,4 @@
-from mysql.connector import connect as mysql_connect
+from database import DBManager
 import os
 import dotenv
 
@@ -66,13 +66,7 @@ table_queries = [
     )
     """,
 ]
-config = {
-    'host': 'dv108.aiturn.fun',
-    'user': 'barry',
-    'password': os.getenv('KOL_DB_PW'),
-    'database': 'db_kol'
-}
-with mysql_connect(**config) as connection:
+with DBManager().connect_to_db() as connection:
     with connection.cursor() as cursor:
         for query in table_queries:
             cursor.execute(query)

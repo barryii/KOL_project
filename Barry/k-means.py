@@ -1,6 +1,5 @@
 import os, dotenv
 import pandas as pd
-import mysql.connector
 import matplotlib.pyplot as plt
 import seaborn as sns
 from enum import Enum
@@ -22,21 +21,14 @@ plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei']
 plt.rcParams['axes.unicode_minus'] = False # 解決負號顯示問題
 
 def preview_kmeans_results(channel: Chienseating | HowHowEat, video_type: str = VideoType.VIDEO.value):
-    connection = mysql.connector.connect(
-        host='dv108.aiturn.fun',
-        user='barry',
-        password=os.getenv('KOL_DB_PW'),
-        database='db_kol'
-    )
-    
-    query = '''
-        SELECT video_id, title, view_count, like_count, comment_count 
-        FROM videos 
-        WHERE channel_id = %s and type = %s
-    '''
-    df = pd.read_sql(query, connection, params=(channel.channel_id, video_type))
-    connection.close()
-    
+    with DBManager().connect_to_db() as connection:
+        query = '''
+            SELECT video_id, title, view_count, like_count, comment_count 
+            FROM videos 
+            WHERE channel_id = %s and type = %s
+        '''
+        df = pd.read_sql(query, connection, params=(channel.channel_id, video_type))
+
     if df.empty:
         print('資料庫中沒有可用的影片資料。')
         return

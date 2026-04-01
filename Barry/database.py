@@ -34,7 +34,7 @@ class DBManager:
         total_view_count BIGINT,
         last_updated DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         """
-        with mysql_connect(**self.config) as connection:
+        with self.connect_to_db() as connection:
             with connection.cursor() as cursor:
                 sql = "INSERT INTO channels (channel_id, channel_name, subscriber_count, total_view_count) VALUES (%s, %s, %s, %s)"
                 cursor.execute(sql, (channel_id, channel_name, subscriber_count, view_count))
@@ -62,7 +62,7 @@ class DBManager:
         cluster_label INT, # 不從這存
         FOREIGN KEY (channel_id) REFERENCES channels(channel_id) ON DELETE CASCADE
         """
-        with mysql_connect(**self.config) as connection:
+        with self.connect_to_db() as connection:
             with connection.cursor() as cursor:
                 sql = """
                 INSERT INTO videos (
@@ -96,7 +96,7 @@ class DBManager:
         video_id VARCHAR(11) PRIMARY KEY,
         cluster_label INT
         """
-        with mysql_connect(**self.config) as connection:
+        with self.connect_to_db() as connection:
             with connection.cursor() as cursor:
                 sql = """
                 INSERT INTO videos (
@@ -130,7 +130,7 @@ class DBManager:
         published_at DATETIME,
         FOREIGN KEY (video_id) REFERENCES videos(video_id) ON DELETE CASCADE
         """
-        with mysql_connect(**self.config) as connection:
+        with self.connect_to_db() as connection:
             with connection.cursor() as cursor:
                 sql = """
                 INSERT INTO video_comments (
@@ -167,7 +167,7 @@ class DBManager:
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- 記錄更新時間
         PRIMARY KEY (channel_id, author_id)  -- 將這兩個欄位設為複合主鍵！
         """
-        with mysql_connect(**self.config) as connection:
+        with self.connect_to_db() as connection:
             with connection.cursor() as cursor:
                 sql = """
                 INSERT INTO topN_comments (
@@ -187,7 +187,7 @@ class DBManager:
 
     def save_kol_data(self, kol_name: str, followers: int, engagement_rate: float) -> None:
         """存入 KOL 成效資料"""
-        with mysql_connect(**self.config) as connection:
+        with self.connect_to_db() as connection:
             with connection.cursor() as cursor:
                 sql = "INSERT INTO kol_stats (name, followers, engagement) VALUES (%s, %s, %s)"
                 cursor.execute(sql, (kol_name, followers, engagement_rate))
@@ -195,7 +195,7 @@ class DBManager:
 
     def get_db_videos(self, channel_id: str = None):
         """讀取所有影片清單"""
-        with mysql_connect(**self.config) as connection:
+        with self.connect_to_db() as connection:
             with connection.cursor() as cursor:
                 if channel_id:
                     sql = "SELECT * FROM videos WHERE channel_id = %s"
@@ -207,7 +207,7 @@ class DBManager:
 
     def get_db_video_comments(self, channel_id: str = None):
         """讀取所有影片清單"""
-        with mysql_connect(**self.config) as connection:
+        with self.connect_to_db() as connection:
             with connection.cursor() as cursor:
                 if channel_id:
                     sql = "SELECT * FROM video_comments WHERE channel_id = %s"
@@ -219,7 +219,7 @@ class DBManager:
 
     def get_all_kol(self):
         """讀取所有 KOL 清單"""
-        with mysql_connect(**self.config) as connection:
+        with self.connect_to_db() as connection:
             with connection.cursor() as cursor:
                 sql = "SELECT * FROM kol_stats"
                 cursor.execute(sql)
@@ -231,7 +231,7 @@ class DBManager:
         data: 欲查詢的欄位，預設為*（所有欄位）
         範例: data='video_id, title, view_count'
         """
-        with mysql_connect(**self.config) as connection:
+        with self.connect_to_db() as connection:
             with connection.cursor() as cursor:
                 sql = f"SELECT {data} FROM videos where channel_id = %s"
                 cursor.execute(sql, (channel_id,))

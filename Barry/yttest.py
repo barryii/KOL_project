@@ -127,14 +127,9 @@ part = 'snippet'
 # response = request.execute()
 # print(response)
 
-from mysql.connector import connect as mysql_connect
-config = {
-    'host': 'dv108.aiturn.fun',
-    'user': 'barry',
-    'password': os.getenv('KOL_DB_PW'),
-    'database': 'db_kol'
-}
-with mysql_connect(**config) as connection:
+from database import DBManager
+
+with DBManager().connect_to_db() as connection:
     with connection.cursor(dictionary=True) as cursor:
         cursor.execute('select comment_id from video_comments where author_id is null')
         comment_ids = cursor.fetchall()

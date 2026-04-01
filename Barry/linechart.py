@@ -1,10 +1,10 @@
 import os, dotenv
 import pandas as pd
-import mysql.connector
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from youtuber_info import Chienseating, HowHowEat
 from video_type import VideoType
+from database import DBManager
 
 dotenv.load_dotenv()
 
@@ -24,19 +24,13 @@ plt.rcParams['ytick.color'] = 'white'
 def draw_monthly_trend(channel: Chienseating | HowHowEat, video_type: str = VideoType.VIDEO.value):
     # 1. 撈取資料
     print('正在從資料庫撈取資料...')
-    connection = mysql.connector.connect(
-        host='dv108.aiturn.fun',
-        user='barry',
-        password=os.getenv('KOL_DB_PW'),
-        database='db_kol'
-    )
-    query = '''
-        SELECT published_at, view_count 
-        FROM videos 
-        WHERE channel_id = %s and type = %s
-    '''
-    df = pd.read_sql(query, connection, params=(channel.channel_id, video_type))
-    connection.close()
+    with DBManager().connect_to_db() as connection:
+        query = '''
+            SELECT published_at, view_count 
+            FROM videos 
+            WHERE channel_id = %s and type = %s
+        '''
+        df = pd.read_sql(query, connection, params=(channel.channel_id, video_type))
 
     if df.empty:
         print('沒有資料可以繪圖。')

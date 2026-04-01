@@ -1,7 +1,7 @@
 from keybert import KeyBERT
 from youtuber_info import Chienseating, HowHowEat
+from database import DBManager
 import jieba
-import mysql.connector
 import re, os, dotenv
 
 dotenv.load_dotenv()
@@ -24,53 +24,46 @@ def clean_text(text):
 
 def extract_video_tags(channel_id, limit=10):
     # 連線到資料庫
-    db = mysql.connector.connect(
-        host='dv108.aiturn.fun',
-        user='barry',
-        password=os.getenv('KOL_DB_PW'),
-        database='db_kol'
-    )
-    cursor = db.cursor(dictionary=True)
+    with DBManager().connect_to_db() as connection:
+        cursor = connection.cursor(dictionary=True)
     
-    # 撈取測試用的影片 (先抓 5 筆測試效果)
-    cursor.execute('SELECT video_id, title, description FROM videos WHERE channel_id = %s LIMIT %s', (channel_id, limit))
-    videos = cursor.fetchall()
-    
-    for video in videos:
-        # 3. 組合文字 (標題放兩次增加權重，說明欄只取前 150 字避免雜訊)
-        title = clean_text(video['title'])
-        raw_text = f'{title} {title} {clean_text(video['description'])[:150]}'
-        raw_text = f'{title} {title} {clean_text(video['description'])}'
-        raw_text = title
-        remove_words = ['千千', '進食', '豪豪', 'google', 'map', '超', '千則', '評論']
+        # 撈取測試用的影片 (先抓 5 筆測試效果)
+        cursor.execute('SELECT video_id, title, description FROM videos WHERE channel_id = %s LIMIT %s', (channel_id, limit))
+        videos = cursor.fetchall()
         
-        # 4. 關鍵步驟：使用 jieba 斷詞並用空白連接
-        # 過濾掉長度只有 1 的單字 (如：的、了、是)
-        seg_list = [word for word in jieba.cut(raw_text) if len(word) > 1]
-        spaced_text = ' '.join(seg_list)
-        
-        # 5. 使用 KeyBERT 提取標籤
-        # keyphrase_ngram_range=(1, 2) 代表允許單詞 (大胃王) 或雙詞組合 (大胃王 挑戰)
-        # top_n=5 代表抓取分數最高的前 5 個標籤
-        keywords = kw_model.extract_keywords(
-            spaced_text, 
-            keyphrase_ngram_range=(1, 1), 
-            stop_words=remove_words, 
-            top_n=6,
-            # use_mmr=True,      # 開啟 MMR 多樣性過濾
-            # diversity=0.7      # 多樣性程度 (0.0 到 1.0，數值越高標籤差異越大)
-        )
-        
-        # keywords 的格式會是 [('大胃王', 0.85), ('拉麵', 0.72), ...]
-        # 我們只需要文字部分
-        tags = [kw[0] for kw in keywords]
-        
-        print(f'影片標題: {video['title']}')
-        print(f'原始標籤: {keywords}')
-        print(f'提取標籤: {tags}\n')
-        print('-' * 40)
-        
-    db.close()
+        for video in videos:
+            # 3. 組合文字 (標題放兩次增加權重，說明欄只取前 150 字避免雜訊)
+            title = clean_text(video['title'])
+            raw_text = f'{title} {title} {clean_text(video['description'])[:150]}'
+            raw_text = f'{title} {title} {clean_text(video['description'])}'
+            raw_text = title
+            remove_words = ['千千', '進食', '豪豪', 'google', 'map', '超', '千則', '評論']
+            
+            # 4. 關鍵步驟：使用 jieba 斷詞並用空白連接
+            # 過濾掉長度只有 1 的單字 (如：的、了、是)
+            seg_list = [word for word in jieba.cut(raw_text) if len(word) > 1]
+            spaced_text = ' '.join(seg_list)
+            
+            # 5. 使用 KeyBERT 提取標籤
+            # keyphrase_ngram_range=(1, 2) 代表允許單詞 (大胃王) 或雙詞組合 (大胃王 挑戰)
+            # top_n=5 代表抓取分數最高的前 5 個標籤
+            keywords = kw_model.extract_keywords(
+                spaced_text, 
+                keyphrase_ngram_range=(1, 1), 
+                stop_words=remove_words, 
+                top_n=6,
+                # use_mmr=True,      # 開啟 MMR 多樣性過濾
+                # diversity=0.7      # 多樣性程度 (0.0 到 1.0，數值越高標籤差異越大)
+            )
+            
+            # keywords 的格式會是 [('大胃王', 0.85), ('拉麵', 0.72), ...]
+            # 我們只需要文字部分
+            tags = [kw[0] for kw in keywords]
+            
+            print(f'影片標題: {video['title']}')
+            print(f'原始標籤: {keywords}')
+            print(f'提取標籤: {tags}\n')
+            print('-' * 40)
 
 if __name__ == '__main__':
     extract_video_tags(Chienseating().channel_id, limit=5)

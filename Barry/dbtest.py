@@ -1,4 +1,4 @@
-from mysql.connector import connect as mysql_connect
+from database import DBManager
 from youtuber_info import Chienseating, HowHowEat
 from googleapiclient.discovery import build
 from datetime import datetime
@@ -18,15 +18,10 @@ class DecimalEncoder(json.JSONEncoder):
 
 class DBOps:
     def __init__(self):
-        self.config = {
-            'host': 'dv108.aiturn.fun',
-            'user': 'barry',
-            'password': os.getenv('KOL_DB_PW'),
-            'database': 'db_kol'
-        }
+        pass
 
     def get_video_stats(self, video_type: str='video'):
-        with mysql_connect(**self.config) as connection:
+        with DBManager().connect_to_db() as connection:
             with connection.cursor() as cursor:
                 sql = """
                 SELECT 
@@ -54,7 +49,7 @@ class DBOps:
                     print(f'=' * 20)
 
     def get_comment_stats(self, channel_id: Chienseating | HowHowEat):
-        with mysql_connect(**self.config) as connection:
+        with DBManager().connect_to_db() as connection:
             with connection.cursor() as cursor:
                 sql = """
                 SELECT 
@@ -86,7 +81,7 @@ class DBOps:
                 #     print(f'=' * 20)
 
     def update_vc_channel_id(self):
-        with mysql_connect(**self.config) as connection:
+        with DBManager().connect_to_db() as connection:
             with connection.cursor() as cursor:
                 # while True:
                 #     batch_size = 5000
@@ -159,7 +154,7 @@ class DBOps:
                 # print(f'已更新 {cursor.rowcount} 筆...')
 
     def export_channel_comment_gap(self, channel_id):
-        with mysql_connect(**self.config) as connection:
+        with DBManager().connect_to_db() as connection:
             with connection.cursor(dictionary=True) as cursor:
                 # 先獲取頻道名稱 (確保 json 裡有名字)
                 cursor.execute('SELECT channel_name FROM channels WHERE channel_id = %s', (channel_id,))
@@ -223,7 +218,7 @@ class DBOps:
                 print(f'   - CSV: {csv_file}')
 
     def update_actual_comment_count(self):
-        with mysql_connect(**self.config) as connection:
+        with DBManager().connect_to_db() as connection:
             with connection.cursor(dictionary=True) as cursor:
                 sql = """
                     UPDATE videos v
@@ -237,7 +232,7 @@ class DBOps:
                 connection.commit()
 
     def get_topic_from_yt(self, channel_id):
-        with mysql_connect(**self.config) as connection:
+        with DBManager().connect_to_db() as connection:
             with connection.cursor(dictionary=True) as cursor:
                 cursor.execute('SELECT channel_name FROM channels WHERE channel_id = %s', (channel_id,))
                 channel_info = cursor.fetchone()
@@ -322,7 +317,7 @@ class DBOps:
                 print(f'   - CSV: {csv_file}')
 
     def tmp(self, channel_id):
-        with mysql_connect(**self.config) as connection:
+        with DBManager().connect_to_db() as connection:
             with connection.cursor(dictionary=True) as cursor:
                 cursor.execute('SELECT channel_name FROM channels WHERE channel_id = %s', (channel_id,))
                 channel_info = cursor.fetchone()

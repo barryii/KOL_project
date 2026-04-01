@@ -1,8 +1,8 @@
 import os, dotenv
 import pandas as pd
-import mysql.connector
 import matplotlib.pyplot as plt
 from prophet import Prophet
+from databsae import DBManager
 from youtuber_info import Chienseating, HowHowEat
 from video_type import VideoType
 
@@ -20,18 +20,14 @@ plt.rcParams['ytick.color'] = 'white'
 def run_prophet_forecasting(channel: Chienseating | HowHowEat, video_type: str = VideoType.VIDEO.value):
     # 1. 撈取資料
     print("1. 正在從資料庫撈取時間與觀看數據...")
-    connection = mysql.connector.connect(
-        host='dv108.aiturn.fun', user='barry',
-        password=os.getenv('KOL_DB_PW'), database='db_kol'
-    )
-    # 我們只需要發布時間和觀看數
-    query = """
-        SELECT published_at, view_count 
-        FROM videos 
-        WHERE channel_id = %s and type = %s
-    """
-    df = pd.read_sql(query, connection, params=(channel.channel_id, video_type))
-    connection.close()
+    with DBManager().connect_to_db() as connection:
+        # 我們只需要發布時間和觀看數
+        query = """
+            SELECT published_at, view_count 
+            FROM videos 
+            WHERE channel_id = %s and type = %s
+        """
+        df = pd.read_sql(query, connection, params=(channel.channel_id, video_type))
 
     if df.empty:
         print("沒有足夠的資料可以進行預測。")

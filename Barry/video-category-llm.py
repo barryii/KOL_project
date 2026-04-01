@@ -3,7 +3,6 @@ from youtuber_info import Chienseating, HowHowEat
 from video_type import VideoType
 from database import DBManager
 from datetime import datetime
-import mysql.connector
 import os, dotenv
 import ollama
 import json
