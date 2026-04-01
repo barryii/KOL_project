@@ -12,7 +12,7 @@ dotenv.load_dotenv()
 
 def data(channel: Chienseating | HowHowEat, limit: int = 100):
     try:
-        with DBManager().connect_to_db() as connection:
+        with DBManager().connect_to_db_readonly() as connection:
             with connection.cursor(dictionary=True) as cursor:
                 if limit:
                     cursor.execute('SELECT * FROM video_comments WHERE channel_id = %s and sentiment IS NULL LIMIT %s', (channel.channel_id, limit))

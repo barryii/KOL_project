@@ -21,7 +21,7 @@ plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei']
 plt.rcParams['axes.unicode_minus'] = False # 解決負號顯示問題
 
 def preview_kmeans_results(channel: Chienseating | HowHowEat, video_type: str = VideoType.VIDEO.value):
-    with DBManager().connect_to_db() as connection:
+    with DBManager().connect_to_db_readonly() as connection:
         query = '''
             SELECT video_id, title, view_count, like_count, comment_count 
             FROM videos 

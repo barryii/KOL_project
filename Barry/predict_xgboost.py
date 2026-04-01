@@ -23,7 +23,7 @@ plt.rcParams['ytick.color'] = 'white'
 def run_xgboost_with_momentum(channel: Chienseating | HowHowEat, video_type: str = VideoType.VIDEO.value):
     # 1. 撈取資料 (加入 channel_id 以防未來有多個頻道混在一起算錯)
     print("1. 正在從資料庫撈取資料...")
-    with DBManager().connect_to_db() as connection:
+    with DBManager().connect_to_db_readonly() as connection:
         query = """
             SELECT channel_id, view_count, published_at, duration_sec
             FROM videos 

@@ -20,7 +20,7 @@ plt.rcParams['ytick.color'] = 'white'
 def run_prophet_forecasting(channel: Chienseating | HowHowEat, video_type: str = VideoType.VIDEO.value):
     # 1. 撈取資料
     print("1. 正在從資料庫撈取時間與觀看數據...")
-    with DBManager().connect_to_db() as connection:
+    with DBManager().connect_to_db_readonly() as connection:
         # 我們只需要發布時間和觀看數
         query = """
             SELECT published_at, view_count 

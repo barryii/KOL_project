@@ -18,8 +18,18 @@ class DBManager:
             'password': os.getenv('KOL_DB_PW_BACKUP'),
             'database': 'db_kol'
         }
-    
+
     def connect_to_db(self):
+        '''
+            ### 寫入時不嘗試連線備用庫，防止寫入汙染備用庫
+        '''
+        try:
+            return mysql_connect(**self.config)
+        except Exception as e:
+            print(f'主資料庫連線失敗 ({e})，無法寫入')
+            raise
+
+    def connect_to_db_readonly(self):
         try:
             return mysql_connect(**self.config)
         except Exception as e:
@@ -195,7 +205,7 @@ class DBManager:
 
     def get_db_videos(self, channel_id: str = None):
         """讀取所有影片清單"""
-        with self.connect_to_db() as connection:
+        with self.connect_to_db_readonly() as connection:
             with connection.cursor() as cursor:
                 if channel_id:
                     sql = "SELECT * FROM videos WHERE channel_id = %s"
@@ -207,7 +217,7 @@ class DBManager:
 
     def get_db_video_comments(self, channel_id: str = None):
         """讀取所有影片清單"""
-        with self.connect_to_db() as connection:
+        with self.connect_to_db_readonly() as connection:
             with connection.cursor() as cursor:
                 if channel_id:
                     sql = "SELECT * FROM video_comments WHERE channel_id = %s"
@@ -219,7 +229,7 @@ class DBManager:
 
     def get_all_kol(self):
         """讀取所有 KOL 清單"""
-        with self.connect_to_db() as connection:
+        with self.connect_to_db_readonly() as connection:
             with connection.cursor() as cursor:
                 sql = "SELECT * FROM kol_stats"
                 cursor.execute(sql)
@@ -231,7 +241,7 @@ class DBManager:
         data: 欲查詢的欄位，預設為*（所有欄位）
         範例: data='video_id, title, view_count'
         """
-        with self.connect_to_db() as connection:
+        with self.connect_to_db_readonly() as connection:
             with connection.cursor() as cursor:
                 sql = f"SELECT {data} FROM videos where channel_id = %s"
                 cursor.execute(sql, (channel_id,))

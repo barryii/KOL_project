@@ -12,7 +12,7 @@ dotenv.load_dotenv()
 
 def data(channel: Chienseating | HowHowEat):
     try:
-        with DBManager().connect_to_db() as connection:
+        with DBManager().connect_to_db_readonly() as connection:
             with connection.cursor(dictionary=True) as cursor:
                 sql = """
                     SELECT 

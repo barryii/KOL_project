@@ -21,7 +21,7 @@ class DBOps:
         pass
 
     def get_video_stats(self, video_type: str='video'):
-        with DBManager().connect_to_db() as connection:
+        with DBManager().connect_to_db_readonly() as connection:
             with connection.cursor() as cursor:
                 sql = """
                 SELECT 
@@ -49,7 +49,7 @@ class DBOps:
                     print(f'=' * 20)
 
     def get_comment_stats(self, channel_id: Chienseating | HowHowEat):
-        with DBManager().connect_to_db() as connection:
+        with DBManager().connect_to_db_readonly() as connection:
             with connection.cursor() as cursor:
                 sql = """
                 SELECT 
@@ -154,7 +154,7 @@ class DBOps:
                 # print(f'已更新 {cursor.rowcount} 筆...')
 
     def export_channel_comment_gap(self, channel_id):
-        with DBManager().connect_to_db() as connection:
+        with DBManager().connect_to_db_readonly() as connection:
             with connection.cursor(dictionary=True) as cursor:
                 # 先獲取頻道名稱 (確保 json 裡有名字)
                 cursor.execute('SELECT channel_name FROM channels WHERE channel_id = %s', (channel_id,))
@@ -232,7 +232,7 @@ class DBOps:
                 connection.commit()
 
     def get_topic_from_yt(self, channel_id):
-        with DBManager().connect_to_db() as connection:
+        with DBManager().connect_to_db_readonly() as connection:
             with connection.cursor(dictionary=True) as cursor:
                 cursor.execute('SELECT channel_name FROM channels WHERE channel_id = %s', (channel_id,))
                 channel_info = cursor.fetchone()
@@ -317,7 +317,7 @@ class DBOps:
                 print(f'   - CSV: {csv_file}')
 
     def tmp(self, channel_id):
-        with DBManager().connect_to_db() as connection:
+        with DBManager().connect_to_db_readonly() as connection:
             with connection.cursor(dictionary=True) as cursor:
                 cursor.execute('SELECT channel_name FROM channels WHERE channel_id = %s', (channel_id,))
                 channel_info = cursor.fetchone()

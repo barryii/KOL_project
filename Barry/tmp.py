@@ -1,7 +1,7 @@
 from youtuber_info import Chienseating, HowHowEat
 from database import DBManager
 
-with DBManager().connect_to_db() as connection:
+with DBManager().connect_to_db_readonly() as connection:
     with connection.cursor() as cursor:
         for channel in [Chienseating(), HowHowEat()]:
             N = 20
@@ -32,5 +32,4 @@ with DBManager().connect_to_db() as connection:
             results = cursor.fetchall()
             # print(results)
             print(len(results))
-
 

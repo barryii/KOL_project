@@ -25,7 +25,7 @@ plt.rcParams['ytick.color'] = 'white'
 def run_random_forest_prediction(channel: Chienseating | HowHowEat, video_type: str = VideoType.VIDEO.value):
     # 1. 撈取合法特徵的資料
     print("1. 正在從資料庫撈取資料...")
-    with DBManager().connect_to_db() as connection:
+    with DBManager().connect_to_db_readonly() as connection:
         query = """
             SELECT view_count, published_at, duration_sec 
             FROM videos 

@@ -11,14 +11,11 @@ dotenv.load_dotenv()
 
 def get_video_data(channel_id, limit=10):
     # 連線到資料庫
-    db = DBManager().connect_to_db()
-    cursor = db.cursor(dictionary=True)
-    
-    # cursor.execute('SELECT video_id, title FROM videos WHERE channel_id = %s and type = %s LIMIT %s', (channel_id, VideoType.VIDEO.value, limit))
-    cursor.execute('SELECT video_id, title FROM videos WHERE channel_id = %s and type = %s', (channel_id, VideoType.VIDEO.value))
-    videos = cursor.fetchall()
-    db.close()
-    
+    with DBManager().connect_to_db_readonly() as connection:
+        with connection.cursor(dictionary=True) as cursor:
+            # cursor.execute('SELECT video_id, title FROM videos WHERE channel_id = %s and type = %s LIMIT %s', (channel_id, VideoType.VIDEO.value, limit))
+            cursor.execute('SELECT video_id, title FROM videos WHERE channel_id = %s and type = %s', (channel_id, VideoType.VIDEO.value))
+            videos = cursor.fetchall()
     return videos
 
 def classify_batch(titles: list[str]) -> list[str]:
