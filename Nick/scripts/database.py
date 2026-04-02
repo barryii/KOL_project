@@ -1,0 +1,152 @@
+from mysql.connector import connect as mysql_connect
+from datetime import datetime
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+class DBManager:
+    def __init__(self):
+        self.config = {
+            'host': 'dv108.aiturn.fun',
+            'user': 'barry',
+            'password': os.getenv('KOL_DB_PW'),
+            'database': 'db_kol'
+        }
+
+    def save_channel_data(self, channel_id: str, channel_name: str, subscriber_count: int, view_count: int) -> None:
+        with mysql_connect(**self.config) as connection:
+            with connection.cursor() as cursor:
+                # 1. 更新主表 (這張表有 channel_name)
+                sql_main = """
+                INSERT INTO channels (channel_id, channel_name, subscriber_count, total_view_count) 
+                VALUES (%s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE 
+                    channel_name = VALUES(channel_name),
+                    subscriber_count = VALUES(subscriber_count),
+                    total_view_count = VALUES(total_view_count),
+                    last_updated = CURRENT_TIMESTAMP
+                """
+                cursor.execute(sql_main, (channel_id, channel_name, subscriber_count, view_count))
+
+                # 2. 存入歷史紀錄表 (現在也把 channel_name 存進去)
+                sql_history = """
+                INSERT INTO channel_history (channel_id, channel_name, subscriber_count, total_view_count)
+                VALUES (%s, %s, %s, %s)
+                """
+                # 這裡要傳入 4 個參數喔！
+                cursor.execute(sql_history, (channel_id, channel_name, subscriber_count, view_count))
+                
+                connection.commit()
+
+    def save_video_batch(self, video_data: list[tuple[str, str, str, str, datetime, str, str, int, int, int, int]]) -> None:
+        """
+        video_data = [
+            (video_id, channel_id, title, description, published_at, type, duration, duration_sec, view_count, like_count, comment_count),
+            ...
+        ]
+        video_id VARCHAR(11) PRIMARY KEY,
+        channel_id VARCHAR(24),
+        title VARCHAR(255),
+        description TEXT,
+        published_at DATETIME,
+        type VARCHAR(20),
+        duration TIME,
+        duration_sec INT,
+        view_count BIGINT,
+        like_count INT,
+        comment_count INT,
+        FOREIGN KEY (channel_id) REFERENCES channels(channel_id) ON DELETE CASCADE
+        """
+        with mysql_connect(**self.config) as connection:
+            with connection.cursor() as cursor:
+                sql = """
+                INSERT INTO videos (
+                    video_id, 
+                    channel_id, 
+                    title, 
+                    description, 
+                    published_at, 
+                    `type`, 
+                    duration, 
+                    duration_sec, 
+                    view_count, 
+                    like_count, 
+                    comment_count
+                ) VALUES (
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                ) ON DUPLICATE KEY UPDATE 
+                    view_count = VALUES(view_count),
+                    like_count = VALUES(like_count),
+                    comment_count = VALUES(comment_count)
+                """
+                cursor.executemany(sql, video_data)
+                connection.commit()
+
+    def save_comment_batch(self, comment_data: list[tuple[str, str, str, str, int, int, datetime]]) -> None:
+        """
+        comment_data = [
+            (comment_id, video_id, author_name, text_content, like_count, reply_count, published_at),
+            ...
+        ]
+        comment_id VARCHAR(50) PRIMARY KEY,
+        video_id VARCHAR(11),
+        author_name VARCHAR(100),
+        text_content TEXT,
+        like_count INT,
+        reply_count INT,
+        # sentiment VARCHAR(20), # 這兩項留給AI填
+        # topic_tag VARCHAR(50),
+        published_at DATETIME,
+        FOREIGN KEY (video_id) REFERENCES videos(video_id) ON DELETE CASCADE
+        """
+        with mysql_connect(**self.config) as connection:
+            with connection.cursor() as cursor:
+                sql = """
+                INSERT INTO video_comments (
+                    comment_id, 
+                    video_id, 
+                    author_name, 
+                    text_content, 
+                    like_count, 
+                    reply_count, 
+                    published_at
+                ) VALUES (
+                    %s, %s, %s, %s, %s, %s, %s
+                ) ON DUPLICATE KEY UPDATE 
+                    like_count = VALUES(like_count),
+                    reply_count = VALUES(reply_count)
+                """
+                cursor.executemany(sql, comment_data)
+                connection.commit()
+
+    def save_kol_data(self, kol_name: str, followers: int, engagement_rate: float) -> None:
+        """存入 KOL 成效資料"""
+        with mysql_connect(**self.config) as connection:
+            with connection.cursor() as cursor:
+                sql = "INSERT INTO kol_stats (name, followers, engagement) VALUES (%s, %s, %s)"
+                cursor.execute(sql, (kol_name, followers, engagement_rate))
+                connection.commit()
+
+    def get_all_kol(self):
+        """讀取所有 KOL 清單"""
+        with mysql_connect(**self.config) as connection:
+            with connection.cursor() as cursor:
+                sql = "SELECT * FROM kol_stats"
+                cursor.execute(sql)
+                return cursor.fetchall()
+
+    def get_videos_by_channel_id(self, channel_id: str, data: str='*') -> list[tuple[str]]:
+        """
+        讀取所有影片清單
+        data: 欲查詢的欄位，預設為*（所有欄位）
+        範例: data='video_id, title, view_count'
+        """
+        with mysql_connect(**self.config) as connection:
+            with connection.cursor() as cursor:
+                sql = f"SELECT {data} FROM videos where channel_id = %s"
+                cursor.execute(sql, (channel_id,))
+                return cursor.fetchall()
+
+# videos = DBManager().get_all_video()
+# print(videos)
