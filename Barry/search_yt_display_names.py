@@ -7,7 +7,6 @@ dotenv.load_dotenv()
 YT_API_KEY = os.getenv('YT_API_KEY')
 youtube = build('youtube', 'v3', developerKey=YT_API_KEY)
 
-
 def fetch_display_names(author_ids: list[str]) -> dict[str, str]:
     """
     批次呼叫 YouTube Channels API，每次最多 50 個 channel ID。
@@ -31,11 +30,8 @@ def fetch_display_names(author_ids: list[str]) -> dict[str, str]:
             channel_id = item['id']
             title = item['snippet']['title']
             result[channel_id] = title
-        
         print(f'  ✅ 已查詢第 {i+1}~{i+len(batch)} 筆，成功取得 {len(response.get("items", []))} 筆名稱')
-    
     return result
-
 
 def main():
     # Step 1: 從 topN_comments 撈出所有不重複的 author_id
