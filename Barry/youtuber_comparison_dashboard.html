@@ -338,21 +338,25 @@
                     粉絲互動 Audience</h2>
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <div
-                        class="lg:col-span-8 bg-surface-container-low rounded-lg p-6 shadow-xl border border-outline-variant/10">
-                        <h3 class="font-headline font-bold text-lg mb-4">每月互動趨勢 (按讚 vs 留言)</h3>
-                        <div class="relative h-[400px] w-full"><canvas id="interactionChart"></canvas></div>
+                    <div class="lg:col-span-8 flex flex-col gap-6">
+                        <div class="bg-surface-container-low rounded-lg p-6 shadow-xl border border-outline-variant/10">
+                            <h3 class="font-headline font-bold text-lg mb-4">每月互動趨勢 (按讚)</h3>
+                            <div class="relative h-[400px] w-full"><canvas id="likeChart"></canvas></div>
+                        </div>
+                        <div class="bg-surface-container-low rounded-lg p-6 shadow-xl border border-outline-variant/10">
+                            <h3 class="font-headline font-bold text-lg mb-4">每月互動趨勢 (留言)</h3>
+                            <div class="relative h-[400px] w-full"><canvas id="commentChart"></canvas></div>
+                        </div>
                     </div>
-
-                    <div
-                        class="lg:col-span-4 bg-surface-container-low rounded-lg p-6 shadow-xl border border-outline-variant/10 flex flex-col">
+                    
+                    <div class="lg:col-span-4 bg-surface-container-low rounded-lg p-6 shadow-xl border border-outline-variant/10 flex flex-col">
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="font-headline font-bold text-lg flex items-center gap-2">
                                 <span class="material-symbols-outlined text-tertiary-container">forum</span>
                                 熱門鐵粉留言者 Top 10
                             </h3>
                         </div>
-                        <div class="space-y-3 flex-1 overflow-y-auto hide-scrollbar max-h-[400px]"
+                        <div class="space-y-3 flex-1 overflow-y-auto hide-scrollbar max-h-[880px]"
                             id="top-commenters-list">
                             <!-- JS 動態寫入 -->
                         </div>
@@ -518,9 +522,12 @@
                 { label: nameB, data: dB.all.avg_views, borderColor: colorB, backgroundColor: bgB, tension: 0.4, fill: true, borderWidth: 2 }
             ], lineOpt);
 
-            createChart('interactionChart', 'bar', [
+            createChart('likeChart', 'bar', [
                 { label: `(${nameA}) 按讚數`, data: dA.all.total_likes, backgroundColor: 'rgba(0, 218, 243, 0.8)', order: 2, stack: 'Stack 0' },
                 { label: `(${nameB}) 按讚數`, data: dB.all.total_likes, backgroundColor: 'rgba(200, 99, 251, 0.8)', order: 2, stack: 'Stack 1' },
+            ], mixOpt);
+
+            createChart('commentChart', 'bar', [
                 { label: `(${nameA}) 留言數`, data: dA.all.total_comments, type: 'line', borderColor: '#bae6fd', borderWidth: 2, order: 1, pointRadius: 3 },
                 { label: `(${nameB}) 留言數`, data: dB.all.total_comments, type: 'line', borderColor: '#f3e8ff', borderWidth: 2, order: 1, pointRadius: 3 }
             ], mixOpt);
