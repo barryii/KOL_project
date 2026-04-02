@@ -1,39 +1,38 @@
-# 執行計畫：導入「數位工坊 (The Digital Atelier)」設計系統
+# 執行計畫：鐵粉排行榜 API 重構與動態篩選功能
 
-根據您提供的 `DESIGN.md`，這套 **「Curated Hearth (精心佈置的壁爐)」** 設計哲學非常獨特，強烈要求溫暖、有機的材質感，並排斥傳統冷硬的數據面板。為了達到這種宛如高級文具與灑滿陽光的工作室氛圍，我將對目前的儀表板進行徹底的基因改造。
+為了解決動態計算的效能問題，並提供更多元的排行檢視方式，我規劃了以下的前後端整合修改方案。
 
 ## User Review Required
 
 > [!IMPORTANT]  
-> 這次的改版將會**徹底改變**所有卡片的形狀、字體與層次結構，請您確認以下實作方向是否符合期待。一旦批准，我將進行全檔重構。
+> 這次修改會異動到 FastAPI 的端點與回傳結構，並在儀表板增加連動控制項。請確認篩選器的設計方向是否符合您的需求。
 
 ## Proposed Changes
 
-### 1. 色彩學注入：Terracotta 與溫暖大地色系
-- **背景與圖層 (Tonal Layering)**：
-  - 將純白與冷灰切換為溫暖的奶油色。最底層背景 `background` 設為 `#fffcf7`。
-  - 主要卡片背景改為 `#ffffff` (`surface_container_lowest`)，創造出浮在奶油色上的輕盈感。
-- **資料與品牌色 (Data Visualization)**：
-  - YouTuber A：使用經典的 **Terracotta (赤陶色 `#a24a35`)** 到 Coral 的漸層色系。
-  - YouTuber B：使用 **Sage (鼠尾草綠)** 或是 **Brown (暖棕色)** 來進行溫和的對比，徹底避免傳統的紅綠互補色（減少 Christmas effect）。
-- **文字對比下降**：絕對禁止純黑 `#000000`，所有文字全數切換為 `#373831` (`on_surface`)。
+### [API 端點重構]
+#### [MODIFY] `front_app.py`
+為了加速讀取並簡化邏輯，我們將：
+1. **捨棄原有的動態 Group By 查詢**：移除以 `video_comments` 即時計算留言數的方法。
+2. **新增單一端點 `/api/top_fans`**：
+   - 直接從預先算好的 `topN_comments` 表格中，以 `channel_id` 撈取資料。
+   - 回傳統一格式：`{ channel_id_A: [ {name, comment_count, total_likes}, ... ], channel_id_B: ... }`。
+3. 這樣就不用再分兩個 API (`top_commenters` 和 `top_commenters_by_likes`)，全部交由前端快速重排。
 
-### 2. The "No-Line" Rule 與 Ambient Depth
-- **移除剛硬邊框**：移除儀表板中所有的 `border` 與 `border-outline-variant` 實心線條。區塊邊界將改由「背景色些微過渡」或是極淡的 15% `ghost border` 來暗示。
-- **溫暖的環境光陰影 (Ambient Shadows)**：卡片與導覽列將套用 `box-shadow: 0 12px 40px rgba(162, 74, 53, 0.06)`，也就是帶有一點赤陶色調的柔和投影，捨棄原本黑色或藍色的剛硬陰影。
+### [UI 操作介面實作]
+#### [MODIFY] `youtuber_comparison_dashboard.html`
+1. **新增排序與篩選下拉選單**：
+   在「互動常客榜單」區塊右上角新增兩個 `<select>`，採用符合目前設計系統的樣式：
+   - **頻道篩選**：可選擇看「全部綜合」、「YTer A 的粉絲」或「YTer B 的粉絲」。
+   - **排序切換**：可選擇依「留言數」或依「獲讚數」精準排序。
+2. **JavaScript 邏輯擴充**：
+   - 建立全域變數 `globalFansData` 緩存後端傳來的資料。
+   - 新增 `renderTopCommentersUI()` 函數：根據下拉選單的選擇，動態過濾對應的頻道數據，並使用原生的 `Array.sort` 切換排序邏輯，最後即時渲染清單。
+   - 當切換為「獲讚數」排序時，榜單上的數據亮點會自動從「則留言」切換為「顆愛心 ❤️」顯示。
 
-### 3. 字體切換：Plus Jakarta Sans
-- 移除 `Manrope` 與 `Inter`，全域導入 `Plus Jakarta Sans`。這套字型擁有現代幾何的俐落與圓潤的曲線，能完美呼應極大的圓角設計。
+## Verification Plan
 
-### 4. 有機造型：超級大圓角
-- 貫徹 `Intentional Softness`：
-  - 所有的分析卡片圓角將從一般的 `8px` (`rounded-lg`) 大幅提升至 `2rem` (`32px`) 甚至是 `3rem` (`48px`)。
-  - 按鈕全數改為 `rounded-full` (全圓角膠囊狀)。
-  - 卡片內部的內邊距 (Padding) 將大幅放寬，使用 `p-8` 甚至是 `p-10` 來創造「奢侈的留白 (Space is a luxury)」。
-
-### 5. Interaction 互動元素
-- 左側選單的高亮狀態 (Active) 與主要按鈕，將應用 `135度` 從 Primary `#a24a35` 漸變至 Primary Container `#ffac99` 的專屬靈魂漸層。
-
----
-
-如果這套「**溫暖、有機、帶有紙張與黏土質地**」的設計系統是您現在想要的最終面貌，請給我您的同意（或提供您想微調的想法），我馬上為您著手改寫！
+### Manual Verification
+1. 重啟 uvicorn，並刷新儀表板頁面。
+2. 觀察 "互動常客榜單" 區塊。
+3. 測試切換「全部/頻道A/頻道B」看是否成功篩選。
+4. 測試切換「留言數/獲愛心數」看數值、文字與排序是否正確對應。

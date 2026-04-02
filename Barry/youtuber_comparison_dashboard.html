@@ -292,11 +292,37 @@
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div
                         class="lg:col-span-8 bg-surface-container-low rounded-lg p-8 shadow-xl border-none border border-outline-variant flex flex-col min-h-[400px]">
-                        <div class="flex justify-between items-center mb-6">
+                        <div class="flex flex-col gap-4 mb-6">
                             <h3 class="font-headline font-bold text-lg flex items-center gap-2">
                                 <span class="material-symbols-outlined text-primary-fixed">local_fire_department</span>
-                                歷史熱門表現影片 Top 5
+                                歷史熱門表現影片 排行榜
                             </h3>
+                            <div class="flex gap-2 text-xs w-full flex-wrap">
+                                <select id="vidFilterCh"
+                                    class="bg-surface-container border-none shadow-sm rounded-lg p-2 flex-1 min-w-[20%] outline-none text-on-surface cursor-pointer font-bold"
+                                    onchange="updateTopVideosUI()">
+                                    <option value="all">👑 綜合榜單</option>
+                                    <option value="ch1" id="vid-filter-name-a">YTer A</option>
+                                    <option value="ch2" id="vid-filter-name-b">YTer B</option>
+                                </select>
+                                <select id="vidFilterType"
+                                    class="bg-surface-container border-none shadow-sm rounded-lg p-2 flex-1 min-w-[20%] outline-none text-on-surface cursor-pointer font-bold"
+                                    onchange="updateTopVideosUI()">
+                                    <option value="all">🎬 全部類型</option>
+                                    <option value="video">📹 一般影片</option>
+                                    <option value="shorts">⚡ Shorts</option>
+                                    <option value="stream">🔴 直播</option>
+                                </select>
+                                <select id="vidFilterLimit"
+                                    class="bg-surface-container border-none shadow-sm rounded-lg p-2 flex-1 min-w-[20%] outline-none text-on-surface cursor-pointer font-bold"
+                                    onchange="updateTopVideosUI()">
+                                    <option value="5">🏆 前 5 部</option>
+                                    <option value="10" selected>🏆 前 10 部</option>
+                                    <option value="20">🏆 前 20 部</option>
+                                    <option value="50">🏆 前 50 部</option>
+                                    <option value="100">🏆 前 100 部</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="overflow-x-auto hide-scrollbar flex-1">
                             <table class="w-full text-left border-collapse">
@@ -345,11 +371,34 @@
 
                     <div
                         class="lg:col-span-4 bg-surface-container-low rounded-lg p-8 shadow-xl border-none border border-outline-variant flex flex-col">
-                        <div class="flex justify-between items-center mb-6">
+                        <div class="flex flex-col gap-4 mb-6">
                             <h3 class="font-headline font-bold text-lg flex items-center gap-2">
                                 <span class="material-symbols-outlined text-tertiary-container">forum</span>
-                                熱門鐵粉留言者 Top 10
+                                熱門鐵粉留言者 排行榜
                             </h3>
+                            <div class="flex gap-2 text-xs w-full flex-wrap">
+                                <select id="fanFilterCh"
+                                    class="bg-surface-container border-none shadow-sm rounded-lg p-2 flex-1 min-w-[25%] outline-none text-on-surface cursor-pointer font-bold"
+                                    onchange="updateTopCommentersUI()">
+                                    <option value="all">👑 綜合榜單</option>
+                                    <option value="ch1" id="filter-name-a">YTer A 粉絲</option>
+                                    <option value="ch2" id="filter-name-b">YTer B 粉絲</option>
+                                </select>
+                                <select id="fanFilterSort"
+                                    class="bg-surface-container border-none shadow-sm rounded-lg p-2 flex-1 min-w-[25%] outline-none text-on-surface cursor-pointer font-bold"
+                                    onchange="updateTopCommentersUI()">
+                                    <option value="comment_count">📝 留言數量</option>
+                                    <option value="total_likes">❤️ 獲愛心數</option>
+                                </select>
+                                <select id="fanFilterLimit"
+                                    class="bg-surface-container border-none shadow-sm rounded-lg p-2 flex-1 min-w-[20%] outline-none text-on-surface cursor-pointer font-bold"
+                                    onchange="updateTopCommentersUI()">
+                                    <option value="10">🏆 前 10 名</option>
+                                    <option value="20">🏆 前 20 名</option>
+                                    <option value="50">🏆 前 50 名</option>
+                                    <option value="100" selected>🏆 前 100 名</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="space-y-3 flex-1 overflow-y-auto hide-scrollbar max-h-[880px]"
                             id="top-commenters-list">
@@ -380,6 +429,8 @@
 
         const gridColor = 'rgba(0, 0, 0, 0.05)';
         let charts = {};
+        let globalFansData = null; // 全域儲存撈回來的鐵粉資料
+        let globalVideosData = null; // 全域儲存熱門影片資料
 
         const formatNum = num => num.toLocaleString('en-US');
         const sumArray = arr => arr.reduce((a, b) => a + Number(b), 0);
@@ -402,16 +453,16 @@
                 const [infoRes, overviewRes, commentersRes, topVideosRes] = await Promise.all([
                     fetch(`http://localhost:8000/api/channel_info`),
                     fetch(`http://localhost:8000/api/overview?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}`),
-                    fetch(`http://localhost:8000/api/top_commenters?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}&top_n=10`),
-                    fetch(`http://localhost:8000/api/top_videos?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}&top_n=5`)
+                    fetch(`http://localhost:8000/api/top_fans?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}&top_n=200`),
+                    fetch(`http://localhost:8000/api/top_videos?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}&top_n=100`)
                 ]);
 
                 if (!infoRes.ok || !overviewRes.ok || !commentersRes.ok || !topVideosRes.ok) throw new Error("API 回應錯誤");
 
                 const infoData = await infoRes.json();
                 const overviewData = await overviewRes.json();
-                const commentersData = await commentersRes.json();
-                const topVideosData = await topVideosRes.json();
+                globalFansData = await commentersRes.json();
+                globalVideosData = await topVideosRes.json();
 
                 // 綁定真實名稱
                 nameA = infoData[CHANNEL_1_ID] || 'YouTuber A';
@@ -421,15 +472,20 @@
                 document.querySelectorAll('.name-a').forEach(el => el.innerText = nameA);
                 document.querySelectorAll('.name-b').forEach(el => el.innerText = nameB);
 
+                const fA = document.getElementById('filter-name-a'); if (fA) fA.innerText = `${nameA} 粉絲`;
+                const fB = document.getElementById('filter-name-b'); if (fB) fB.innerText = `${nameB} 粉絲`;
+                const vA = document.getElementById('vid-filter-name-a'); if (vA) vA.innerText = nameA;
+                const vB = document.getElementById('vid-filter-name-b'); if (vB) vB.innerText = nameB;
+
                 renderOverviewAndCharts(overviewData, CHANNEL_1_ID, CHANNEL_2_ID);
-                renderTopVideos(topVideosData, CHANNEL_1_ID, CHANNEL_2_ID);
-                renderTopCommenters(commentersData, CHANNEL_1_ID, CHANNEL_2_ID);
+                updateTopVideosUI();
+                updateTopCommentersUI();
 
                 document.getElementById('loading-indicator').classList.add('hidden');
                 document.getElementById('dashboard-content').classList.remove('hidden');
             } catch (error) {
                 console.error('Fetch Error:', error);
-                document.getElementById('loading-indicator').innerHTML = `<span class="material-symbols-outlined text-4xl text-error mb-4">error</span><p class="text-error font-bold text-base">API 讀取錯誤，請確認 uvicorn 已啟動</p>`;
+                document.getElementById('loading-indicator').innerHTML = `<span class="material-symbols-outlined text-4xl text-error mb-4">error</span><p class="text-error font-bold text-base">錯誤原因: ${error.message} - ${error.stack}</p>`;
             }
         }
 
@@ -592,15 +648,36 @@
             createMiniCardChart('miniRateChart', rateA, rateB, '%');
         }
 
-        function renderTopVideos(data, ch1, ch2) {
-            const tbody = document.getElementById('top-videos-body'); tbody.innerHTML = '';
+        function updateTopVideosUI() {
+            const tbody = document.getElementById('top-videos-body');
+            if (!globalVideosData || !tbody) return;
+            tbody.innerHTML = '';
+
+            const chFilter = document.getElementById('vidFilterCh').value;
+            const typeFilter = document.getElementById('vidFilterType').value;
+            const limitEl = document.getElementById('vidFilterLimit');
+            const limitFilter = parseInt(limitEl ? limitEl.value : 10);
+
             let allVids = [];
-            (data[ch1] || []).forEach(v => allVids.push({ ...v, labelName: nameA, badge: classBadgeA }));
-            (data[ch2] || []).forEach(v => allVids.push({ ...v, labelName: nameB, badge: classBadgeB }));
+            const addVids = (chId, labelName, badge) => {
+                (globalVideosData[chId] || []).forEach(v => allVids.push({ ...v, labelName, badge }));
+            };
+
+            if (chFilter === 'all' || chFilter === 'ch1') addVids(CHANNEL_1_ID, nameA, classBadgeA);
+            if (chFilter === 'all' || chFilter === 'ch2') addVids(CHANNEL_2_ID, nameB, classBadgeB);
+
+            // 影片類型篩選
+            if (typeFilter !== 'all') {
+                allVids = allVids.filter(v => v.type === typeFilter);
+            }
 
             allVids.sort((a, b) => b.view_count - a.view_count);
-            allVids.slice(0, 5).forEach(v => {
+
+            const typeLabel = { video: '📹', shorts: '⚡', stream: '🔴' };
+
+            allVids.slice(0, limitFilter).forEach((v, idx) => {
                 const eng = ((v.like_count + v.comment_count) / (v.view_count || 1) * 100).toFixed(2);
+                const typeIcon = typeLabel[v.type] || '🎬';
                 const tr = document.createElement('tr'); tr.className = 'border-b border-outline-variant hover:bg-surface-container transition-colors';
                 tr.innerHTML = `
                     <td class="py-3 px-2"><span class="text-xs font-bold px-2 py-1 rounded-full ${v.badge}">${v.labelName}</span></td>
@@ -608,7 +685,7 @@
                         <div class="flex items-center gap-3">
                             <div class="video-thumb shrink-0 flex items-center justify-center text-outline-variant/30 text-xs"><span class="material-symbols-outlined text-xl">play_circle</span></div>
                             <div>
-                                <div class="font-medium text-sm line-clamp-2 leading-tight" title="${v.title}">${v.title}</div>
+                                <div class="font-medium text-sm line-clamp-2 leading-tight" title="${v.title}">${typeIcon} ${v.title}</div>
                                 <div class="text-xs text-on-surface-variant mt-1">${v.published_date}</div>
                             </div>
                         </div>
@@ -617,32 +694,63 @@
                 `;
                 tbody.appendChild(tr);
             });
+
+            if (allVids.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="py-8 text-center text-on-surface-variant">沒有符合條件的影片</td></tr>';
+            }
         }
 
-        function renderTopCommenters(data, ch1, ch2) {
-            const listContainer = document.getElementById('top-commenters-list'); listContainer.innerHTML = '';
+        function updateTopCommentersUI() {
+            const listContainer = document.getElementById('top-commenters-list');
+            if (!globalFansData || !listContainer) return;
+
+            listContainer.innerHTML = '';
+
+            const chFilter = document.getElementById('fanFilterCh').value;
+            const sortFilter = document.getElementById('fanFilterSort').value;
+            const limitEl = document.getElementById('fanFilterLimit');
+            const limitFilter = parseInt(limitEl ? limitEl.value : 10);
+
             let allFans = [];
-            const gatherFans = (chData, labelName, colorClass) => {
-                if (!chData || !chData.names) return;
-                for (let i = 0; i < Math.min(chData.names.length, 5); i++) {
-                    allFans.push({ name: chData.names[i], count: chData.counts[i], labelName: labelName, colorClass: colorClass });
-                }
+            const addFans = (chId, labelName, colorClass) => {
+                const arr = globalFansData[chId] || [];
+                arr.forEach(f => {
+                    allFans.push({
+                        name: f.author_display_name || f.author_name,
+                        comment_count: f.comment_count,
+                        total_likes: f.total_likes,
+                        labelName: labelName,
+                        colorClass: colorClass
+                    });
+                });
             };
 
-            gatherFans(data[ch1], nameA, 'bg-secondary-fixed-dim/20 text-secondary-fixed-dim');
-            gatherFans(data[ch2], nameB, 'bg-tertiary-container/20 text-tertiary-container');
+            // 依據頻道篩選器挑選陣列
+            if (chFilter === 'all' || chFilter === 'ch1') addFans(CHANNEL_1_ID, nameA, 'bg-primary-fixed/20 text-primary-container');
+            if (chFilter === 'all' || chFilter === 'ch2') addFans(CHANNEL_2_ID, nameB, 'bg-secondary-fixed-dim/20 text-secondary-fixed-dim');
 
-            allFans.sort((a, b) => b.count - a.count);
-            allFans.slice(0, 10).forEach(fan => {
+            // 根據指標進行排序
+            if (sortFilter === 'total_likes') {
+                allFans.sort((a, b) => b.total_likes - a.total_likes || b.comment_count - a.comment_count);
+            } else {
+                allFans.sort((a, b) => b.comment_count - a.comment_count || b.total_likes - a.total_likes);
+            }
+
+            // 取前 N 名渲染
+            allFans.slice(0, limitFilter).forEach((fan, idx) => {
                 const initial = fan.name ? fan.name.charAt(0).toUpperCase() : '?';
-                const el = document.createElement('div'); el.className = 'flex items-center p-3 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors group';
+                const el = document.createElement('div'); el.className = 'flex items-center p-3 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors group mb-1 shadow-sm';
+
+                const valToShow = sortFilter === 'total_likes' ? formatNum(fan.total_likes) : formatNum(fan.comment_count);
+                const unitToShow = sortFilter === 'total_likes' ? '顆愛心 ❤️' : '則留言';
+
                 el.innerHTML = `
-                    <div class="c-avatar bg-surface-container-highest border border-outline-variant text-on-surface">${initial}</div>
+                    <div class="font-black text-on-surface-variant w-4 text-center mr-2 opacity-30 group-hover:opacity-100 transition-opacity">${idx + 1}</div>
                     <div class="ml-3 flex-1 overflow-hidden">
                         <p class="text-sm font-bold truncate" title="${fan.name}">${fan.name}</p>
-                        <div class="flex items-center gap-2 mt-0.5"><span class="text-xs px-1.5 rounded-sm font-bold ${fan.colorClass}">${fan.labelName} 粉絲</span></div>
+                        <div class="flex items-center gap-2 mt-0.5"><span class="text-xs px-2 py-0.5 rounded-full font-bold ${fan.colorClass}">${fan.labelName} 粉絲</span></div>
                     </div>
-                    <div class="text-right"><div class="font-black text-on-surface">${formatNum(fan.count)}</div><div class="text-xs text-on-surface-variant">則留言</div></div>
+                    <div class="text-right"><div class="font-black text-on-surface text-lg leading-tight drop-shadow-sm">${valToShow}</div><div class="text-[10px] tracking-wider font-bold text-on-surface-variant mt-[2px]">${unitToShow}</div></div>
                 `;
                 listContainer.appendChild(el);
             });

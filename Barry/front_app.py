@@ -134,75 +134,25 @@ def get_channel_overview(
 
             return processed_data
 
-# http://localhost:8000/api/top_commenters?channel1_id=UC9i2Qgd5lizhVgJrdnxunKw&channel2_id=UCa2YiSXNTkmOA-QTKdzzbSQ
-@app.get("/api/top_commenters")
-def get_top_commenters(
+# http://localhost:8000/api/top_fans?channel1_id=UC9i2Qgd5lizhVgJrdnxunKw&channel2_id=UCa2YiSXNTkmOA-QTKdzzbSQ
+@app.get("/api/top_fans")
+def get_top_fans(
     channel1_id: str = Query(..., description="第一個頻道的 ID"),
     channel2_id: str = Query(..., description="第二個頻道的 ID"),
-    top_n: int = Query(10, description="取前 N 名活躍觀眾") # 預設抓前 10 名
+    top_n: int = Query(200, description="取預計算表中的前 N 名觀眾進行前端渲染")
 ):
     with DBManager().connect_to_db_readonly() as connection:
         with connection.cursor(dictionary=True) as cursor:
-            # SQL 邏輯：依 author_id 分組計算留言數，降冪排序後取前 N 筆
-            # 使用 MAX(author_name) 是為了解決同一 author_id 可能有改過名字的問題
+            # 從 topN_comments 取資料
             sql = """
                 SELECT 
                     author_id,
-                    MAX(author_name) AS author_name,
-                    COUNT(comment_id) AS comment_count,
-                    SUM(like_count) AS total_likes
-                FROM video_comments
+                    author_name,
+                    author_display_name,
+                    comment_count,
+                    total_likes
+                FROM topN_comments
                 WHERE channel_id = %s
-                GROUP BY author_id
-                ORDER BY comment_count DESC
-                LIMIT %s
-            """
-            
-            # 查詢頻道 1 的活躍觀眾
-            cursor.execute(sql, (channel1_id, top_n))
-            channel1_results = cursor.fetchall()
-            
-            # 查詢頻道 2 的活躍觀眾
-            cursor.execute(sql, (channel2_id, top_n))
-            channel2_results = cursor.fetchall()
-            
-            # 整理成前端圖表或表格易於使用的格式
-            return {
-                channel1_id: {
-                    "names": [row['author_name'] for row in channel1_results],
-                    "counts": [row['comment_count'] for row in channel1_results],
-                    "total_likes": [row['total_likes'] for row in channel1_results],
-                    "details": channel1_results # 保留完整原始資料備用
-                },
-                channel2_id: {
-                    "names": [row['author_name'] for row in channel2_results],
-                    "counts": [row['comment_count'] for row in channel2_results],
-                    "total_likes": [row['total_likes'] for row in channel2_results],
-                    "details": channel2_results
-                }
-            }
-
-# http://localhost:8000/api/top_commenters_by_likes?channel1_id=UC9i2Qgd5lizhVgJrdnxunKw&channel2_id=UCa2YiSXNTkmOA-QTKdzzbSQ
-@app.get("/api/top_commenters_by_likes")
-def get_top_commenters_by_likes(
-    channel1_id: str = Query(..., description="第一個頻道的 ID"),
-    channel2_id: str = Query(..., description="第二個頻道的 ID"),
-    top_n: int = Query(20, description="取前 N 名獲讚最多的觀眾"),
-):
-    with DBManager().connect_to_db_readonly() as connection:
-        with connection.cursor(dictionary=True) as cursor:
-            # SQL 邏輯：加入 SUM(like_count) 計算總按讚數，並以此作為主要排序依據
-            # 若按讚數相同，則以留言數較多者優先 (ORDER BY total_likes DESC, comment_count DESC)
-            sql = """
-                SELECT 
-                    author_id,
-                    MAX(author_name) AS author_name,
-                    COUNT(comment_id) AS comment_count,
-                    SUM(like_count) AS total_likes
-                FROM video_comments
-                WHERE channel_id = %s
-                GROUP BY author_id
-                HAVING comment_count > 20
                 ORDER BY total_likes DESC, comment_count DESC
                 LIMIT %s
             """
@@ -213,20 +163,10 @@ def get_top_commenters_by_likes(
             cursor.execute(sql, (channel2_id, top_n))
             channel2_results = cursor.fetchall()
             
-            # 整理結構，將 total_likes 與 comment_counts 都拉出來成獨立陣列
+            # 回傳給前端
             return {
-                channel1_id: {
-                    "names": [row['author_name'] for row in channel1_results],
-                    "total_likes": [int(row['total_likes'] or 0) for row in channel1_results],
-                    "comment_counts": [row['comment_count'] for row in channel1_results],
-                    "details": channel1_results
-                },
-                channel2_id: {
-                    "names": [row['author_name'] for row in channel2_results],
-                    "total_likes": [int(row['total_likes'] or 0) for row in channel2_results],
-                    "comment_counts": [row['comment_count'] for row in channel2_results],
-                    "details": channel2_results
-                }
+                channel1_id: channel1_results,
+                channel2_id: channel2_results
             }
 
 # http://localhost:8000/api/top_videos?channel1_id=UC9i2Qgd5lizhVgJrdnxunKw&channel2_id=UCa2YiSXNTkmOA-QTKdzzbSQ
@@ -234,7 +174,7 @@ def get_top_commenters_by_likes(
 def get_top_videos(
     channel1_id: str = Query(..., description="第一個頻道的 ID"),
     channel2_id: str = Query(..., description="第二個頻道的 ID"),
-    top_n: int = Query(5, description="取歷史表現最好 (最高觀看) 的前 N 部影片")
+    top_n: int = Query(100, description="取歷史表現最好 (最高觀看) 的前 N 部影片")
 ):
     with DBManager().connect_to_db_readonly() as connection:
         with connection.cursor(dictionary=True) as cursor:
@@ -244,6 +184,7 @@ def get_top_videos(
                     channel_id,
                     video_id,
                     title,
+                    `type`,
                     view_count,
                     like_count,
                     comment_count,
