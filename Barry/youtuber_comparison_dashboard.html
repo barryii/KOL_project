@@ -101,7 +101,7 @@
         }
 
         .nav-item.active {
-            background: linear-gradient(135deg, #CF5800 0%, #ffac99 100%);
+            background: linear-gradient(135deg, #CF5800 0%, #FFB19C 100%);
             color: #ffffff !important;
             border-right-width: 0px;
             border-radius: 9999px;
@@ -126,11 +126,11 @@
 
         .dash-filter-btn:hover {
             background: rgba(162, 74, 53, 0.08);
-            color: #a24a35;
+            color: #CF5800;
         }
 
         .dash-filter-active {
-            background: linear-gradient(135deg, #a24a35 0%, #d86c55 100%) !important;
+            background: linear-gradient(135deg, #CF5800 0%, #FF7F5C 100%) !important;
             color: #ffffff !important;
             box-shadow: 0 4px 12px rgba(162, 74, 53, 0.3);
         }
@@ -218,25 +218,6 @@
             <div id="tab-dashboard" class="tab-section block">
                 <h2 class="text-xl font-bold font-headline mb-4 text-on-surface border-b border-outline-variant pb-2">
                     總覽摘要 Dashboard</h2>
-
-                <!-- Dashboard 圖表類型篩選器 -->
-                <div class="flex items-center gap-2 mb-4 mt-2">
-                    <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">影片類型</span>
-                    <div class="flex gap-1 flex-wrap">
-                        <button onclick="renderDashboardCharts('all')" id="dashFilter-all"
-                            class="dash-filter-btn dash-filter-active text-xs font-bold px-3 py-1 rounded-full transition-all">🎬
-                            全部</button>
-                        <button onclick="renderDashboardCharts('video')" id="dashFilter-video"
-                            class="dash-filter-btn text-xs font-bold px-3 py-1 rounded-full transition-all">📹
-                            一般影片</button>
-                        <button onclick="renderDashboardCharts('shorts')" id="dashFilter-shorts"
-                            class="dash-filter-btn text-xs font-bold px-3 py-1 rounded-full transition-all">⚡
-                            Shorts</button>
-                        <button onclick="renderDashboardCharts('stream')" id="dashFilter-stream"
-                            class="dash-filter-btn text-xs font-bold px-3 py-1 rounded-full transition-all">🔴
-                            直播</button>
-                    </div>
-                </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <!-- 總觀看次數 -->
@@ -511,6 +492,7 @@
         let overviewDataCache = null; // 全域儲存 Overview 資料以供 Dashboard 圖表連動
         let dashChartOpts = {};  // 全域儲存 Chart.js 選項
         let globalVideoType = 'all'; // 全域影片類型篩選狀態
+        let sharedHoverIndex = -1;   // 全域同步 Hover 索引
 
         const formatNum = num => num.toLocaleString('en-US');
         const sumArray = arr => arr.reduce((a, b) => a + Number(b), 0);
@@ -576,7 +558,31 @@
             Object.values(charts).forEach(chart => { if (chart) chart.resize(); });
         }
 
-        // --- 全域篩選器更新函式 ---
+        // --- 全域圖表同步函式 ---
+        function syncChartsTooltip(index, skipChartId = null) {
+            sharedHoverIndex = index;
+            // 定義要參與同步的圖表 ID
+            const syncIds = ['totalViewsChart', 'avgViewsChart', 'publishChart', 'likeChart', 'commentChart'];
+
+            syncIds.forEach(id => {
+                const chart = charts[id];
+                if (!chart || id === skipChartId) return;
+
+                if (index === -1) {
+                    chart.tooltip.setActiveElements([], { x: 0, y: 0 });
+                } else {
+                    const meta = chart.getDatasetMeta(0);
+                    if (meta && meta.data[index]) {
+                        chart.tooltip.setActiveElements([
+                            { datasetIndex: 0, index: index },
+                            { datasetIndex: 1, index: index }
+                        ], { x: meta.data[index].x, y: meta.data[index].y });
+                    }
+                }
+                chart.render(); // 使用 render 而非 update 以維持效能
+            });
+        }
+
         function updateGlobalFilter(type) {
             globalVideoType = type;
 
@@ -752,21 +758,34 @@
             Chart.defaults.color = '#57534e';
             Chart.defaults.font.family = "'Inter', sans-serif";
 
-            // ★ 新增互動垂直輔助光
+            // ★ 升級版：全域同步互動垂直輔助光
             const hoverLinePlugin = {
                 id: 'hoverLine',
                 afterDraw: chart => {
+                    // 優先使用該圖表自身的 tooltip 索引，若無則使用全域共享索引
+                    let activeIndex = -1;
                     if (chart.tooltip?._active?.length) {
+                        activeIndex = chart.tooltip._active[0].index;
+                    } else if (sharedHoverIndex !== -1) {
+                        activeIndex = sharedHoverIndex;
+                    }
+
+                    if (activeIndex !== -1) {
                         const ctx = chart.ctx;
-                        const x = chart.tooltip._active[0].element.x;
+                        const meta = chart.getDatasetMeta(0);
+                        if (!meta.data[activeIndex]) return;
+
+                        const x = meta.data[activeIndex].x;
                         const topY = chart.scales.y.top;
                         const bottomY = chart.scales.y.bottom;
+
                         ctx.save();
                         ctx.beginPath();
                         ctx.moveTo(x, topY);
                         ctx.lineTo(x, bottomY);
                         ctx.lineWidth = 1;
-                        ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)'; // 淡淡的黑光
+                        ctx.strokeStyle = 'rgba(0, 0, 0, 0.15)';
+                        ctx.setLineDash([5, 5]); // 使用虛線更具美感
                         ctx.stroke();
                         ctx.restore();
                     }
@@ -775,22 +794,48 @@
 
             const commonOpt = {
                 responsive: true, maintainAspectRatio: false,
+                onHover: (event, elements) => {
+                    // 當滑鼠移動時，同步 index 到其他圖表
+                    const index = elements.length > 0 ? elements[0].index : -1;
+                    if (index !== sharedHoverIndex) {
+                        syncChartsTooltip(index);
+                    }
+                },
                 interaction: {
                     mode: 'index',
                     intersect: false,
                 },
                 plugins: {
                     legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } },
-                    tooltip: { backgroundColor: 'rgba(255, 255, 255, 0.95)', titleColor: '#1c1917', bodyColor: '#57534e', padding: 13, borderWidth: 1, borderColor: 'rgba(0,0,0,0.1)' }
+                    tooltip: {
+                        enabled: true,
+                        position: 'nearest',
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)', titleColor: '#1c1917', bodyColor: '#57534e', padding: 13, borderWidth: 1, borderColor: 'rgba(0,0,0,0.1)',
+                        callbacks: {
+                            label: (context) => ` ${context.dataset.label}: ${formatNum(context.raw)}`
+                        }
+                    }
                 },
                 scales: {
                     x: { stacked: true, grid: { display: false, drawBorder: false } },
-                    y: { stacked: true, grid: { color: gridColor, drawBorder: false }, beginAtZero: true }
+                    y: {
+                        stacked: true,
+                        grid: { color: gridColor, drawBorder: false },
+                        beginAtZero: true,
+                        afterFit: (axis) => {
+                            axis.width = 80; // ★ 強制固定寬度，達成完美的垂直對齊
+                        }
+                    }
                 }
             };
 
-            const lineOpt = JSON.parse(JSON.stringify(commonOpt));
-            lineOpt.scales.x.stacked = false; lineOpt.scales.y.stacked = false;
+            const lineOpt = {
+                ...commonOpt,
+                scales: {
+                    x: { ...commonOpt.scales.x, stacked: false },
+                    y: { ...commonOpt.scales.y, stacked: false }
+                }
+            };
 
             // 將 chart.js 選項儲存到全域以供 renderDashboardCharts 使用
             dashChartOpts = { commonOpt, lineOpt, labels, hoverLinePlugin };
