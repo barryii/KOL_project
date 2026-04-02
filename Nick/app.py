@@ -291,7 +291,7 @@ async def predict(req: PredictRequest):
 @app.get("/api/features/ranking")
 async def get_ranking():
     try:
-        if MODEL_VERSION == "V7":
+        if MODEL_VERSION in ("V8", "V7"):
             imp = model.get_feature_importance()
             fs = pd.Series(imp, index=model_columns)
         else:
