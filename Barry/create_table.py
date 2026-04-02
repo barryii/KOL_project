@@ -31,6 +31,7 @@ table_queries = [
         cluster_label INT,
         INDEX channel_id ON videos(channel_id),
         INDEX idx_actual_comments ON videos(actual_comment_count),
+        INDEX idx_v_type (`type`),
         FOREIGN KEY (channel_id) REFERENCES channels(channel_id) ON DELETE CASCADE
     )
     """,
@@ -60,10 +61,11 @@ table_queries = [
         author_id VARCHAR(24),
         author_name VARCHAR(100),
         author_display_name TEXT,
-        comment_count INT,               -- 總留言數量
-        total_likes INT,                 -- 獲得的總讚數
+        `type` VARCHAR(20),              -- 新增：影片類型 (video, shorts, stream)
+        comment_count INT,               -- 該類型的總留言數量
+        total_likes INT,                 -- 該類型獲得的總讚數
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- 記錄更新時間
-        PRIMARY KEY (channel_id, author_id)  -- 將這兩個欄位設為複合主鍵！
+        PRIMARY KEY (channel_id, author_id, `type`)  -- 升級為三位一體的複合主鍵
     )
     """,
 ]

@@ -163,19 +163,21 @@ class DBManager:
                 cursor.executemany(sql, comment_data)
                 connection.commit()
 
-    def save_topN_comment_batch(self, topN_comment_data: list[tuple[str, str, str, int, int]]) -> None:
+    def save_topN_comment_batch(self, topN_comment_data: list[tuple[str, str, str, str, int, int]]) -> None:
         """
         topN_comment_data = [
-            (channel_id, author_id, author_name, comment_count, total_likes),
+            (channel_id, author_id, author_name, type, comment_count, total_likes),
             ...
         ]
         channel_id VARCHAR(24),
         author_id VARCHAR(24),
         author_name VARCHAR(100),
+        author_display_name TEXT,        -- 不在這裡更新
+        type VARCHAR(20),                -- 新增影片類型欄位
         comment_count INT,               -- 總留言數量
         total_likes INT,                 -- 獲得的總讚數
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- 記錄更新時間
-        PRIMARY KEY (channel_id, author_id)  -- 將這兩個欄位設為複合主鍵！
+        PRIMARY KEY (channel_id, author_id, type)  -- 複合主鍵更新！
         """
         with self.connect_to_db() as connection:
             with connection.cursor() as cursor:
@@ -184,10 +186,11 @@ class DBManager:
                     channel_id, 
                     author_id, 
                     author_name, 
+                    `type`,
                     comment_count, 
                     total_likes
                 ) VALUES (
-                    %s, %s, %s, %s, %s
+                    %s, %s, %s, %s, %s, %s
                 ) ON DUPLICATE KEY UPDATE
                     comment_count = VALUES(comment_count),
                     total_likes = VALUES(total_likes)
