@@ -188,7 +188,7 @@ def get_top_videos(
                     view_count,
                     like_count,
                     comment_count,
-                    DATE_FORMAT(published_at, '%%Y-%%m-%%d') AS published_date
+                    DATE(published_at) AS published_date
                 FROM videos
                 WHERE channel_id = %s
                 ORDER BY view_count DESC

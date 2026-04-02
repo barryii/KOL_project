@@ -20,16 +20,16 @@
             theme: {
                 extend: {
                     colors: {
-                        "background": "#fffcf7",
+                        "background": "#FFF5E3",
                         "surface": "#fffcf7",
                         "surface-dim": "#fcf9f2",
-                        "surface-container-lowest": "#ffffff",
+                        "surface-container-lowest": "#FFFBF2", // 左邊導航欄
                         "surface-container-low": "#fcf9f2",
                         "surface-container": "#f7f3e8",
                         "surface-container-high": "#ebe7dc",
                         "surface-container-highest": "#dedad0",
                         "on-surface": "#373831",
-                        "on-surface-variant": "#838075",
+                        "on-surface-variant": "#696560",
                         "outline-variant": "rgba(162, 74, 53, 0.15)",
                         "primary": "#a24a35",
                         "primary-fixed": "#ffac99",
@@ -101,11 +101,38 @@
         }
 
         .nav-item.active {
-            background: linear-gradient(135deg, #a24a35 0%, #ffac99 100%);
+            background: linear-gradient(135deg, #CF5800 0%, #ffac99 100%);
             color: #ffffff !important;
             border-right-width: 0px;
             border-radius: 9999px;
             box-shadow: 0 4px 15px rgba(162, 74, 53, 0.2);
+        }
+
+        .dash-filter-btn {
+            background: transparent;
+            color: #57534e;
+            cursor: pointer;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            align-items: center;
+            gap: 6px;
+            height: 32px;
+        }
+
+        .dash-filter-btn:hover {
+            background: rgba(162, 74, 53, 0.08);
+            color: #a24a35;
+        }
+
+        .dash-filter-active {
+            background: linear-gradient(135deg, #a24a35 0%, #d86c55 100%) !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(162, 74, 53, 0.3);
         }
     </style>
 </head>
@@ -162,6 +189,20 @@
                     YouTuber 關鍵數據分析控制台</h1>
             </div>
             <p class="text-on-surface-variant max-w-2xl mt-2 text-base">自動帶入系統預設頻道對比近期的觀看、互動與發片趨勢，請透過左側選單切換數據視圖。</p>
+
+            <div
+                class="flex items-center gap-1 mt-6 p-1.5 bg-surface-container-low rounded-full w-fit shadow-sm border border-outline-variant">
+                <span
+                    class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest pl-4 pr-3 py-1 border-r border-outline-variant/50 mr-2">內容分析維度</span>
+                <button id="globalFilter-all" onclick="updateGlobalFilter('all')"
+                    class="dash-filter-btn dash-filter-active">🎬 綜合摘要</button>
+                <button id="globalFilter-video" onclick="updateGlobalFilter('video')" class="dash-filter-btn">📹
+                    一般影片</button>
+                <button id="globalFilter-shorts" onclick="updateGlobalFilter('shorts')" class="dash-filter-btn">⚡
+                    Shorts</button>
+                <button id="globalFilter-stream" onclick="updateGlobalFilter('stream')" class="dash-filter-btn">🔴
+                    直播</button>
+            </div>
         </header>
 
         <!-- Loading 狀態顯示區 -->
@@ -178,6 +219,25 @@
                 <h2 class="text-xl font-bold font-headline mb-4 text-on-surface border-b border-outline-variant pb-2">
                     總覽摘要 Dashboard</h2>
 
+                <!-- Dashboard 圖表類型篩選器 -->
+                <div class="flex items-center gap-2 mb-4 mt-2">
+                    <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">影片類型</span>
+                    <div class="flex gap-1 flex-wrap">
+                        <button onclick="renderDashboardCharts('all')" id="dashFilter-all"
+                            class="dash-filter-btn dash-filter-active text-xs font-bold px-3 py-1 rounded-full transition-all">🎬
+                            全部</button>
+                        <button onclick="renderDashboardCharts('video')" id="dashFilter-video"
+                            class="dash-filter-btn text-xs font-bold px-3 py-1 rounded-full transition-all">📹
+                            一般影片</button>
+                        <button onclick="renderDashboardCharts('shorts')" id="dashFilter-shorts"
+                            class="dash-filter-btn text-xs font-bold px-3 py-1 rounded-full transition-all">⚡
+                            Shorts</button>
+                        <button onclick="renderDashboardCharts('stream')" id="dashFilter-stream"
+                            class="dash-filter-btn text-xs font-bold px-3 py-1 rounded-full transition-all">🔴
+                            直播</button>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <!-- 總觀看次數 -->
                     <div
@@ -186,17 +246,24 @@
                             class="absolute -right-6 -top-6 text-on-surface-variant opacity-10 group-hover:scale-110 transition-transform">
                             <span class="material-symbols-outlined text-[100px]">visibility</span>
                         </div>
-                        <p class="text-on-surface-variant text-xs mb-3 font-bold tracking-wider uppercase">累積觀看次數</p>
+                        <p
+                            class="text-on-surface-variant text-[10px] mb-3 font-black tracking-widest uppercase opacity-70">
+                            累積觀看次數</p>
 
-                        <!-- 舊版備份 (您隨時可以解除註解恢復)
-                        <div class="flex flex-col gap-2 relative z-10">
-                            <div class="flex justify-between items-center"><span class="text-xs text-secondary-fixed-dim font-bold bg-secondary-fixed-dim/10 px-2 rounded name-a">YTer A</span> <span class="text-xl font-black font-headline" id="stat-view-a">0</span></div>
-                            <div class="flex justify-between items-center"><span class="text-xs text-tertiary-container font-bold bg-tertiary-container/10 px-2 rounded name-b">YTer B</span> <span class="text-xl font-black font-headline" id="stat-view-b">0</span></div>
+                        <div class="flex flex-col gap-1 mb-3 relative z-10">
+                            <div class="flex justify-between items-end">
+                                <span class="text-xs font-bold text-on-surface-variant name-a">YTer A</span>
+                                <span class="text-xl font-black font-headline text-primary leading-none"
+                                    id="val-views-a">0</span>
+                            </div>
+                            <div class="flex justify-between items-end">
+                                <span class="text-xs font-bold text-on-surface-variant name-b">YTer B</span>
+                                <span class="text-xl font-black font-headline text-on-surface-variant leading-none"
+                                    id="val-views-b">0</span>
+                            </div>
                         </div>
-                        -->
 
-                        <!-- 新版直條圖 -->
-                        <div class="relative h-24 w-full mt-2 z-10">
+                        <div class="relative h-14 w-full z-10">
                             <canvas id="miniViewsChart"></canvas>
                         </div>
                     </div>
@@ -208,17 +275,24 @@
                             class="absolute -right-6 -top-6 text-on-surface-variant opacity-10 group-hover:scale-110 transition-transform">
                             <span class="material-symbols-outlined text-[100px]">monitoring</span>
                         </div>
-                        <p class="text-on-surface-variant text-xs mb-3 font-bold tracking-wider uppercase">單支影片平均觀看</p>
+                        <p
+                            class="text-on-surface-variant text-[10px] mb-3 font-black tracking-widest uppercase opacity-70">
+                            單支影片平均觀看</p>
 
-                        <!-- 舊版備份 
-                        <div class="flex flex-col gap-2 relative z-10">
-                            <div class="flex justify-between items-center"><span class="text-xs text-secondary-fixed-dim font-bold bg-secondary-fixed-dim/10 px-2 rounded name-a">YTer A</span> <span class="text-xl font-black font-headline" id="stat-avgview-a">0</span></div>
-                            <div class="flex justify-between items-center"><span class="text-xs text-tertiary-container font-bold bg-tertiary-container/10 px-2 rounded name-b">YTer B</span> <span class="text-xl font-black font-headline" id="stat-avgview-b">0</span></div>
+                        <div class="flex flex-col gap-1 mb-3 relative z-10">
+                            <div class="flex justify-between items-end">
+                                <span class="text-xs font-bold text-on-surface-variant name-a">YTer A</span>
+                                <span class="text-xl font-black font-headline text-primary leading-none"
+                                    id="val-avg-a">0</span>
+                            </div>
+                            <div class="flex justify-between items-end">
+                                <span class="text-xs font-bold text-on-surface-variant name-b">YTer B</span>
+                                <span class="text-xl font-black font-headline text-on-surface-variant leading-none"
+                                    id="val-avg-b">0</span>
+                            </div>
                         </div>
-                        -->
 
-                        <!-- 新版直條圖 -->
-                        <div class="relative h-24 w-full mt-2 z-10">
+                        <div class="relative h-14 w-full z-10">
                             <canvas id="miniAvgViewsChart"></canvas>
                         </div>
                     </div>
@@ -230,18 +304,24 @@
                             class="absolute -right-6 -top-6 text-on-surface-variant opacity-10 group-hover:scale-110 transition-transform">
                             <span class="material-symbols-outlined text-[100px]">favorite</span>
                         </div>
-                        <p class="text-on-surface-variant text-xs mb-3 font-bold tracking-wider uppercase">總互動數 (按讚+留言)
-                        </p>
+                        <p
+                            class="text-on-surface-variant text-[10px] mb-3 font-black tracking-widest uppercase opacity-70">
+                            總互動數 (按讚+留言)</p>
 
-                        <!-- 舊版備份
-                        <div class="flex flex-col gap-2 relative z-10">
-                            <div class="flex justify-between items-center"><span class="text-xs text-secondary-fixed-dim font-bold bg-secondary-fixed-dim/10 px-2 rounded name-a">YTer A</span> <span class="text-xl font-black font-headline" id="stat-eng-a">0</span></div>
-                            <div class="flex justify-between items-center"><span class="text-xs text-tertiary-container font-bold bg-tertiary-container/10 px-2 rounded name-b">YTer B</span> <span class="text-xl font-black font-headline" id="stat-eng-b">0</span></div>
+                        <div class="flex flex-col gap-1 mb-3 relative z-10">
+                            <div class="flex justify-between items-end">
+                                <span class="text-xs font-bold text-on-surface-variant name-a">YTer A</span>
+                                <span class="text-xl font-black font-headline text-primary leading-none"
+                                    id="val-enc-a">0</span>
+                            </div>
+                            <div class="flex justify-between items-end">
+                                <span class="text-xs font-bold text-on-surface-variant name-b">YTer B</span>
+                                <span class="text-xl font-black font-headline text-on-surface-variant leading-none"
+                                    id="val-enc-b">0</span>
+                            </div>
                         </div>
-                        -->
 
-                        <!-- 新版直條圖 -->
-                        <div class="relative h-24 w-full mt-2 z-10">
+                        <div class="relative h-14 w-full z-10">
                             <canvas id="miniEngChart"></canvas>
                         </div>
                     </div>
@@ -253,18 +333,24 @@
                             class="absolute -right-6 -top-6 text-on-surface-variant opacity-10 group-hover:scale-110 transition-transform">
                             <span class="material-symbols-outlined text-[100px]">bolt</span>
                         </div>
-                        <p class="text-on-surface-variant text-xs mb-3 font-bold tracking-wider uppercase">綜合互動率
-                            (Engagement)</p>
+                        <p
+                            class="text-on-surface-variant text-[10px] mb-3 font-black tracking-widest uppercase opacity-70">
+                            平均互動率 (Engagement)</p>
 
-                        <!-- 舊版備份
-                        <div class="flex flex-col gap-2 relative z-10">
-                            <div class="flex justify-between items-center"><span class="text-xs text-secondary-fixed-dim font-bold bg-secondary-fixed-dim/10 px-2 rounded name-a">YTer A</span> <span class="text-xl font-black font-headline" id="stat-rate-a">0%</span></div>
-                            <div class="flex justify-between items-center"><span class="text-xs text-tertiary-container font-bold bg-tertiary-container/10 px-2 rounded name-b">YTer B</span> <span class="text-xl font-black font-headline" id="stat-rate-b">0%</span></div>
+                        <div class="flex flex-col gap-1 mb-3 relative z-10">
+                            <div class="flex justify-between items-end">
+                                <span class="text-xs font-bold text-on-surface-variant name-a">YTer A</span>
+                                <span class="text-xl font-black font-headline text-primary leading-none"
+                                    id="val-rate-a">0%</span>
+                            </div>
+                            <div class="flex justify-between items-end">
+                                <span class="text-xs font-bold text-on-surface-variant name-b">YTer B</span>
+                                <span class="text-xl font-black font-headline text-on-surface-variant leading-none"
+                                    id="val-rate-b">0%</span>
+                            </div>
                         </div>
-                        -->
 
-                        <!-- 新版直條圖 -->
-                        <div class="relative h-24 w-full mt-2 z-10">
+                        <div class="relative h-14 w-full z-10">
                             <canvas id="miniRateChart"></canvas>
                         </div>
                     </div>
@@ -273,13 +359,18 @@
                 <div class="grid grid-cols-1 gap-6">
                     <div
                         class="bg-surface-container-low rounded-lg p-8 shadow-xl border-none border border-outline-variant">
-                        <h3 class="font-headline font-bold text-lg mb-4">每月總觀看數走勢 (三種類型堆疊)</h3>
-                        <div class="relative h-64 w-full"><canvas id="totalViewsChart"></canvas></div>
+                        <h3 id="dashPublishTitle" class="font-headline font-bold text-lg mb-4">發片產量 (Video Output)</h3>
+                        <div class="relative h-[300px] w-full"><canvas id="publishChart"></canvas></div>
                     </div>
                     <div
                         class="bg-surface-container-low rounded-lg p-8 shadow-xl border-none border border-outline-variant">
-                        <h3 class="font-headline font-bold text-lg mb-4">每月平均觀看數</h3>
+                        <h3 id="dashAvgTitle" class="font-headline font-bold text-lg mb-4">每月平均觀看數 (三種類型堆疊)</h3>
                         <div class="relative h-64 w-full"><canvas id="avgViewsChart"></canvas></div>
+                    </div>
+                    <div
+                        class="bg-surface-container-low rounded-lg p-8 shadow-xl border-none border border-outline-variant">
+                        <h3 id="dashTotalTitle" class="font-headline font-bold text-lg mb-4">每月總觀看數走勢 (三種類型堆疊)</h3>
+                        <div class="relative h-64 w-full"><canvas id="totalViewsChart"></canvas></div>
                     </div>
                 </div>
             </div>
@@ -291,7 +382,7 @@
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div
-                        class="lg:col-span-8 bg-surface-container-low rounded-lg p-8 shadow-xl border-none border border-outline-variant flex flex-col min-h-[400px]">
+                        class="lg:col-span-12 bg-surface-container-low rounded-lg p-8 shadow-xl border-none border border-outline-variant flex flex-col min-h-[400px]">
                         <div class="flex flex-col gap-4 mb-6">
                             <h3 class="font-headline font-bold text-lg flex items-center gap-2">
                                 <span class="material-symbols-outlined text-primary-fixed">local_fire_department</span>
@@ -304,14 +395,6 @@
                                     <option value="all">👑 綜合榜單</option>
                                     <option value="ch1" id="vid-filter-name-a">YTer A</option>
                                     <option value="ch2" id="vid-filter-name-b">YTer B</option>
-                                </select>
-                                <select id="vidFilterType"
-                                    class="bg-surface-container border-none shadow-sm rounded-lg p-2 flex-1 min-w-[20%] outline-none text-on-surface cursor-pointer font-bold"
-                                    onchange="updateTopVideosUI()">
-                                    <option value="all">🎬 全部類型</option>
-                                    <option value="video">📹 一般影片</option>
-                                    <option value="shorts">⚡ Shorts</option>
-                                    <option value="stream">🔴 直播</option>
                                 </select>
                                 <select id="vidFilterLimit"
                                     class="bg-surface-container border-none shadow-sm rounded-lg p-2 flex-1 min-w-[20%] outline-none text-on-surface cursor-pointer font-bold"
@@ -340,12 +423,6 @@
                                 </tbody>
                             </table>
                         </div>
-                    </div>
-
-                    <div
-                        class="lg:col-span-4 bg-surface-container-low rounded-lg p-8 shadow-xl border-none border border-outline-variant">
-                        <h3 class="font-headline font-bold text-lg mb-4">發片產量 (Video Output)</h3>
-                        <div class="relative h-[300px] w-full"><canvas id="publishChart"></canvas></div>
                     </div>
                 </div>
             </div>
@@ -431,9 +508,61 @@
         let charts = {};
         let globalFansData = null; // 全域儲存撈回來的鐵粉資料
         let globalVideosData = null; // 全域儲存熱門影片資料
+        let overviewDataCache = null; // 全域儲存 Overview 資料以供 Dashboard 圖表連動
+        let dashChartOpts = {};  // 全域儲存 Chart.js 選項
+        let globalVideoType = 'all'; // 全域影片類型篩選狀態
 
         const formatNum = num => num.toLocaleString('en-US');
         const sumArray = arr => arr.reduce((a, b) => a + Number(b), 0);
+
+        const createMiniCardChart = (id, valA, valB, tooltipSuffix = '', isStacked = false, datasets = null) => {
+            if (charts[id]) charts[id].destroy();
+            let ds = datasets;
+            if (!ds) {
+                ds = [{ data: [valA, valB], backgroundColor: [colorA, colorB], borderRadius: 4, barThickness: 16 }];
+            } else {
+                // 如果是堆疊圖，確保 barThickness 統一
+                ds.forEach(d => { d.barThickness = 16; d.borderRadius = 0; });
+                // 最後一個 dataset 給圓角
+                if (ds.length > 0) ds[ds.length - 1].borderRadius = 4;
+            }
+
+            charts[id] = new Chart(document.getElementById(id), {
+                type: 'bar',
+                data: {
+                    labels: [nameA, nameB],
+                    datasets: ds
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true, maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            enabled: true,
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)', titleColor: '#1c1917', bodyColor: '#57534e', padding: 8, borderColor: 'rgba(0,0,0,0.1)', borderWidth: 1,
+                            callbacks: {
+                                label: function (context) {
+                                    return ' ' + (context.dataset.label ? context.dataset.label + ': ' : '') + formatNum(context.raw) + tooltipSuffix;
+                                }
+                            }
+                        }
+                    },
+                    layout: { padding: { left: 0, right: 30 } },
+                    scales: {
+                        x: { stacked: isStacked, display: false, grid: { display: false } },
+                        y: {
+                            stacked: isStacked,
+                            grid: { display: false, drawBorder: false },
+                            ticks: {
+                                display: false // 既然上面有名字了，圖表左側就不用重複顯示名字，讓圖表更寬
+                            }
+                        }
+                    }
+                }
+            });
+        };
 
         function switchTab(targetId, btnElement) {
             document.querySelectorAll('.tab-section').forEach(el => { el.classList.remove('block'); el.classList.add('hidden'); });
@@ -445,6 +574,125 @@
             });
             btnElement.classList.add('active');
             Object.values(charts).forEach(chart => { if (chart) chart.resize(); });
+        }
+
+        // --- 全域篩選器更新函式 ---
+        function updateGlobalFilter(type) {
+            globalVideoType = type;
+
+            // 1. 更新 UI 按鈕樣式 (Header)
+            document.querySelectorAll('.dash-filter-btn').forEach(btn => {
+                btn.classList.remove('dash-filter-active');
+            });
+            const activeBtn = document.getElementById(`globalFilter-${type}`);
+            if (activeBtn) activeBtn.classList.add('dash-filter-active');
+
+            // 2. 觸發各分頁連動更新
+            renderDashboardCharts(type);  // 更新 Dashboard (三圖、四卡)
+            updateTopVideosUI();          // 更新影片排行榜
+            renderAudienceCharts(type);   // 更新互動趨勢圖
+        }
+
+        function renderDashboardCharts(type) {
+            if (!overviewDataCache) return;
+            const data = overviewDataCache;
+            const dA = data[CHANNEL_1_ID];
+            const dB = data[CHANNEL_2_ID];
+            const { lineOpt, labels, hoverLinePlugin } = dashChartOpts;
+            if (!lineOpt) return;
+
+            const typeNames = { all: '全部類型', video: '一般影片', shorts: 'Shorts', stream: '直播' };
+            const typeName = typeNames[type] || '';
+            document.getElementById('dashTotalTitle').innerText = `每月總觀看數走勢 (${typeName})`;
+            document.getElementById('dashAvgTitle').innerText = `每月平均觀看數 (${typeName})`;
+            document.getElementById('dashPublishTitle').innerText = `每月發片產量 (${typeName})`;
+
+            // --- 核心連動：更新最上方的四張 Mini Metric Cards ---
+            const curA = dA[type]; const curB = dB[type];
+            const viewsA = sumArray(curA.total_views); const viewsB = sumArray(curB.total_views);
+            const vidsA = sumArray(curA.video_counts); const vidsB = sumArray(curB.video_counts);
+            const engA = sumArray(curA.total_likes) + sumArray(curA.total_comments);
+            const engB = sumArray(curB.total_likes) + sumArray(curB.total_comments);
+            const rA = viewsA > 0 ? ((engA / viewsA) * 100).toFixed(2) : 0;
+            const rB = viewsB > 0 ? ((engB / viewsB) * 100).toFixed(2) : 0;
+
+            const updateVal = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+            updateVal('val-views-a', formatNum(viewsA)); updateVal('val-views-b', formatNum(viewsB));
+            updateVal('val-avg-a', formatNum(Math.round(viewsA / (vidsA || 1)))); updateVal('val-avg-b', formatNum(Math.round(viewsB / (vidsB || 1))));
+            updateVal('val-enc-a', formatNum(engA)); updateVal('val-enc-b', formatNum(engB));
+            updateVal('val-rate-a', rA + '%'); updateVal('val-rate-b', rB + '%');
+
+            // 更新 Mini 圖表比例 (如果是 'all' 則維持堆疊顯示內容，否則顯示單一類型)
+            if (type === 'all') {
+                createMiniCardChart('miniViewsChart', null, null, '', true, [
+                    { label: '影片', data: [sumArray(dA.video.total_views), sumArray(dB.video.total_views)], backgroundColor: ['#a24a35', '#8da399'] },
+                    { label: 'Shorts', data: [sumArray(dA.shorts.total_views), sumArray(dB.shorts.total_views)], backgroundColor: ['#d86c55', '#5c7368'] },
+                    { label: '直播', data: [sumArray(dA.stream.total_views), sumArray(dB.stream.total_views)], backgroundColor: ['#ffac99', '#b0c2b9'] }
+                ]);
+                createMiniCardChart('miniEngChart', null, null, '', true, [
+                    { label: '影片', data: [sumArray(dA.video.total_likes) + sumArray(dA.video.total_comments), sumArray(dB.video.total_likes) + sumArray(dB.video.total_comments)], backgroundColor: ['#a24a35', '#8da399'] },
+                    { label: 'Shorts', data: [sumArray(dA.shorts.total_likes) + sumArray(dA.shorts.total_comments), sumArray(dB.shorts.total_likes) + sumArray(dB.shorts.total_comments)], backgroundColor: ['#d86c55', '#5c7368'] },
+                    { label: '直播', data: [sumArray(dA.stream.total_likes) + sumArray(dA.stream.total_comments), sumArray(dB.stream.total_likes) + sumArray(dB.stream.total_comments)], backgroundColor: ['#ffac99', '#b0c2b9'] }
+                ]);
+            } else {
+                createMiniCardChart('miniViewsChart', viewsA, viewsB);
+                createMiniCardChart('miniEngChart', engA, engB);
+            }
+            createMiniCardChart('miniAvgViewsChart', Math.round(viewsA / (vidsA || 1)), Math.round(viewsB / (vidsB || 1)));
+            createMiniCardChart('miniRateChart', rA, rB, '%');
+            // --- 結束 Mini Metric Cards 更新 ---
+
+            const mkLineChart = (id, datasets) => {
+                if (charts[id]) charts[id].destroy();
+                charts[id] = new Chart(document.getElementById(id), {
+                    type: 'line',
+                    data: { labels, datasets },
+                    options: lineOpt,
+                    plugins: [hoverLinePlugin]
+                });
+            };
+
+            // 統一使用折線圖 (加強版 Area Chart)
+            mkLineChart('totalViewsChart', [
+                { label: nameA, data: dA[type].total_views, borderColor: colorA, backgroundColor: bgA, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 },
+                { label: nameB, data: dB[type].total_views, borderColor: colorB, backgroundColor: bgB, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 }
+            ]);
+
+            mkLineChart('avgViewsChart', [
+                { label: nameA, data: dA[type].avg_views, borderColor: colorA, backgroundColor: bgA, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 },
+                { label: nameB, data: dB[type].avg_views, borderColor: colorB, backgroundColor: bgB, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 }
+            ]);
+
+            mkLineChart('publishChart', [
+                { label: nameA, data: dA[type].video_counts, borderColor: colorA, backgroundColor: bgA, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 },
+                { label: nameB, data: dB[type].video_counts, borderColor: colorB, backgroundColor: bgB, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 }
+            ]);
+        }
+
+        // --- 互動趨勢圖連動 ---
+        function renderAudienceCharts(type) {
+            if (!overviewDataCache) return;
+            const dA = overviewDataCache[CHANNEL_1_ID];
+            const dB = overviewDataCache[CHANNEL_2_ID];
+            const { lineOpt, labels, hoverLinePlugin } = dashChartOpts;
+            if (!lineOpt) return;
+
+            const createChart = (id, datasets) => {
+                if (charts[id]) charts[id].destroy();
+                charts[id] = new Chart(document.getElementById(id), {
+                    type: 'line', data: { labels, datasets }, options: lineOpt, plugins: [hoverLinePlugin]
+                });
+            };
+
+            createChart('likeChart', [
+                { label: nameA, data: dA[type].total_likes, borderColor: colorA, backgroundColor: bgA, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 },
+                { label: nameB, data: dB[type].total_likes, borderColor: colorB, backgroundColor: bgB, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 }
+            ]);
+
+            createChart('commentChart', [
+                { label: nameA, data: dA[type].total_comments, borderColor: colorA, backgroundColor: bgA, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 },
+                { label: nameB, data: dB[type].total_comments, borderColor: colorB, backgroundColor: bgB, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 }
+            ]);
         }
 
         async function fetchAndRenderDashboard() {
@@ -477,12 +725,17 @@
                 const vA = document.getElementById('vid-filter-name-a'); if (vA) vA.innerText = nameA;
                 const vB = document.getElementById('vid-filter-name-b'); if (vB) vB.innerText = nameB;
 
+                overviewDataCache = overviewData;
+
                 renderOverviewAndCharts(overviewData, CHANNEL_1_ID, CHANNEL_2_ID);
                 updateTopVideosUI();
                 updateTopCommentersUI();
 
                 document.getElementById('loading-indicator').classList.add('hidden');
                 document.getElementById('dashboard-content').classList.remove('hidden');
+
+                // 觸發全域首次渲染
+                updateGlobalFilter('all');
             } catch (error) {
                 console.error('Fetch Error:', error);
                 document.getElementById('loading-indicator').innerHTML = `<span class="material-symbols-outlined text-4xl text-error mb-4">error</span><p class="text-error font-bold text-base">錯誤原因: ${error.message} - ${error.stack}</p>`;
@@ -494,14 +747,6 @@
             const dA = data[ch1];
             const dB = data[ch2];
             if (!labels || labels.length === 0) return;
-
-            const A_totViews = sumArray(dA.all.total_views); const B_totViews = sumArray(dB.all.total_views);
-            const A_totVideos = sumArray(dA.all.video_counts); const B_totVideos = sumArray(dB.all.video_counts);
-            const A_totEng = sumArray(dA.all.total_likes) + sumArray(dA.all.total_comments);
-            const B_totEng = sumArray(dB.all.total_likes) + sumArray(dB.all.total_comments);
-
-            const rateA = A_totViews > 0 ? ((A_totEng / A_totViews) * 100).toFixed(2) : 0;
-            const rateB = B_totViews > 0 ? ((B_totEng / B_totViews) * 100).toFixed(2) : 0;
 
             // Chart.js 共用預設設定
             Chart.defaults.color = '#57534e';
@@ -547,105 +792,8 @@
             const lineOpt = JSON.parse(JSON.stringify(commonOpt));
             lineOpt.scales.x.stacked = false; lineOpt.scales.y.stacked = false;
 
-            const mixOpt = JSON.parse(JSON.stringify(commonOpt));
-            mixOpt.scales.x.stacked = true; mixOpt.scales.y.stacked = true;
-
-            const createChart = (id, type, datasets, opt, disableHoverLine = false) => {
-                if (charts[id]) charts[id].destroy();
-                let params = { type, data: { labels, datasets }, options: opt };
-                if (!disableHoverLine) params.plugins = [hoverLinePlugin];
-                charts[id] = new Chart(document.getElementById(id), params);
-            };
-
-            // 繪製主區塊大圖: 使用各類別堆疊
-            createChart('totalViewsChart', 'bar', [
-                { label: `${nameA} (影片)`, data: dA.video.total_views, backgroundColor: '#a24a35', stack: 'Stack 0', borderRadius: 0 },
-                { label: `${nameA} (Shorts)`, data: dA.shorts.total_views, backgroundColor: '#d86c55', stack: 'Stack 0', borderRadius: 0 },
-                { label: `${nameA} (直播)`, data: dA.stream.total_views, backgroundColor: '#ffac99', stack: 'Stack 0', borderRadius: [4, 4, 0, 0] },
-
-                { label: `${nameB} (影片)`, data: dB.video.total_views, backgroundColor: '#8da399', stack: 'Stack 1', borderRadius: 0 },
-                { label: `${nameB} (Shorts)`, data: dB.shorts.total_views, backgroundColor: '#5c7368', stack: 'Stack 1', borderRadius: 0 },
-                { label: `${nameB} (直播)`, data: dB.stream.total_views, backgroundColor: '#b0c2b9', stack: 'Stack 1', borderRadius: [4, 4, 0, 0] }
-            ], commonOpt);
-
-            createChart('avgViewsChart', 'line', [
-                { label: nameA, data: dA.all.avg_views, borderColor: colorA, backgroundColor: bgA, tension: 0.4, fill: true, borderWidth: 2 },
-                { label: nameB, data: dB.all.avg_views, borderColor: colorB, backgroundColor: bgB, tension: 0.4, fill: true, borderWidth: 2 }
-            ], lineOpt);
-
-            createChart('likeChart', 'bar', [
-                { label: `(${nameA}) 按讚數`, data: dA.all.total_likes, backgroundColor: 'rgba(162, 74, 53, 0.8)', order: 2, stack: 'Stack 0' },
-                { label: `(${nameB}) 按讚數`, data: dB.all.total_likes, backgroundColor: 'rgba(141, 163, 153, 0.8)', order: 2, stack: 'Stack 1' },
-            ], mixOpt);
-
-            createChart('commentChart', 'bar', [
-                { label: `(${nameA}) 留言數`, data: dA.all.total_comments, type: 'line', borderColor: '#a24a35', borderWidth: 2, order: 1, pointRadius: 3 },
-                { label: `(${nameB}) 留言數`, data: dB.all.total_comments, type: 'line', borderColor: '#8da399', borderWidth: 2, order: 1, pointRadius: 3 }
-            ], mixOpt);
-
-            createChart('publishChart', 'bar', [
-                { label: `${nameA} (影片)`, data: dA.video.video_counts, backgroundColor: '#a24a35', stack: 'Stack 0' },
-                { label: `${nameA} (Shorts)`, data: dA.shorts.video_counts, backgroundColor: '#d86c55', stack: 'Stack 0' },
-                { label: `${nameA} (直播)`, data: dA.stream.video_counts, backgroundColor: '#ffac99', stack: 'Stack 0' },
-
-                { label: `${nameB} (影片)`, data: dB.video.video_counts, backgroundColor: '#8da399', stack: 'Stack 1' },
-                { label: `${nameB} (Shorts)`, data: dB.shorts.video_counts, backgroundColor: '#5c7368', stack: 'Stack 1' },
-                { label: `${nameB} (直播)`, data: dB.stream.video_counts, backgroundColor: '#b0c2b9', stack: 'Stack 1' }
-            ], commonOpt);
-
-            // ★ 繪製四張迷你直條圖
-            const createMiniCardChart = (id, valA, valB, tooltipSuffix = '', isStacked = false, datasets = null) => {
-                if (charts[id]) charts[id].destroy();
-                let ds = datasets;
-                if (!ds) {
-                    ds = [{ data: [valA, valB], backgroundColor: [colorA, colorB], borderRadius: 4, barThickness: 24 }];
-                }
-                charts[id] = new Chart(document.getElementById(id), {
-                    type: 'bar',
-                    data: {
-                        labels: [nameA, nameB],
-                        datasets: ds
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        interaction: { mode: 'index', intersect: false },
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                enabled: true,
-                                backgroundColor: 'rgba(255, 255, 255, 0.95)', titleColor: '#1c1917', bodyColor: '#57534e', padding: 8, borderColor: 'rgba(0,0,0,0.1)', borderWidth: 1,
-                                callbacks: {
-                                    label: function (context) {
-                                        return ' ' + (context.dataset.label ? context.dataset.label + ': ' : '') + formatNum(context.raw) + tooltipSuffix;
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            x: { stacked: isStacked, grid: { display: false, drawBorder: false }, ticks: { color: 'rgba(0,0,0,0.6)', font: { size: 10 } } },
-                            y: { stacked: isStacked, display: false, beginAtZero: true, grid: { display: false } }
-                        }
-                    }
-                });
-            };
-
-            // 總觀看 (堆疊顯示成分)
-            createMiniCardChart('miniViewsChart', null, null, '', true, [
-                { label: '影片', data: [sumArray(dA.video.total_views), sumArray(dB.video.total_views)], backgroundColor: ['#a24a35', '#8da399'], barThickness: 24 },
-                { label: 'Shorts', data: [sumArray(dA.shorts.total_views), sumArray(dB.shorts.total_views)], backgroundColor: ['#d86c55', '#5c7368'], barThickness: 24 },
-                { label: '直播', data: [sumArray(dA.stream.total_views), sumArray(dB.stream.total_views)], backgroundColor: ['#ffac99', '#b0c2b9'], barThickness: 24 }
-            ]);
-            // 平均觀看 (單一柱體)
-            createMiniCardChart('miniAvgViewsChart', Math.round(A_totViews / (A_totVideos || 1)), Math.round(B_totViews / (B_totVideos || 1)));
-
-            // 總互動 (堆疊)
-            createMiniCardChart('miniEngChart', null, null, '', true, [
-                { label: '影片', data: [sumArray(dA.video.total_likes) + sumArray(dA.video.total_comments), sumArray(dB.video.total_likes) + sumArray(dB.video.total_comments)], backgroundColor: ['#a24a35', '#8da399'], barThickness: 24 },
-                { label: 'Shorts', data: [sumArray(dA.shorts.total_likes) + sumArray(dA.shorts.total_comments), sumArray(dB.shorts.total_likes) + sumArray(dB.shorts.total_comments)], backgroundColor: ['#d86c55', '#5c7368'], barThickness: 24 },
-                { label: '直播', data: [sumArray(dA.stream.total_likes) + sumArray(dA.stream.total_comments), sumArray(dB.stream.total_likes) + sumArray(dB.stream.total_comments)], backgroundColor: ['#ffac99', '#b0c2b9'], barThickness: 24 }
-            ]);
-            // 互動率 (單一柱體)
-            createMiniCardChart('miniRateChart', rateA, rateB, '%');
+            // 將 chart.js 選項儲存到全域以供 renderDashboardCharts 使用
+            dashChartOpts = { commonOpt, lineOpt, labels, hoverLinePlugin };
         }
 
         function updateTopVideosUI() {
@@ -654,7 +802,7 @@
             tbody.innerHTML = '';
 
             const chFilter = document.getElementById('vidFilterCh').value;
-            const typeFilter = document.getElementById('vidFilterType').value;
+            const typeFilter = globalVideoType;
             const limitEl = document.getElementById('vidFilterLimit');
             const limitFilter = parseInt(limitEl ? limitEl.value : 10);
 
@@ -678,17 +826,19 @@
             allVids.slice(0, limitFilter).forEach((v, idx) => {
                 const eng = ((v.like_count + v.comment_count) / (v.view_count || 1) * 100).toFixed(2);
                 const typeIcon = typeLabel[v.type] || '🎬';
+                const thumbUrl = `https://i.ytimg.com/vi/${v.video_id}/mqdefault.jpg`;
+                const videoUrl = `https://www.youtube.com/watch?v=${v.video_id}`;
                 const tr = document.createElement('tr'); tr.className = 'border-b border-outline-variant hover:bg-surface-container transition-colors';
                 tr.innerHTML = `
                     <td class="py-3 px-2"><span class="text-xs font-bold px-2 py-1 rounded-full ${v.badge}">${v.labelName}</span></td>
                     <td class="py-3 px-2">
-                        <div class="flex items-center gap-3">
-                            <div class="video-thumb shrink-0 flex items-center justify-center text-outline-variant/30 text-xs"><span class="material-symbols-outlined text-xl">play_circle</span></div>
+                        <a href="${videoUrl}" target="_blank" rel="noopener" class="flex items-center gap-3 group/vid">
+                            <img src="${thumbUrl}" alt="" class="w-24 h-[54px] object-cover rounded-md shrink-0 shadow-sm group-hover/vid:shadow-lg transition-shadow" loading="lazy" />
                             <div>
-                                <div class="font-medium text-sm line-clamp-2 leading-tight" title="${v.title}">${typeIcon} ${v.title}</div>
+                                <div class="font-medium text-sm line-clamp-2 leading-tight group-hover/vid:text-primary transition-colors" title="${v.title}">${typeIcon} ${v.title}</div>
                                 <div class="text-xs text-on-surface-variant mt-1">${v.published_date}</div>
                             </div>
-                        </div>
+                        </a>
                     </td>
                     <td class="py-3 px-2 font-bold">${formatNum(v.view_count)}</td><td class="py-3 px-2 text-primary-container font-black">${eng}%</td>
                 `;
