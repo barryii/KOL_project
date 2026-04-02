@@ -1,9 +1,17 @@
-# 🚀 鐵粉排行榜功能實作進度
+# 🚀 儀表板開發與優化任務追蹤
 
-- `[x]` **後端重構 (`front_app.py`)**：新增 `/api/top_fans` 端點，讀取 `topN_comments` 表格資料，並回傳原始的數值結構。
-- `[x]` **後端清理 (`front_app.py`)**：安全移除或註解原本的 `/api/top_commenters` 與 `/api/top_commenters_by_likes`。
-- `[x]` **前端 UI 新增 (`youtuber_comparison_dashboard.html`)**：加入「頻道篩選」與「指標排序」的下拉選單。
-- `[x]` **前端邏輯處理 (`youtuber_comparison_dashboard.html`)**：
-  - 更新 `fetchAndRenderDashboard`，改而呼叫 `/api/top_fans`。
-  - 設計 `updateTopCommentersUI()`，依據條件過濾、使用原生 `.sort()` 重新排序，再渲染到版面上。
-  - 切換為「愛心數排序」時，動態將單位字眼從「則留言」變成「總獲讚」。
+## 階段三：全域篩選與圖表同步 (最新完成)
+- `[x]` **全域篩選器介面**：於 Header 建立 Pill-style 篩選按鈕，並美化 Active 狀態（圓角與漸層配色）。
+- `[x]` **全域狀態連動**：實作 `updateGlobalFilter`，點擊後同步觸發 Dashboard 圖表、Top Videos 排行榜與 Audience 互動圖的過濾重繪。
+- `[x]` **圖表精準對齊**：在 Chart.js 配置中加入 `afterFit` 回呼，將各趨勢圖 Y 軸寬度強制固定為 80px。
+- `[x]` **跨圖表同步提示**：實作 `sharedHoverIndex` 與事件元件廣播，讓所有圖表能同時顯現該點的提示框與虛線。
+- `[x]` **觸發邊界穩定化**：將 `mouseleave` 監聽移至畫布的父容器層級，並於上方摘要卡片區設定 `mouseenter` 提示清除機制，徹底解決提示框殘影問題。
+
+## 階段二：鐵粉排行榜與互動視圖 (已完成)
+- `[x]` **API 重構**：新增 `/api/top_fans`，回傳乾淨的粉絲陣列，簡化原本需要動態 Group 計算的邏輯。
+- `[x]` **排序與過濾選單**：新增頻道篩選與指標排序 UI，利用本地 JS `.filter()` 與 `.sort()` 瞬間重排。
+- `[x]` **單位智能切換**：依照下拉選單切換數據單位字眼（則留言 / 顆愛心 ❤️）。
+
+## 階段一：堆疊圖表與版面重構 (已完成)
+- `[x]` **滿幅排版切版**：套用 Tailwind Grid 釋放圖表空間，取消左右側疊加之侷促感。
+- `[x]` **頂層數據堆疊**：開發 `createMiniCardChart` 渲染四大數據卡的堆疊長條比例圖。

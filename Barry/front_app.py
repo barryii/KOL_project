@@ -178,8 +178,8 @@ def get_top_videos(
 ):
     with DBManager().connect_to_db_readonly() as connection:
         with connection.cursor(dictionary=True) as cursor:
-            # 依觀看數排序影片
-            sql = """
+            # 原始 SQL
+            sql_base = """
                 SELECT 
                     channel_id,
                     video_id,
@@ -192,14 +192,20 @@ def get_top_videos(
                 FROM videos
                 WHERE channel_id = %s
                 ORDER BY view_count DESC
-                LIMIT %s
             """
             
-            cursor.execute(sql, (channel1_id, top_n))
-            channel1_results = cursor.fetchall()
-            
-            cursor.execute(sql, (channel2_id, top_n))
-            channel2_results = cursor.fetchall()
+            if top_n > 0:
+                sql = sql_base + " LIMIT %s"
+                cursor.execute(sql, (channel1_id, top_n))
+                channel1_results = cursor.fetchall()
+                cursor.execute(sql, (channel2_id, top_n))
+                channel2_results = cursor.fetchall()
+            else:
+                # top_n <= 0 代表不限制，直接抓取全量
+                cursor.execute(sql_base, (channel1_id,))
+                channel1_results = cursor.fetchall()
+                cursor.execute(sql_base, (channel2_id,))
+                channel2_results = cursor.fetchall()
             
             return {
                 channel1_id: channel1_results,

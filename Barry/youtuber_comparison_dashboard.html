@@ -193,9 +193,9 @@
             <div
                 class="flex items-center gap-1 mt-6 p-1.5 bg-surface-container-low rounded-full w-fit shadow-sm border border-outline-variant">
                 <span
-                    class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest pl-4 pr-3 py-1 border-r border-outline-variant/50 mr-2">內容分析維度</span>
+                    class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest pl-4 pr-3 py-1 border-r border-outline-variant/50 mr-2">影片類型</span>
                 <button id="globalFilter-all" onclick="updateGlobalFilter('all')"
-                    class="dash-filter-btn dash-filter-active">🎬 綜合摘要</button>
+                    class="dash-filter-btn dash-filter-active">🎬 全部</button>
                 <button id="globalFilter-video" onclick="updateGlobalFilter('video')" class="dash-filter-btn">📹
                     一般影片</button>
                 <button id="globalFilter-shorts" onclick="updateGlobalFilter('shorts')" class="dash-filter-btn">⚡
@@ -216,7 +216,8 @@
 
             <!-- 分頁 1 : 總覽 Dashboard -->
             <div id="tab-dashboard" class="tab-section block">
-                <h2 id="dash-overview-title" class="text-xl font-bold font-headline mb-4 text-on-surface border-b border-outline-variant pb-2">
+                <h2 id="dash-overview-title"
+                    class="text-xl font-bold font-headline mb-4 text-on-surface border-b border-outline-variant pb-2">
                     總覽摘要 Dashboard</h2>
 
                 <div id="mini-cards-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -657,10 +658,10 @@
                     options: lineOpt,
                     plugins: [hoverLinePlugin]
                 });
-                
+
                 // ★ 補位機制：滑鼠一離開「容器」，就廣播「移除提示」
                 canvas.parentElement.addEventListener('mouseleave', () => {
-                   syncChartsTooltip(-1);
+                    syncChartsTooltip(-1);
                 });
             };
 
@@ -696,7 +697,7 @@
                     type: 'line', data: { labels, datasets }, options: lineOpt, plugins: [hoverLinePlugin]
                 });
                 canvas.parentElement.addEventListener('mouseleave', () => {
-                   syncChartsTooltip(-1);
+                    syncChartsTooltip(-1);
                 });
             };
 
@@ -718,7 +719,7 @@
                     fetch(`http://localhost:8000/api/channel_info`),
                     fetch(`http://localhost:8000/api/overview?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}`),
                     fetch(`http://localhost:8000/api/top_fans?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}&top_n=200`),
-                    fetch(`http://localhost:8000/api/top_videos?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}&top_n=100`)
+                    fetch(`http://localhost:8000/api/top_videos?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}&top_n=0`)
                 ]);
 
                 if (!infoRes.ok || !overviewRes.ok || !commentersRes.ok || !topVideosRes.ok) throw new Error("API 回應錯誤");
