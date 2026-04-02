@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="dark" lang="zh-Hant">
+<html class="light" lang="zh-Hant">
 
 <head>
     <meta charset="utf-8" />
@@ -7,8 +7,7 @@
     <title>YouTuber 對比分析儀表板</title>
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&family=Inter:wght@400;500;600&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" />
@@ -21,28 +20,35 @@
             theme: {
                 extend: {
                     colors: {
-                        "tertiary-fixed": "#f6d9ff", "on-error": "#690005", "on-tertiary-container": "#460066",
-                        "secondary-fixed": "#9cf0ff", "surface-container-highest": "#2d3449", "surface-bright": "#31394d",
-                        "on-background": "#dae2fd", "on-tertiary": "#510074", "on-secondary-fixed": "#001f24",
-                        "on-primary-fixed": "#410000", "surface-container-lowest": "#060e20", "surface-container-low": "#131b2e",
-                        "surface-container-high": "#222a3d", "tertiary-fixed-dim": "#e9b3ff", "primary-container": "#ff5540",
-                        "on-surface-variant": "#ebbbb4", "on-primary-fixed-variant": "#930100", "tertiary-container": "#c863fb",
-                        "inverse-on-surface": "#283044", "surface-variant": "#2d3449", "secondary": "#bdf4ff",
-                        "primary-fixed": "#ffdad4", "inverse-surface": "#dae2fd", "surface-container": "#171f33",
-                        "primary": "#ffb4a8", "surface-tint": "#ffb4a8", "secondary-fixed-dim": "#00daf3",
-                        "on-primary": "#690100", "on-primary-container": "#5c0000", "on-secondary": "#00363d",
-                        "error-container": "#93000a", "on-secondary-container": "#00616d", "on-error-container": "#ffdad6",
-                        "background": "#0b1326", "on-surface": "#dae2fd", "tertiary": "#e9b3ff", "on-tertiary-fixed": "#310048",
-                        "inverse-primary": "#c00100", "surface-dim": "#0b1326", "error": "#ffb4ab", "surface": "#0b1326",
-                        "outline-variant": "#603e39", "on-secondary-fixed-variant": "#004f58", "primary-fixed-dim": "#ffb4a8",
-                        "secondary-container": "#00e3fd", "outline": "#b18780", "on-tertiary-fixed-variant": "#7200a3"
+                        "background": "#fffcf7",
+                        "surface": "#fffcf7",
+                        "surface-dim": "#fcf9f2",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#fcf9f2",
+                        "surface-container": "#f7f3e8",
+                        "surface-container-high": "#ebe7dc",
+                        "surface-container-highest": "#dedad0",
+                        "on-surface": "#373831",
+                        "on-surface-variant": "#838075",
+                        "outline-variant": "rgba(162, 74, 53, 0.15)",
+                        "primary": "#a24a35",
+                        "primary-fixed": "#ffac99",
+                        "primary-container": "#ffac99",
+                        "secondary-fixed-dim": "#8da399",
+                        "tertiary-container": "#8c6b5d",
+                        "error": "#b3374e",
                     },
                     fontFamily: {
-                        "headline": ["Manrope"],
-                        "body": ["Inter"],
-                        "label": ["Inter"]
+                        "headline": ["'Plus Jakarta Sans'", "sans-serif"],
+                        "body": ["'Plus Jakarta Sans'", "sans-serif"],
+                        "label": ["'Plus Jakarta Sans'", "sans-serif"]
                     },
-                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                    boxShadow: {
+                        "xl": "0 12px 40px rgba(162, 74, 53, 0.06)",
+                        "lg": "0 8px 24px rgba(162, 74, 53, 0.05)",
+                        "sm": "0 4px 12px rgba(162, 74, 53, 0.04)"
+                    },
+                    borderRadius: { "DEFAULT": "0.5rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
                 },
             },
         }
@@ -53,18 +59,18 @@
         }
 
         .glass-panel {
-            background: rgba(45, 52, 73, 0.6);
+            background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(20px);
         }
 
         .yter-badge-a {
-            background-color: rgba(0, 218, 243, 0.15);
-            color: #00daf3;
+            background-color: rgba(162, 74, 53, 0.15);
+            color: #a24a35;
         }
 
         .yter-badge-b {
-            background-color: rgba(200, 99, 251, 0.15);
-            color: #c863fb;
+            background-color: rgba(141, 163, 153, 0.2);
+            color: #5c7368;
         }
 
         .video-thumb {
@@ -95,12 +101,11 @@
         }
 
         .nav-item.active {
-            background-color: rgba(255, 85, 64, 0.1);
-            color: #ffb4a8;
-            border-right-width: 4px;
-            border-right-color: #ff5540;
-            border-top-left-radius: 0.5rem;
-            border-bottom-left-radius: 0.5rem;
+            background: linear-gradient(135deg, #a24a35 0%, #ffac99 100%);
+            color: #ffffff !important;
+            border-right-width: 0px;
+            border-radius: 9999px;
+            box-shadow: 0 4px 15px rgba(162, 74, 53, 0.2);
         }
     </style>
 </head>
@@ -109,15 +114,15 @@
 
     <!-- TopNavBar -->
     <nav
-        class="fixed top-0 w-full z-50 bg-slate-950/60 backdrop-blur-xl flex justify-between items-center px-8 h-16 shadow-[0px_32px_32px_rgba(218,226,253,0.06)] border-b border-outline-variant/10">
-        <div class="text-2xl font-black tracking-tighter text-primary font-headline">YOUTUBER.COMPARE</div>
+        class="fixed top-0 w-full z-50 bg-ffffff/80 backdrop-blur-[20px] flex justify-between items-center px-8 h-16 shadow-lg">
+        <div class="text-2xl font-black tracking-tighter text-primary font-headline">Youtuber Compare</div>
         <div class="flex items-center space-x-4">
             <button
-                class="text-slate-400 hover:bg-slate-800/50 transition-all p-2 rounded-full active:scale-95 duration-200">
+                class="text-on-surface-variant hover:bg-surface-container-highest transition-all p-2 rounded-full active:scale-95 duration-200">
                 <span class="material-symbols-outlined">notifications</span>
             </button>
             <button
-                class="text-slate-400 hover:bg-slate-800/50 transition-all p-2 rounded-full active:scale-95 duration-200">
+                class="text-on-surface-variant hover:bg-surface-container-highest transition-all p-2 rounded-full active:scale-95 duration-200">
                 <span class="material-symbols-outlined">settings</span>
             </button>
         </div>
@@ -125,7 +130,7 @@
 
     <!-- SideNavBar -->
     <aside
-        class="h-screen w-64 fixed left-0 top-0 z-40 bg-surface-container-lowest flex flex-col py-6 border-r border-outline-variant/10 hidden lg:flex pt-20">
+        class="h-screen w-64 fixed left-0 top-0 z-40 bg-surface-container-lowest flex flex-col py-6 border-r border-outline-variant hidden lg:flex pt-20">
         <div class="px-6 mb-8 mt-2">
             <h2 class="text-lg font-bold text-on-surface font-headline">分析視圖切換</h2>
             <p class="text-xs text-on-surface-variant uppercase tracking-widest mt-1">View Modules</p>
@@ -147,18 +152,6 @@
                 <span class="font-medium text-sm">粉絲互動 Audience</span>
             </button>
         </nav>
-        <div class="mt-auto px-4 pt-4 border-t border-outline-variant/10 space-y-2">
-            <a class="flex items-center space-x-3 px-4 py-2 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface rounded-lg text-sm transition-all"
-                href="#">
-                <span class="material-symbols-outlined text-sm">help</span>
-                <span>系統幫助</span>
-            </a>
-            <a class="flex items-center space-x-3 px-4 py-2 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface rounded-lg text-sm transition-all"
-                href="#">
-                <span class="material-symbols-outlined text-sm">logout</span>
-                <span>登出</span>
-            </a>
-        </div>
     </aside>
 
     <!-- Main Content -->
@@ -182,14 +175,13 @@
 
             <!-- 分頁 1 : 總覽 Dashboard -->
             <div id="tab-dashboard" class="tab-section block">
-                <h2
-                    class="text-xl font-bold font-headline mb-4 text-on-surface border-b border-outline-variant/20 pb-2">
+                <h2 class="text-xl font-bold font-headline mb-4 text-on-surface border-b border-outline-variant pb-2">
                     總覽摘要 Dashboard</h2>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <!-- 總觀看次數 -->
                     <div
-                        class="bg-surface-container rounded-lg p-5 shadow-lg border border-outline-variant/10 relative overflow-hidden group">
+                        class="bg-surface-container rounded-lg p-6 shadow-lg border-none border border-outline-variant relative overflow-hidden group">
                         <div
                             class="absolute -right-6 -top-6 text-on-surface-variant opacity-10 group-hover:scale-110 transition-transform">
                             <span class="material-symbols-outlined text-[100px]">visibility</span>
@@ -211,7 +203,7 @@
 
                     <!-- 平均觀看 -->
                     <div
-                        class="bg-surface-container rounded-lg p-5 shadow-lg border border-outline-variant/10 relative overflow-hidden group">
+                        class="bg-surface-container rounded-lg p-6 shadow-lg border-none border border-outline-variant relative overflow-hidden group">
                         <div
                             class="absolute -right-6 -top-6 text-on-surface-variant opacity-10 group-hover:scale-110 transition-transform">
                             <span class="material-symbols-outlined text-[100px]">monitoring</span>
@@ -233,7 +225,7 @@
 
                     <!-- 總互動數 -->
                     <div
-                        class="bg-surface-container rounded-lg p-5 shadow-lg border border-outline-variant/10 relative overflow-hidden group">
+                        class="bg-surface-container rounded-lg p-6 shadow-lg border-none border border-outline-variant relative overflow-hidden group">
                         <div
                             class="absolute -right-6 -top-6 text-on-surface-variant opacity-10 group-hover:scale-110 transition-transform">
                             <span class="material-symbols-outlined text-[100px]">favorite</span>
@@ -256,7 +248,7 @@
 
                     <!-- 互動率 -->
                     <div
-                        class="bg-surface-container rounded-lg p-5 shadow-lg border border-outline-variant/10 relative overflow-hidden group">
+                        class="bg-surface-container rounded-lg p-6 shadow-lg border-none border border-outline-variant relative overflow-hidden group">
                         <div
                             class="absolute -right-6 -top-6 text-on-surface-variant opacity-10 group-hover:scale-110 transition-transform">
                             <span class="material-symbols-outlined text-[100px]">bolt</span>
@@ -279,11 +271,13 @@
                 </div>
 
                 <div class="grid grid-cols-1 gap-6">
-                    <div class="bg-surface-container-low rounded-lg p-6 shadow-xl border border-outline-variant/10">
+                    <div
+                        class="bg-surface-container-low rounded-lg p-8 shadow-xl border-none border border-outline-variant">
                         <h3 class="font-headline font-bold text-lg mb-4">每月總觀看數走勢 (三種類型堆疊)</h3>
                         <div class="relative h-64 w-full"><canvas id="totalViewsChart"></canvas></div>
                     </div>
-                    <div class="bg-surface-container-low rounded-lg p-6 shadow-xl border border-outline-variant/10">
+                    <div
+                        class="bg-surface-container-low rounded-lg p-8 shadow-xl border-none border border-outline-variant">
                         <h3 class="font-headline font-bold text-lg mb-4">每月平均觀看數</h3>
                         <div class="relative h-64 w-full"><canvas id="avgViewsChart"></canvas></div>
                     </div>
@@ -292,13 +286,12 @@
 
             <!-- 分頁 2 : 影片表現 Content -->
             <div id="tab-content" class="tab-section hidden">
-                <h2
-                    class="text-xl font-bold font-headline mb-4 text-on-surface border-b border-outline-variant/20 pb-2">
+                <h2 class="text-xl font-bold font-headline mb-4 text-on-surface border-b border-outline-variant pb-2">
                     影片表現 Content</h2>
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div
-                        class="lg:col-span-8 bg-surface-container-low rounded-lg p-6 shadow-xl border border-outline-variant/10 flex flex-col min-h-[400px]">
+                        class="lg:col-span-8 bg-surface-container-low rounded-lg p-8 shadow-xl border-none border border-outline-variant flex flex-col min-h-[400px]">
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="font-headline font-bold text-lg flex items-center gap-2">
                                 <span class="material-symbols-outlined text-primary-fixed">local_fire_department</span>
@@ -309,7 +302,7 @@
                             <table class="w-full text-left border-collapse">
                                 <thead>
                                     <tr
-                                        class="text-on-surface-variant text-xs font-bold uppercase tracking-wider border-b border-outline-variant/20">
+                                        class="text-on-surface-variant text-xs font-bold uppercase tracking-wider border-b border-outline-variant">
                                         <th class="py-3 px-2">創作者</th>
                                         <th class="py-3 px-2">影片標題</th>
                                         <th class="py-3 px-2 whitespace-nowrap">觀看次數</th>
@@ -324,7 +317,7 @@
                     </div>
 
                     <div
-                        class="lg:col-span-4 bg-surface-container-low rounded-lg p-6 shadow-xl border border-outline-variant/10">
+                        class="lg:col-span-4 bg-surface-container-low rounded-lg p-8 shadow-xl border-none border border-outline-variant">
                         <h3 class="font-headline font-bold text-lg mb-4">發片產量 (Video Output)</h3>
                         <div class="relative h-[300px] w-full"><canvas id="publishChart"></canvas></div>
                     </div>
@@ -333,23 +326,25 @@
 
             <!-- 分頁 3 : 粉絲互動 Audience -->
             <div id="tab-audience" class="tab-section hidden">
-                <h2
-                    class="text-xl font-bold font-headline mb-4 text-on-surface border-b border-outline-variant/20 pb-2">
+                <h2 class="text-xl font-bold font-headline mb-4 text-on-surface border-b border-outline-variant pb-2">
                     粉絲互動 Audience</h2>
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-8 flex flex-col gap-6">
-                        <div class="bg-surface-container-low rounded-lg p-6 shadow-xl border border-outline-variant/10">
+                        <div
+                            class="bg-surface-container-low rounded-lg p-8 shadow-xl border-none border border-outline-variant">
                             <h3 class="font-headline font-bold text-lg mb-4">每月互動趨勢 (按讚)</h3>
                             <div class="relative h-[400px] w-full"><canvas id="likeChart"></canvas></div>
                         </div>
-                        <div class="bg-surface-container-low rounded-lg p-6 shadow-xl border border-outline-variant/10">
+                        <div
+                            class="bg-surface-container-low rounded-lg p-8 shadow-xl border-none border border-outline-variant">
                             <h3 class="font-headline font-bold text-lg mb-4">每月互動趨勢 (留言)</h3>
                             <div class="relative h-[400px] w-full"><canvas id="commentChart"></canvas></div>
                         </div>
                     </div>
-                    
-                    <div class="lg:col-span-4 bg-surface-container-low rounded-lg p-6 shadow-xl border border-outline-variant/10 flex flex-col">
+
+                    <div
+                        class="lg:col-span-4 bg-surface-container-low rounded-lg p-8 shadow-xl border-none border border-outline-variant flex flex-col">
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="font-headline font-bold text-lg flex items-center gap-2">
                                 <span class="material-symbols-outlined text-tertiary-container">forum</span>
@@ -375,15 +370,15 @@
         let nameA = 'YTer A';
         let nameB = 'YTer B';
 
-        const colorA = '#00daf3';
-        const bgA = 'rgba(0, 218, 243, 0.2)';
+        const colorA = '#a24a35';
+        const bgA = 'rgba(162, 74, 53, 0.1)';
         const classBadgeA = 'yter-badge-a';
 
-        const colorB = '#c863fb';
-        const bgB = 'rgba(200, 99, 251, 0.2)';
+        const colorB = '#8da399';
+        const bgB = 'rgba(141, 163, 153, 0.2)';
         const classBadgeB = 'yter-badge-b';
 
-        const gridColor = 'rgba(255, 255, 255, 0.08)';
+        const gridColor = 'rgba(0, 0, 0, 0.05)';
         let charts = {};
 
         const formatNum = num => num.toLocaleString('en-US');
@@ -453,7 +448,7 @@
             const rateB = B_totViews > 0 ? ((B_totEng / B_totViews) * 100).toFixed(2) : 0;
 
             // Chart.js 共用預設設定
-            Chart.defaults.color = '#dae2fd';
+            Chart.defaults.color = '#57534e';
             Chart.defaults.font.family = "'Inter', sans-serif";
 
             // ★ 新增互動垂直輔助光
@@ -470,7 +465,7 @@
                         ctx.moveTo(x, topY);
                         ctx.lineTo(x, bottomY);
                         ctx.lineWidth = 1;
-                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'; // 淡淡的白光
+                        ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)'; // 淡淡的黑光
                         ctx.stroke();
                         ctx.restore();
                     }
@@ -485,7 +480,7 @@
                 },
                 plugins: {
                     legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } },
-                    tooltip: { backgroundColor: 'rgba(22, 33, 62, 0.95)', titleColor: '#dde8f2', padding: 13, borderWidth: 1, borderColor: 'rgba(100,150,190,0.2)' }
+                    tooltip: { backgroundColor: 'rgba(255, 255, 255, 0.95)', titleColor: '#1c1917', bodyColor: '#57534e', padding: 13, borderWidth: 1, borderColor: 'rgba(0,0,0,0.1)' }
                 },
                 scales: {
                     x: { stacked: true, grid: { display: false, drawBorder: false } },
@@ -508,13 +503,13 @@
 
             // 繪製主區塊大圖: 使用各類別堆疊
             createChart('totalViewsChart', 'bar', [
-                { label: `${nameA} (影片)`, data: dA.video.total_views, backgroundColor: '#00daf3', stack: 'Stack 0', borderRadius: 0 },
-                { label: `${nameA} (Shorts)`, data: dA.shorts.total_views, backgroundColor: '#008291', stack: 'Stack 0', borderRadius: 0 },
-                { label: `${nameA} (直播)`, data: dA.stream.total_views, backgroundColor: '#9cf0ff', stack: 'Stack 0', borderRadius: [4, 4, 0, 0] },
+                { label: `${nameA} (影片)`, data: dA.video.total_views, backgroundColor: '#a24a35', stack: 'Stack 0', borderRadius: 0 },
+                { label: `${nameA} (Shorts)`, data: dA.shorts.total_views, backgroundColor: '#d86c55', stack: 'Stack 0', borderRadius: 0 },
+                { label: `${nameA} (直播)`, data: dA.stream.total_views, backgroundColor: '#ffac99', stack: 'Stack 0', borderRadius: [4, 4, 0, 0] },
 
-                { label: `${nameB} (影片)`, data: dB.video.total_views, backgroundColor: '#c863fb', stack: 'Stack 1', borderRadius: 0 },
-                { label: `${nameB} (Shorts)`, data: dB.shorts.total_views, backgroundColor: '#7a00b8', stack: 'Stack 1', borderRadius: 0 },
-                { label: `${nameB} (直播)`, data: dB.stream.total_views, backgroundColor: '#f6d9ff', stack: 'Stack 1', borderRadius: [4, 4, 0, 0] }
+                { label: `${nameB} (影片)`, data: dB.video.total_views, backgroundColor: '#8da399', stack: 'Stack 1', borderRadius: 0 },
+                { label: `${nameB} (Shorts)`, data: dB.shorts.total_views, backgroundColor: '#5c7368', stack: 'Stack 1', borderRadius: 0 },
+                { label: `${nameB} (直播)`, data: dB.stream.total_views, backgroundColor: '#b0c2b9', stack: 'Stack 1', borderRadius: [4, 4, 0, 0] }
             ], commonOpt);
 
             createChart('avgViewsChart', 'line', [
@@ -523,23 +518,23 @@
             ], lineOpt);
 
             createChart('likeChart', 'bar', [
-                { label: `(${nameA}) 按讚數`, data: dA.all.total_likes, backgroundColor: 'rgba(0, 218, 243, 0.8)', order: 2, stack: 'Stack 0' },
-                { label: `(${nameB}) 按讚數`, data: dB.all.total_likes, backgroundColor: 'rgba(200, 99, 251, 0.8)', order: 2, stack: 'Stack 1' },
+                { label: `(${nameA}) 按讚數`, data: dA.all.total_likes, backgroundColor: 'rgba(162, 74, 53, 0.8)', order: 2, stack: 'Stack 0' },
+                { label: `(${nameB}) 按讚數`, data: dB.all.total_likes, backgroundColor: 'rgba(141, 163, 153, 0.8)', order: 2, stack: 'Stack 1' },
             ], mixOpt);
 
             createChart('commentChart', 'bar', [
-                { label: `(${nameA}) 留言數`, data: dA.all.total_comments, type: 'line', borderColor: '#bae6fd', borderWidth: 2, order: 1, pointRadius: 3 },
-                { label: `(${nameB}) 留言數`, data: dB.all.total_comments, type: 'line', borderColor: '#f3e8ff', borderWidth: 2, order: 1, pointRadius: 3 }
+                { label: `(${nameA}) 留言數`, data: dA.all.total_comments, type: 'line', borderColor: '#a24a35', borderWidth: 2, order: 1, pointRadius: 3 },
+                { label: `(${nameB}) 留言數`, data: dB.all.total_comments, type: 'line', borderColor: '#8da399', borderWidth: 2, order: 1, pointRadius: 3 }
             ], mixOpt);
 
             createChart('publishChart', 'bar', [
-                { label: `${nameA} (影片)`, data: dA.video.video_counts, backgroundColor: '#00daf3', stack: 'Stack 0' },
-                { label: `${nameA} (Shorts)`, data: dA.shorts.video_counts, backgroundColor: '#008291', stack: 'Stack 0' },
-                { label: `${nameA} (直播)`, data: dA.stream.video_counts, backgroundColor: '#9cf0ff', stack: 'Stack 0' },
+                { label: `${nameA} (影片)`, data: dA.video.video_counts, backgroundColor: '#a24a35', stack: 'Stack 0' },
+                { label: `${nameA} (Shorts)`, data: dA.shorts.video_counts, backgroundColor: '#d86c55', stack: 'Stack 0' },
+                { label: `${nameA} (直播)`, data: dA.stream.video_counts, backgroundColor: '#ffac99', stack: 'Stack 0' },
 
-                { label: `${nameB} (影片)`, data: dB.video.video_counts, backgroundColor: '#c863fb', stack: 'Stack 1' },
-                { label: `${nameB} (Shorts)`, data: dB.shorts.video_counts, backgroundColor: '#7a00b8', stack: 'Stack 1' },
-                { label: `${nameB} (直播)`, data: dB.stream.video_counts, backgroundColor: '#f6d9ff', stack: 'Stack 1' }
+                { label: `${nameB} (影片)`, data: dB.video.video_counts, backgroundColor: '#8da399', stack: 'Stack 1' },
+                { label: `${nameB} (Shorts)`, data: dB.shorts.video_counts, backgroundColor: '#5c7368', stack: 'Stack 1' },
+                { label: `${nameB} (直播)`, data: dB.stream.video_counts, backgroundColor: '#b0c2b9', stack: 'Stack 1' }
             ], commonOpt);
 
             // ★ 繪製四張迷你直條圖
@@ -562,7 +557,7 @@
                             legend: { display: false },
                             tooltip: {
                                 enabled: true,
-                                backgroundColor: 'rgba(22, 33, 62, 0.95)', titleColor: '#dde8f2', padding: 8,
+                                backgroundColor: 'rgba(255, 255, 255, 0.95)', titleColor: '#1c1917', bodyColor: '#57534e', padding: 8, borderColor: 'rgba(0,0,0,0.1)', borderWidth: 1,
                                 callbacks: {
                                     label: function (context) {
                                         return ' ' + (context.dataset.label ? context.dataset.label + ': ' : '') + formatNum(context.raw) + tooltipSuffix;
@@ -571,7 +566,7 @@
                             }
                         },
                         scales: {
-                            x: { stacked: isStacked, grid: { display: false, drawBorder: false }, ticks: { color: 'rgba(255,255,255,0.8)', font: { size: 10 } } },
+                            x: { stacked: isStacked, grid: { display: false, drawBorder: false }, ticks: { color: 'rgba(0,0,0,0.6)', font: { size: 10 } } },
                             y: { stacked: isStacked, display: false, beginAtZero: true, grid: { display: false } }
                         }
                     }
@@ -580,18 +575,18 @@
 
             // 總觀看 (堆疊顯示成分)
             createMiniCardChart('miniViewsChart', null, null, '', true, [
-                { label: '影片', data: [sumArray(dA.video.total_views), sumArray(dB.video.total_views)], backgroundColor: ['#00daf3', '#c863fb'], barThickness: 24 },
-                { label: 'Shorts', data: [sumArray(dA.shorts.total_views), sumArray(dB.shorts.total_views)], backgroundColor: ['#008291', '#7a00b8'], barThickness: 24 },
-                { label: '直播', data: [sumArray(dA.stream.total_views), sumArray(dB.stream.total_views)], backgroundColor: ['#9cf0ff', '#f6d9ff'], barThickness: 24 }
+                { label: '影片', data: [sumArray(dA.video.total_views), sumArray(dB.video.total_views)], backgroundColor: ['#a24a35', '#8da399'], barThickness: 24 },
+                { label: 'Shorts', data: [sumArray(dA.shorts.total_views), sumArray(dB.shorts.total_views)], backgroundColor: ['#d86c55', '#5c7368'], barThickness: 24 },
+                { label: '直播', data: [sumArray(dA.stream.total_views), sumArray(dB.stream.total_views)], backgroundColor: ['#ffac99', '#b0c2b9'], barThickness: 24 }
             ]);
             // 平均觀看 (單一柱體)
             createMiniCardChart('miniAvgViewsChart', Math.round(A_totViews / (A_totVideos || 1)), Math.round(B_totViews / (B_totVideos || 1)));
 
             // 總互動 (堆疊)
             createMiniCardChart('miniEngChart', null, null, '', true, [
-                { label: '影片', data: [sumArray(dA.video.total_likes) + sumArray(dA.video.total_comments), sumArray(dB.video.total_likes) + sumArray(dB.video.total_comments)], backgroundColor: ['#00daf3', '#c863fb'], barThickness: 24 },
-                { label: 'Shorts', data: [sumArray(dA.shorts.total_likes) + sumArray(dA.shorts.total_comments), sumArray(dB.shorts.total_likes) + sumArray(dB.shorts.total_comments)], backgroundColor: ['#008291', '#7a00b8'], barThickness: 24 },
-                { label: '直播', data: [sumArray(dA.stream.total_likes) + sumArray(dA.stream.total_comments), sumArray(dB.stream.total_likes) + sumArray(dB.stream.total_comments)], backgroundColor: ['#9cf0ff', '#f6d9ff'], barThickness: 24 }
+                { label: '影片', data: [sumArray(dA.video.total_likes) + sumArray(dA.video.total_comments), sumArray(dB.video.total_likes) + sumArray(dB.video.total_comments)], backgroundColor: ['#a24a35', '#8da399'], barThickness: 24 },
+                { label: 'Shorts', data: [sumArray(dA.shorts.total_likes) + sumArray(dA.shorts.total_comments), sumArray(dB.shorts.total_likes) + sumArray(dB.shorts.total_comments)], backgroundColor: ['#d86c55', '#5c7368'], barThickness: 24 },
+                { label: '直播', data: [sumArray(dA.stream.total_likes) + sumArray(dA.stream.total_comments), sumArray(dB.stream.total_likes) + sumArray(dB.stream.total_comments)], backgroundColor: ['#ffac99', '#b0c2b9'], barThickness: 24 }
             ]);
             // 互動率 (單一柱體)
             createMiniCardChart('miniRateChart', rateA, rateB, '%');
@@ -606,7 +601,7 @@
             allVids.sort((a, b) => b.view_count - a.view_count);
             allVids.slice(0, 5).forEach(v => {
                 const eng = ((v.like_count + v.comment_count) / (v.view_count || 1) * 100).toFixed(2);
-                const tr = document.createElement('tr'); tr.className = 'border-b border-outline-variant/10 hover:bg-surface-container transition-colors';
+                const tr = document.createElement('tr'); tr.className = 'border-b border-outline-variant hover:bg-surface-container transition-colors';
                 tr.innerHTML = `
                     <td class="py-3 px-2"><span class="text-xs font-bold px-2 py-1 rounded-full ${v.badge}">${v.labelName}</span></td>
                     <td class="py-3 px-2">
@@ -642,7 +637,7 @@
                 const initial = fan.name ? fan.name.charAt(0).toUpperCase() : '?';
                 const el = document.createElement('div'); el.className = 'flex items-center p-3 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors group';
                 el.innerHTML = `
-                    <div class="c-avatar bg-surface-container-highest border border-outline-variant/30 text-on-surface">${initial}</div>
+                    <div class="c-avatar bg-surface-container-highest border border-outline-variant text-on-surface">${initial}</div>
                     <div class="ml-3 flex-1 overflow-hidden">
                         <p class="text-sm font-bold truncate" title="${fan.name}">${fan.name}</p>
                         <div class="flex items-center gap-2 mt-0.5"><span class="text-xs px-1.5 rounded-sm font-bold ${fan.colorClass}">${fan.labelName} 粉絲</span></div>
