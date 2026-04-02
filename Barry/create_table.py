@@ -59,6 +59,7 @@ table_queries = [
         channel_id VARCHAR(24),
         author_id VARCHAR(24),
         author_name VARCHAR(100),
+        author_display_name TEXT,
         comment_count INT,               -- 總留言數量
         total_likes INT,                 -- 獲得的總讚數
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- 記錄更新時間
