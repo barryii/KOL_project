@@ -216,10 +216,10 @@
 
             <!-- 分頁 1 : 總覽 Dashboard -->
             <div id="tab-dashboard" class="tab-section block">
-                <h2 class="text-xl font-bold font-headline mb-4 text-on-surface border-b border-outline-variant pb-2">
+                <h2 id="dash-overview-title" class="text-xl font-bold font-headline mb-4 text-on-surface border-b border-outline-variant pb-2">
                     總覽摘要 Dashboard</h2>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div id="mini-cards-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <!-- 總觀看次數 -->
                     <div
                         class="bg-surface-container rounded-lg p-6 shadow-lg border-none border border-outline-variant relative overflow-hidden group">
@@ -579,7 +579,7 @@
                         ], { x: meta.data[index].x, y: meta.data[index].y });
                     }
                 }
-                chart.render(); // 使用 render 而非 update 以維持效能
+                chart.update('none'); // 使用 update('none') 以保持流暢度且強制 Tooltip 狀態生效
             });
         }
 
@@ -650,11 +650,17 @@
 
             const mkLineChart = (id, datasets) => {
                 if (charts[id]) charts[id].destroy();
-                charts[id] = new Chart(document.getElementById(id), {
+                const canvas = document.getElementById(id);
+                charts[id] = new Chart(canvas, {
                     type: 'line',
                     data: { labels, datasets },
                     options: lineOpt,
                     plugins: [hoverLinePlugin]
+                });
+                
+                // ★ 補位機制：滑鼠一離開「容器」，就廣播「移除提示」
+                canvas.parentElement.addEventListener('mouseleave', () => {
+                   syncChartsTooltip(-1);
                 });
             };
 
@@ -685,8 +691,12 @@
 
             const createChart = (id, datasets) => {
                 if (charts[id]) charts[id].destroy();
-                charts[id] = new Chart(document.getElementById(id), {
+                const canvas = document.getElementById(id);
+                charts[id] = new Chart(canvas, {
                     type: 'line', data: { labels, datasets }, options: lineOpt, plugins: [hoverLinePlugin]
+                });
+                canvas.parentElement.addEventListener('mouseleave', () => {
+                   syncChartsTooltip(-1);
                 });
             };
 
@@ -739,6 +749,13 @@
 
                 document.getElementById('loading-indicator').classList.add('hidden');
                 document.getElementById('dashboard-content').classList.remove('hidden');
+
+                // ★ 補強機制：當滑鼠移入上方標題或卡片區時，強制清除圖表連動提示
+                const clearAreas = ['dash-overview-title', 'mini-cards-container'];
+                clearAreas.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.addEventListener('mouseenter', () => syncChartsTooltip(-1));
+                });
 
                 // 觸發全域首次渲染
                 updateGlobalFilter('all');
