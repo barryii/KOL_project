@@ -139,29 +139,46 @@ def get_channel_overview(
 def get_top_fans(
     channel1_id: str = Query(..., description="第一個頻道的 ID"),
     channel2_id: str = Query(..., description="第二個頻道的 ID"),
+    video_type: str = Query("all", description="篩選特定的影片類型範疇"),
     top_n: int = Query(200, description="取預計算表中的前 N 名觀眾進行前端渲染")
 ):
     with DBManager().connect_to_db_readonly() as connection:
         with connection.cursor(dictionary=True) as cursor:
-            # 從 topN_comments 取資料
-            sql = """
-                SELECT 
-                    author_id,
-                    author_name,
-                    author_display_name,
-                    comment_count,
-                    total_likes
-                FROM topN_comments
-                WHERE channel_id = %s
-                ORDER BY total_likes DESC, comment_count DESC
-                LIMIT %s
-            """
-            
-            cursor.execute(sql, (channel1_id, top_n))
-            channel1_results = cursor.fetchall()
-            
-            cursor.execute(sql, (channel2_id, top_n))
-            channel2_results = cursor.fetchall()
+            # 依據 video_type 決定使用哪個查詢邏輯
+            if video_type == 'all':
+                # 全量：從預計算好的表中「加總」各維度的數據
+                sql_all = """
+                    SELECT 
+                        author_id, 
+                        MAX(author_name) as author_name, 
+                        MAX(author_display_name) as author_display_name,
+                        SUM(comment_count) as comment_count,
+                        SUM(total_likes) as total_likes
+                    FROM topN_comments
+                    WHERE channel_id = %s
+                    GROUP BY author_id
+                    ORDER BY total_likes DESC, comment_count DESC
+                    LIMIT %s
+                """
+                cursor.execute(sql_all, (channel1_id, top_n))
+                channel1_results = cursor.fetchall()
+                cursor.execute(sql_all, (channel2_id, top_n))
+                channel2_results = cursor.fetchall()
+            else:
+                # 分維度：直接從整理過的 topN_comments 抓取該類型的數據
+                sql_type = """
+                    SELECT 
+                        author_id, author_name, author_display_name,
+                        comment_count, total_likes
+                    FROM topN_comments
+                    WHERE channel_id = %s AND `type` = %s
+                    ORDER BY total_likes DESC, comment_count DESC
+                    LIMIT %s
+                """
+                cursor.execute(sql_type, (channel1_id, video_type, top_n))
+                channel1_results = cursor.fetchall()
+                cursor.execute(sql_type, (channel2_id, video_type, top_n))
+                channel2_results = cursor.fetchall()
             
             # 回傳給前端
             return {
