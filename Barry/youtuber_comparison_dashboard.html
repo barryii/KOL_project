@@ -13,6 +13,7 @@
         rel="stylesheet" />
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
 
     <script id="tailwind-config">
         tailwind.config = {
@@ -432,7 +433,8 @@
                         class="lg:col-span-4 bg-surface-container-low rounded-lg p-8 shadow-xl border-none border border-outline-variant flex flex-col">
                         <div class="flex flex-col gap-4 mb-6">
                             <h3 class="font-headline font-bold text-lg flex items-center gap-2">
-                                <span id="fan-leaderboard-icon" class="material-symbols-outlined text-tertiary-container">forum</span>
+                                <span id="fan-leaderboard-icon"
+                                    class="material-symbols-outlined text-tertiary-container">forum</span>
                                 熱門鐵粉 <span id="fan-leaderboard-type-label" class="text-primary">頻道全量</span> 排行榜
                             </h3>
                             <div class="flex gap-2 text-xs w-full flex-wrap">
@@ -494,6 +496,7 @@
         let dashChartOpts = {};  // 全域儲存 Chart.js 選項
         let globalVideoType = 'all'; // 全域影片類型篩選狀態
         let sharedHoverIndex = -1;   // 全域同步 Hover 索引
+        let isSyncingZoom = false;   // ★ 防止縮放連動無窮遞迴的旗標
 
         const formatNum = num => num.toLocaleString('en-US');
         const sumArray = arr => arr.reduce((a, b) => a + Number(b), 0);
@@ -562,7 +565,6 @@
         // --- 全域圖表同步函式 ---
         function syncChartsTooltip(index, skipChartId = null) {
             sharedHoverIndex = index;
-            // 定義要參與同步的圖表 ID
             const syncIds = ['totalViewsChart', 'avgViewsChart', 'publishChart', 'likeChart', 'commentChart'];
 
             syncIds.forEach(id => {
@@ -580,9 +582,73 @@
                         ], { x: meta.data[index].x, y: meta.data[index].y });
                     }
                 }
-                chart.update('none'); // 使用 update('none') 以保持流暢度且強制 Tooltip 狀態生效
+                chart.update('none');
             });
         }
+
+        // ★ 全域圖表縮放同步
+        function syncChartsZoom(min, max, skipChartId = null) {
+            if (isSyncingZoom) return;
+            isSyncingZoom = true;
+            try {
+                const syncIds = ['totalViewsChart', 'avgViewsChart', 'publishChart', 'likeChart', 'commentChart'];
+                const labelsLen = (dashChartOpts.labels || []).length;
+
+                // 校準數值，確保不超出範圍且為整數索引
+                const safeMin = Math.max(0, Math.min(labelsLen - 1, Math.floor(min)));
+                const safeMax = Math.max(0, Math.min(labelsLen - 1, Math.ceil(max)));
+
+                syncIds.forEach(id => {
+                    const chart = charts[id];
+                    if (!chart || id === skipChartId) return;
+                    chart.options.scales.x.min = safeMin;
+                    chart.options.scales.x.max = safeMax;
+                    chart.update('none');
+                });
+            } finally {
+                isSyncingZoom = false;
+            }
+        }
+
+        // ★ 全域縮放還原 (實作物理重設，不仰賴插件快取)
+        function globalResetZoom() {
+            if (isSyncingZoom) return;
+            isSyncingZoom = true;
+            try {
+                console.log("發動物理縮放還原...");
+                const syncIds = ['totalViewsChart', 'avgViewsChart', 'publishChart', 'likeChart', 'commentChart'];
+                syncIds.forEach(id => {
+                    const chart = charts[id];
+                    if (!chart) return;
+
+                    // 強制從選項層級清除限制 (使用 undefined 才是正確重設)
+                    if (chart.options.scales && chart.options.scales.x) {
+                        chart.options.scales.x.min = undefined;
+                        chart.options.scales.x.max = undefined;
+                    }
+
+                    // 同步清理全域模板中的殘留
+                    if (dashChartOpts.lineOpt && dashChartOpts.lineOpt.scales && dashChartOpts.lineOpt.scales.x) {
+                        dashChartOpts.lineOpt.scales.x.min = undefined;
+                        dashChartOpts.lineOpt.scales.x.max = undefined;
+                    }
+
+                    chart.update('default');
+                });
+            } catch (e) {
+                console.error("還原失敗:", e);
+            } finally {
+                isSyncingZoom = false;
+            }
+        }
+
+        // ★ 全域事件委派：處理所有趨勢圖的雙擊還原
+        document.addEventListener('dblclick', (e) => {
+            const syncIds = ['totalViewsChart', 'avgViewsChart', 'publishChart', 'likeChart', 'commentChart'];
+            if (e.target.tagName === 'CANVAS' && syncIds.includes(e.target.id)) {
+                globalResetZoom();
+            }
+        });
 
         async function updateGlobalFilter(type) {
             globalVideoType = type;
@@ -595,6 +661,7 @@
             if (activeBtn) activeBtn.classList.add('dash-filter-active');
 
             // 2. 觸發各分頁連動更新
+            globalResetZoom();            // ★ 切換時強制回歸初始視野
             renderDashboardCharts(type);  // 更新 Dashboard (三圖、四卡)
             updateTopVideosUI();          // 更新影片排行榜
             renderAudienceCharts(type);   // 更新互動趨勢圖
@@ -604,10 +671,10 @@
                 // UI 提示：抓取中
                 const listContainer = document.getElementById('top-commenters-list');
                 if (listContainer) listContainer.innerHTML = '<div class="flex justify-center p-8"><span class="material-symbols-outlined animate-spin text-2xl opacity-30">progress_activity</span></div>';
-                
+
                 const res = await fetch(`http://localhost:8000/api/top_fans?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}&top_n=200&video_type=${type}`);
                 globalFansData = await res.json();
-                
+
                 // 更新標題圖示與文字
                 const iconMap = { all: 'forum', video: 'movie', shorts: 'bolt', stream: 'live_tv' };
                 const labelMap = { all: '頻道全量', video: '一般影片', shorts: 'Shorts', stream: '直播' };
@@ -674,12 +741,27 @@
             const mkLineChart = (id, datasets) => {
                 if (charts[id]) charts[id].destroy();
                 const canvas = document.getElementById(id);
+
+                // ★ 真正深層隔離配置：避免 plugins.zoom 物件共用
+                const instanceOpt = JSON.parse(JSON.stringify(lineOpt));
+                instanceOpt.onHover = lineOpt.onHover;
+                // 強制重建深層 path，確保 zoom 狀態不互穿
+                instanceOpt.plugins = {
+                    ...lineOpt.plugins,
+                    zoom: JSON.parse(JSON.stringify(lineOpt.plugins.zoom))
+                };
+                // 補回被 stringify 掉的函式
+                instanceOpt.plugins.zoom.zoom.onZoomComplete = lineOpt.plugins.zoom.zoom.onZoomComplete;
+                instanceOpt.plugins.zoom.zoom.onPanComplete = lineOpt.plugins.zoom.zoom.onPanComplete;
+
                 charts[id] = new Chart(canvas, {
                     type: 'line',
                     data: { labels, datasets },
-                    options: lineOpt,
+                    options: instanceOpt,
                     plugins: [hoverLinePlugin]
                 });
+
+                // --- 已由全域事件委派處理 dblclick ---
 
                 // ★ 補位機制：滑鼠一離開「容器」，就廣播「移除提示」
                 canvas.parentElement.addEventListener('mouseleave', () => {
@@ -715,9 +797,20 @@
             const createChart = (id, datasets) => {
                 if (charts[id]) charts[id].destroy();
                 const canvas = document.getElementById(id);
+
+                const instanceOpt = JSON.parse(JSON.stringify(lineOpt));
+                instanceOpt.onHover = lineOpt.onHover;
+                instanceOpt.plugins = {
+                    ...lineOpt.plugins,
+                    zoom: JSON.parse(JSON.stringify(lineOpt.plugins.zoom))
+                };
+                instanceOpt.plugins.zoom.zoom.onZoomComplete = lineOpt.plugins.zoom.zoom.onZoomComplete;
+                instanceOpt.plugins.zoom.zoom.onPanComplete = lineOpt.plugins.zoom.zoom.onPanComplete;
+
                 charts[id] = new Chart(canvas, {
-                    type: 'line', data: { labels, datasets }, options: lineOpt, plugins: [hoverLinePlugin]
+                    type: 'line', data: { labels, datasets }, options: instanceOpt, plugins: [hoverLinePlugin]
                 });
+                // --- 已由全域事件委派處理 dblclick ---
                 canvas.parentElement.addEventListener('mouseleave', () => {
                     syncChartsTooltip(-1);
                 });
@@ -853,6 +946,27 @@
                         backgroundColor: 'rgba(255, 255, 255, 0.95)', titleColor: '#1c1917', bodyColor: '#57534e', padding: 13, borderWidth: 1, borderColor: 'rgba(0,0,0,0.1)',
                         callbacks: {
                             label: (context) => ` ${context.dataset.label}: ${formatNum(context.raw)}`
+                        }
+                    },
+                    zoom: {
+                        zoom: {
+                            drag: {
+                                enabled: true,
+                                backgroundColor: 'rgba(162, 74, 53, 0.1)',
+                                borderColor: '#a24a35',
+                                borderWidth: 1
+                            },
+                            mode: 'x', // 僅在時間軸 (X軸) 進行縮放較符合趨勢圖邏輯
+                            onZoomComplete: ({ chart }) => {
+                                if (isSyncingZoom) return;
+                                const { min, max } = chart.scales.x;
+                                syncChartsZoom(min, max, chart.canvas.id);
+                            },
+                            onPanComplete: ({ chart }) => {
+                                if (isSyncingZoom) return;
+                                const { min, max } = chart.scales.x;
+                                syncChartsZoom(min, max, chart.canvas.id);
+                            }
                         }
                     }
                 },
