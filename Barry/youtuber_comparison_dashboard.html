@@ -246,7 +246,7 @@
                             </div>
                         </div>
 
-                        <div class="relative h-14 w-full z-10">
+                        <div class="relative h-20 w-full z-10">
                             <canvas id="miniViewsChart"></canvas>
                         </div>
                     </div>
@@ -275,7 +275,7 @@
                             </div>
                         </div>
 
-                        <div class="relative h-14 w-full z-10">
+                        <div class="relative h-20 w-full z-10">
                             <canvas id="miniAvgViewsChart"></canvas>
                         </div>
                     </div>
@@ -304,7 +304,7 @@
                             </div>
                         </div>
 
-                        <div class="relative h-14 w-full z-10">
+                        <div class="relative h-20 w-full z-10">
                             <canvas id="miniEngChart"></canvas>
                         </div>
                     </div>
@@ -333,7 +333,7 @@
                             </div>
                         </div>
 
-                        <div class="relative h-14 w-full z-10">
+                        <div class="relative h-20 w-full z-10">
                             <canvas id="miniRateChart"></canvas>
                         </div>
                     </div>
@@ -525,12 +525,20 @@
                 options: {
                     indexAxis: 'y',
                     responsive: true, maintainAspectRatio: false,
-                    interaction: { mode: 'index', intersect: false },
+                    animation: { duration: 400 }, // 加入微量平滑動畫
+                    interaction: { mode: 'index', intersect: false, axis: 'y' },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
                             enabled: true,
-                            backgroundColor: 'rgba(255, 255, 255, 0.95)', titleColor: '#1c1917', bodyColor: '#57534e', padding: 8, borderColor: 'rgba(0,0,0,0.1)', borderWidth: 1,
+                            position: 'average', // ★ 讓提示窗穩定在中心點，避免亂跳
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            titleColor: '#1c1917',
+                            bodyColor: '#57534e',
+                            padding: 6,
+                            bodyFont: { size: 10 }, // 縮小字體以在迷你圖中容納 3 行
+                            borderColor: 'rgba(0,0,0,0.1)',
+                            borderWidth: 1,
                             callbacks: {
                                 label: function (context) {
                                     return ' ' + (context.dataset.label ? context.dataset.label + ': ' : '') + formatNum(context.raw) + tooltipSuffix;
@@ -940,12 +948,13 @@
                 interaction: {
                     mode: 'index',
                     intersect: false,
+                    axis: 'x' // 趨勢圖明確鎖定 X 軸區間偵測
                 },
                 plugins: {
                     legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } },
                     tooltip: {
                         enabled: true,
-                        position: 'nearest',
+                        position: 'average', // 使用平均位置防止在兩線間「跳動」
                         backgroundColor: 'rgba(255, 255, 255, 0.95)', titleColor: '#1c1917', bodyColor: '#57534e', padding: 13, borderWidth: 1, borderColor: 'rgba(0,0,0,0.1)',
                         callbacks: {
                             label: (context) => ` ${context.dataset.label}: ${formatNum(context.raw)}`
