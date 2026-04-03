@@ -473,6 +473,9 @@
     </main>
 
     <script>
+        // ★ API 基礎路徑變數 (方便之後切換到雲端或生產環境)
+        const API_BASE_URL = 'http://localhost:8000';
+
         const CHANNEL_1_ID = 'UC9i2Qgd5lizhVgJrdnxunKw';
         const CHANNEL_2_ID = 'UCa2YiSXNTkmOA-QTKdzzbSQ';
 
@@ -672,7 +675,7 @@
                 const listContainer = document.getElementById('top-commenters-list');
                 if (listContainer) listContainer.innerHTML = '<div class="flex justify-center p-8"><span class="material-symbols-outlined animate-spin text-2xl opacity-30">progress_activity</span></div>';
 
-                const res = await fetch(`http://localhost:8000/api/top_fans?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}&top_n=200&video_type=${type}`);
+                const res = await fetch(`${API_BASE_URL}/api/top_fans?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}&top_n=200&video_type=${type}`);
                 globalFansData = await res.json();
 
                 // 更新標題圖示與文字
@@ -831,10 +834,10 @@
             try {
                 // 發出 4 支 API 請求 (多加了 channel_info 拿真實名稱)
                 const [infoRes, overviewRes, commentersRes, topVideosRes] = await Promise.all([
-                    fetch(`http://localhost:8000/api/channel_info`),
-                    fetch(`http://localhost:8000/api/overview?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}`),
-                    fetch(`http://localhost:8000/api/top_fans?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}&top_n=200&video_type=${globalVideoType}`),
-                    fetch(`http://localhost:8000/api/top_videos?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}&top_n=0`)
+                    fetch(`${API_BASE_URL}/api/channel_info`),
+                    fetch(`${API_BASE_URL}/api/overview?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}`),
+                    fetch(`${API_BASE_URL}/api/top_fans?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}&top_n=200&video_type=${globalVideoType}`),
+                    fetch(`${API_BASE_URL}/api/top_videos?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}&top_n=0`)
                 ]);
 
                 if (!infoRes.ok || !overviewRes.ok || !commentersRes.ok || !topVideosRes.ok) throw new Error("API 回應錯誤");
