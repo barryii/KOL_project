@@ -104,9 +104,9 @@
         /* ★ 全域字體大小變數位：調整這裡可同時更改四張卡片的文字大小 */
         :root {
             /* 最上方的小類別標題 (原本 10px) */
-            --card-title-size: 18px;
+            --card-title-size: 16px;
             /* YouTuber 名字 (原本 12px) */
-            --card-name-size: 20px;
+            --card-name-size: 18px;
             /* 關鍵數據的大數字 (原本 20px) */
             --card-value-size: 22px;
 
@@ -542,6 +542,10 @@
         let globalVideoType = 'all'; // 全域影片類型篩選狀態
         let sharedHoverIndex = -1;   // 全域同步 Hover 索引
         let isSyncingZoom = false;   // ★ 防止縮放連動無窮遞迴的旗標
+        
+        // ★ 全域縮放狀態紀錄：讓切換類型時能維持縮放視野
+        let currentZoomMin = null;
+        let currentZoomMax = null;
 
         const formatNum = num => num.toLocaleString('en-US');
         const sumArray = arr => arr.reduce((a, b) => a + Number(b), 0);
@@ -671,6 +675,10 @@
                 // ★ 連動：重算上方數據摘要 (僅計算不重建圖表，確保平滑)
                 updateSummaryMetrics(globalVideoType, safeMin, safeMax);
 
+                // ★ 紀錄目前的縮放狀態至全域，供切換類型時使用
+                currentZoomMin = safeMin;
+                currentZoomMax = safeMax;
+
             } finally {
                 isSyncingZoom = false;
             }
@@ -702,8 +710,10 @@
                     chart.update('default');
                 });
 
-                // ★ 還原連動：將數據重設為全量
+                // ★ 還原連動：將數據與全域變數重設為全量
                 const labelsLen = (dashChartOpts.labels || []).length;
+                currentZoomMin = null;
+                currentZoomMax = null;
                 updateSummaryMetrics(globalVideoType, 0, labelsLen - 1);
 
             } catch (e) {
@@ -732,9 +742,9 @@
             if (activeBtn) activeBtn.classList.add('dash-filter-active');
 
             // 2. 觸發各分頁連動更新
-            globalResetZoom();            // ★ 切換時強制回歸初始視野
-            renderTrendCharts(type);      // 建立趨勢圖 (僅在此處重建)
-            updateSummaryMetrics(type);   // 更新數據面板 (依目前視野重算)
+            // globalResetZoom();        // ★ 移除：不再強制重設，以維持縮放視野
+            renderTrendCharts(type);      // 建立趨勢圖
+            updateSummaryMetrics(type, currentZoomMin, currentZoomMax); // ★ 使用目前的縮放範圍
             updateTopVideosUI();          // 更新影片排行榜
             renderAudienceCharts(type);   // 更新互動趨勢圖
 
@@ -842,6 +852,15 @@
                 // ★ 真正深層隔離配置：避免 plugins.zoom 物件共用
                 const instanceOpt = JSON.parse(JSON.stringify(lineOpt));
                 instanceOpt.onHover = lineOpt.onHover;
+
+                // ★ 套用目前的縮放視野 (如果有的話)
+                if (currentZoomMin !== null && currentZoomMax !== null) {
+                    if (!instanceOpt.scales) instanceOpt.scales = {};
+                    if (!instanceOpt.scales.x) instanceOpt.scales.x = {};
+                    instanceOpt.scales.x.min = currentZoomMin;
+                    instanceOpt.scales.x.max = currentZoomMax;
+                }
+
                 // 強制重建深層 path，確保 zoom 狀態不互穿
                 instanceOpt.plugins = {
                     ...lineOpt.plugins,
