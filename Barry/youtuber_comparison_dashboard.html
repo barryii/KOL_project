@@ -101,6 +101,13 @@
             scrollbar-width: none;
         }
 
+        /* ★ 全域字體大小變數位：調整這裡可同時更改四張卡片的文字大小 */
+        :root {
+            --card-title-size: 11px;  /* 最上方的小類別標題 (原本 10px) */
+            --card-name-size: 13px;   /* YouTuber 名字 (原本 12px) */
+            --card-value-size: 22px;  /* 關鍵數據的大數字 (原本 20px) */
+        }
+
         .nav-item.active {
             background: linear-gradient(135deg, #CF5800 0%, #FFB19C 100%);
             color: #ffffff !important;
@@ -230,18 +237,21 @@
                             <span class="material-symbols-outlined text-[100px]">visibility</span>
                         </div>
                         <p
-                            class="text-on-surface-variant text-[10px] mb-3 font-black tracking-widest uppercase opacity-70">
+                            class="text-on-surface-variant mb-3 font-black tracking-widest uppercase opacity-70"
+                            style="font-size: var(--card-title-size);">
                             累積觀看次數</p>
 
                         <div class="flex flex-col gap-1 mb-3 relative z-10">
                             <div class="flex justify-between items-end">
-                                <span class="text-xs font-bold text-on-surface-variant name-a">YTer A</span>
-                                <span class="text-xl font-black font-headline text-primary leading-none"
+                                <span class="font-bold text-on-surface-variant name-a" style="font-size: var(--card-name-size);">YTer A</span>
+                                <span class="font-black font-headline text-primary leading-none"
+                                    style="font-size: var(--card-value-size);"
                                     id="val-views-a">0</span>
                             </div>
                             <div class="flex justify-between items-end">
-                                <span class="text-xs font-bold text-on-surface-variant name-b">YTer B</span>
-                                <span class="text-xl font-black font-headline text-on-surface-variant leading-none"
+                                <span class="font-bold text-on-surface-variant name-b" style="font-size: var(--card-name-size);">YTer B</span>
+                                <span class="font-black font-headline text-on-surface-variant leading-none"
+                                    style="font-size: var(--card-value-size);"
                                     id="val-views-b">0</span>
                             </div>
                         </div>
@@ -259,18 +269,21 @@
                             <span class="material-symbols-outlined text-[100px]">monitoring</span>
                         </div>
                         <p
-                            class="text-on-surface-variant text-[10px] mb-3 font-black tracking-widest uppercase opacity-70">
+                            class="text-on-surface-variant mb-3 font-black tracking-widest uppercase opacity-70"
+                            style="font-size: var(--card-title-size);">
                             單支影片平均觀看</p>
 
                         <div class="flex flex-col gap-1 mb-3 relative z-10">
                             <div class="flex justify-between items-end">
-                                <span class="text-xs font-bold text-on-surface-variant name-a">YTer A</span>
-                                <span class="text-xl font-black font-headline text-primary leading-none"
+                                <span class="font-bold text-on-surface-variant name-a" style="font-size: var(--card-name-size);">YTer A</span>
+                                <span class="font-black font-headline text-primary leading-none"
+                                    style="font-size: var(--card-value-size);"
                                     id="val-avg-a">0</span>
                             </div>
                             <div class="flex justify-between items-end">
-                                <span class="text-xs font-bold text-on-surface-variant name-b">YTer B</span>
-                                <span class="text-xl font-black font-headline text-on-surface-variant leading-none"
+                                <span class="font-bold text-on-surface-variant name-b" style="font-size: var(--card-name-size);">YTer B</span>
+                                <span class="font-black font-headline text-on-surface-variant leading-none"
+                                    style="font-size: var(--card-value-size);"
                                     id="val-avg-b">0</span>
                             </div>
                         </div>
@@ -288,18 +301,21 @@
                             <span class="material-symbols-outlined text-[100px]">favorite</span>
                         </div>
                         <p
-                            class="text-on-surface-variant text-[10px] mb-3 font-black tracking-widest uppercase opacity-70">
+                            class="text-on-surface-variant mb-3 font-black tracking-widest uppercase opacity-70"
+                            style="font-size: var(--card-title-size);">
                             總互動數 (按讚+留言)</p>
 
                         <div class="flex flex-col gap-1 mb-3 relative z-10">
                             <div class="flex justify-between items-end">
-                                <span class="text-xs font-bold text-on-surface-variant name-a">YTer A</span>
-                                <span class="text-xl font-black font-headline text-primary leading-none"
+                                <span class="font-bold text-on-surface-variant name-a" style="font-size: var(--card-name-size);">YTer A</span>
+                                <span class="font-black font-headline text-primary leading-none"
+                                    style="font-size: var(--card-value-size);"
                                     id="val-enc-a">0</span>
                             </div>
                             <div class="flex justify-between items-end">
-                                <span class="text-xs font-bold text-on-surface-variant name-b">YTer B</span>
-                                <span class="text-xl font-black font-headline text-on-surface-variant leading-none"
+                                <span class="font-bold text-on-surface-variant name-b" style="font-size: var(--card-name-size);">YTer B</span>
+                                <span class="font-black font-headline text-on-surface-variant leading-none"
+                                    style="font-size: var(--card-value-size);"
                                     id="val-enc-b">0</span>
                             </div>
                         </div>
@@ -317,18 +333,21 @@
                             <span class="material-symbols-outlined text-[100px]">bolt</span>
                         </div>
                         <p
-                            class="text-on-surface-variant text-[10px] mb-3 font-black tracking-widest uppercase opacity-70">
+                            class="text-on-surface-variant mb-3 font-black tracking-widest uppercase opacity-70"
+                            style="font-size: var(--card-title-size);">
                             平均互動率 (Engagement)</p>
 
                         <div class="flex flex-col gap-1 mb-3 relative z-10">
                             <div class="flex justify-between items-end">
-                                <span class="text-xs font-bold text-on-surface-variant name-a">YTer A</span>
-                                <span class="text-xl font-black font-headline text-primary leading-none"
+                                <span class="font-bold text-on-surface-variant name-a" style="font-size: var(--card-name-size);">YTer A</span>
+                                <span class="font-black font-headline text-primary leading-none"
+                                    style="font-size: var(--card-value-size);"
                                     id="val-rate-a">0%</span>
                             </div>
                             <div class="flex justify-between items-end">
-                                <span class="text-xs font-bold text-on-surface-variant name-b">YTer B</span>
-                                <span class="text-xl font-black font-headline text-on-surface-variant leading-none"
+                                <span class="font-bold text-on-surface-variant name-b" style="font-size: var(--card-name-size);">YTer B</span>
+                                <span class="font-black font-headline text-on-surface-variant leading-none"
+                                    style="font-size: var(--card-value-size);"
                                     id="val-rate-b">0%</span>
                             </div>
                         </div>
