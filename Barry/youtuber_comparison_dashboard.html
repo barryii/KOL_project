@@ -65,13 +65,15 @@
         }
 
         .yter-badge-a {
-            background-color: rgba(162, 74, 53, 0.15);
-            color: #a24a35;
+            background-color: var(--yter-a-bg);
+            color: var(--yter-a-color);
+            transition: var(--theme-transition);
         }
 
         .yter-badge-b {
-            background-color: rgba(141, 163, 153, 0.2);
-            color: #5c7368;
+            background-color: var(--yter-b-bg);
+            color: var(--yter-b-color);
+            transition: var(--theme-transition);
         }
 
         .video-thumb {
@@ -117,6 +119,23 @@
 
             /* 折線圖區塊標題字體大小變數 */
             --chart-section-title-size: 18px;
+
+            /* ★ 第一位 YTer (紅/深紅/淺紅) */
+            --color-ch1-dark: #a24a35;
+            --color-ch1-medium: #d86c55;
+            --color-ch1-light: #FF8C70;
+
+            /* ★ 第二位 YTer (深綠/中綠/淺綠) */
+            --color-ch2-dark: #5c7368;
+            --color-ch2-medium: #8da399;
+            --color-ch2-light: #b0c2b9;
+
+            /* ★ 動態主題色彩 (預設為 'all' 的標誌色) */
+            --yter-a-color: var(--color-ch1-dark);
+            --yter-a-bg: rgba(162, 74, 53, 0.1);
+            --yter-b-color: var(--color-ch2-medium);
+            --yter-b-bg: rgba(141, 163, 153, 0.2);
+            --theme-transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
         }
 
         .nav-item.active {
@@ -525,15 +544,37 @@
         let nameA = 'YTer A';
         let nameB = 'YTer B';
 
-        const colorA = '#a24a35';
-        const bgA = 'rgba(162, 74, 53, 0.1)';
-        const classBadgeA = 'yter-badge-a';
+        // ★ 從 CSS 抓取色階變數
+        const ch1Dark = getStyleVar('--color-ch1-dark') || '#a24a35';
+        const ch1Med = getStyleVar('--color-ch1-medium') || '#d86c55';
+        const ch1Lite = getStyleVar('--color-ch1-light') || '#ffac99';
+        const ch2Dark = getStyleVar('--color-ch2-dark') || '#5c7368';
+        const ch2Med = getStyleVar('--color-ch2-medium') || '#8da399';
+        const ch2Lite = getStyleVar('--color-ch2-light') || '#b0c2b9';
 
-        const colorB = '#8da399';
-        const bgB = 'rgba(141, 163, 153, 0.2)';
-        const classBadgeB = 'yter-badge-b';
+        // ★ 色彩主題映射表
+        const THEME_CONFIG = {
+            all: {
+                a: { primary: ch1Dark, bg: 'rgba(162, 74, 53, 0.1)' },
+                b: { primary: ch2Med, bg: 'rgba(141, 163, 153, 0.2)' }
+            },
+            video: {
+                a: { primary: ch1Dark, bg: 'rgba(162, 74, 53, 0.1)' },
+                b: { primary: ch2Dark, bg: 'rgba(92, 115, 104, 0.2)' }
+            },
+            shorts: {
+                a: { primary: ch1Med, bg: 'rgba(216, 108, 85, 0.1)' },
+                b: { primary: ch2Med, bg: 'rgba(141, 163, 153, 0.2)' }
+            },
+            stream: {
+                a: { primary: ch1Lite, bg: 'rgba(255, 172, 153, 0.1)' },
+                b: { primary: ch2Lite, bg: 'rgba(176, 194, 185, 0.2)' }
+            }
+        };
 
         const gridColor = 'rgba(0, 0, 0, 0.05)';
+        const classBadgeA = 'yter-badge-a';
+        const classBadgeB = 'yter-badge-b';
         let charts = {};
         let globalFansData = null; // 全域儲存撈回來的鐵粉資料
         let globalVideosData = null; // 全域儲存熱門影片資料
@@ -542,7 +583,7 @@
         let globalVideoType = 'all'; // 全域影片類型篩選狀態
         let sharedHoverIndex = -1;   // 全域同步 Hover 索引
         let isSyncingZoom = false;   // ★ 防止縮放連動無窮遞迴的旗標
-        
+
         // ★ 全域縮放狀態紀錄：讓切換類型時能維持縮放視野
         let currentZoomMin = null;
         let currentZoomMax = null;
@@ -552,9 +593,15 @@
 
         const createMiniCardChart = (id, valA, valB, tooltipSuffix = '', isStacked = false, datasets = null) => {
             if (charts[id]) charts[id].destroy();
+
+            // ★ 動態獲取目前的配色
+            const theme = THEME_CONFIG[globalVideoType] || THEME_CONFIG.all;
+            const currentA = theme.a.primary;
+            const currentB = theme.b.primary;
+
             let ds = datasets;
             if (!ds) {
-                ds = [{ data: [valA, valB], backgroundColor: [colorA, colorB], borderRadius: 4, barThickness: 16 }];
+                ds = [{ data: [valA, valB], backgroundColor: [currentA, currentB], borderRadius: 4, barThickness: 16 }];
             } else {
                 // 如果是堆疊圖，確保 barThickness 統一
                 ds.forEach(d => { d.barThickness = 16; d.borderRadius = 0; });
@@ -734,6 +781,14 @@
         async function updateGlobalFilter(type) {
             globalVideoType = type;
 
+            // ★ 更新全域主題色彩 (CSS 變數)
+            const theme = THEME_CONFIG[type] || THEME_CONFIG.all;
+            const root = document.documentElement;
+            root.style.setProperty('--yter-a-color', theme.a.primary);
+            root.style.setProperty('--yter-a-bg', theme.a.bg);
+            root.style.setProperty('--yter-b-color', theme.b.primary);
+            root.style.setProperty('--yter-b-bg', theme.b.bg);
+
             // 1. 更新 UI 按鈕樣式 (Header)
             document.querySelectorAll('.dash-filter-btn').forEach(btn => {
                 btn.classList.remove('dash-filter-active');
@@ -813,14 +868,14 @@
             // 5. 更新迷你比例圖 (Horizontal Bars)
             if (type === 'all') {
                 createMiniCardChart('miniViewsChart', null, null, '', true, [
-                    { label: '影片', data: [sumSlice(dA.video.total_views), sumSlice(dB.video.total_views)], backgroundColor: ['#a24a35', '#8da399'] },
-                    { label: 'Shorts', data: [sumSlice(dA.shorts.total_views), sumSlice(dB.shorts.total_views)], backgroundColor: ['#d86c55', '#5c7368'] },
-                    { label: '直播', data: [sumSlice(dA.stream.total_views), sumSlice(dB.stream.total_views)], backgroundColor: ['#ffac99', '#b0c2b9'] }
+                    { label: '影片', data: [sumSlice(dA.video.total_views), sumSlice(dB.video.total_views)], backgroundColor: [ch1Dark, ch2Dark] },
+                    { label: 'Shorts', data: [sumSlice(dA.shorts.total_views), sumSlice(dB.shorts.total_views)], backgroundColor: [ch1Med, ch2Med] },
+                    { label: '直播', data: [sumSlice(dA.stream.total_views), sumSlice(dB.stream.total_views)], backgroundColor: [ch1Lite, ch2Lite] }
                 ]);
                 createMiniCardChart('miniEngChart', null, null, '', true, [
-                    { label: '影片', data: [sumSlice(dA.video.total_likes) + sumSlice(dA.video.total_comments), sumSlice(dB.video.total_likes) + sumSlice(dB.video.total_comments)], backgroundColor: ['#a24a35', '#8da399'] },
-                    { label: 'Shorts', data: [sumSlice(dA.shorts.total_likes) + sumSlice(dA.shorts.total_comments), sumSlice(dB.shorts.total_likes) + sumSlice(dB.shorts.total_comments)], backgroundColor: ['#d86c55', '#5c7368'] },
-                    { label: '直播', data: [sumSlice(dA.stream.total_likes) + sumSlice(dA.stream.total_comments), sumSlice(dB.stream.total_likes) + sumSlice(dB.stream.total_comments)], backgroundColor: ['#ffac99', '#b0c2b9'] }
+                    { label: '影片', data: [sumSlice(dA.video.total_likes) + sumSlice(dA.video.total_comments), sumSlice(dB.video.total_likes) + sumSlice(dB.video.total_comments)], backgroundColor: [ch1Dark, ch2Dark] },
+                    { label: 'Shorts', data: [sumSlice(dA.shorts.total_likes) + sumSlice(dA.shorts.total_comments), sumSlice(dB.shorts.total_likes) + sumSlice(dB.shorts.total_comments)], backgroundColor: [ch1Med, ch2Med] },
+                    { label: '直播', data: [sumSlice(dA.stream.total_likes) + sumSlice(dA.stream.total_comments), sumSlice(dB.stream.total_likes) + sumSlice(dB.stream.total_comments)], backgroundColor: [ch1Lite, ch2Lite] }
                 ]);
             } else {
                 createMiniCardChart('miniViewsChart', viewsA, viewsB);
@@ -848,6 +903,13 @@
             const mkLineChart = (id, datasets) => {
                 if (charts[id]) charts[id].destroy();
                 const canvas = document.getElementById(id);
+
+                // ★ 動態獲取目前的配色
+                const theme = THEME_CONFIG[globalVideoType] || THEME_CONFIG.all;
+                datasets[0].borderColor = theme.a.primary;
+                datasets[0].backgroundColor = theme.a.bg;
+                datasets[1].borderColor = theme.b.primary;
+                datasets[1].backgroundColor = theme.b.bg;
 
                 // ★ 真正深層隔離配置：避免 plugins.zoom 物件共用
                 const instanceOpt = JSON.parse(JSON.stringify(lineOpt));
@@ -887,18 +949,18 @@
 
             // 統一使用折線圖 (加強版 Area Chart)
             mkLineChart('totalViewsChart', [
-                { label: nameA, data: dA[type].total_views, borderColor: colorA, backgroundColor: bgA, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 },
-                { label: nameB, data: dB[type].total_views, borderColor: colorB, backgroundColor: bgB, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 }
+                { label: nameA, data: dA[type].total_views, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 },
+                { label: nameB, data: dB[type].total_views, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 }
             ]);
 
             mkLineChart('avgViewsChart', [
-                { label: nameA, data: dA[type].avg_views, borderColor: colorA, backgroundColor: bgA, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 },
-                { label: nameB, data: dB[type].avg_views, borderColor: colorB, backgroundColor: bgB, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 }
+                { label: nameA, data: dA[type].avg_views, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 },
+                { label: nameB, data: dB[type].avg_views, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 }
             ]);
 
             mkLineChart('publishChart', [
-                { label: nameA, data: dA[type].video_counts, borderColor: colorA, backgroundColor: bgA, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 },
-                { label: nameB, data: dB[type].video_counts, borderColor: colorB, backgroundColor: bgB, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 }
+                { label: nameA, data: dA[type].video_counts, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 },
+                { label: nameB, data: dB[type].video_counts, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 }
             ]);
         }
 
@@ -914,8 +976,24 @@
                 if (charts[id]) charts[id].destroy();
                 const canvas = document.getElementById(id);
 
+                // ★ 動態獲取目前的配色
+                const theme = THEME_CONFIG[globalVideoType] || THEME_CONFIG.all;
+                datasets[0].borderColor = theme.a.primary;
+                datasets[0].backgroundColor = theme.a.bg;
+                datasets[1].borderColor = theme.b.primary;
+                datasets[1].backgroundColor = theme.b.bg;
+
                 const instanceOpt = JSON.parse(JSON.stringify(lineOpt));
                 instanceOpt.onHover = lineOpt.onHover;
+
+                // ★ 同步補足：套用目前的縮放視野
+                if (currentZoomMin !== null && currentZoomMax !== null) {
+                    if (!instanceOpt.scales) instanceOpt.scales = {};
+                    if (!instanceOpt.scales.x) instanceOpt.scales.x = {};
+                    instanceOpt.scales.x.min = currentZoomMin;
+                    instanceOpt.scales.x.max = currentZoomMax;
+                }
+
                 instanceOpt.plugins = {
                     ...lineOpt.plugins,
                     zoom: JSON.parse(JSON.stringify(lineOpt.plugins.zoom))
@@ -933,13 +1011,13 @@
             };
 
             createChart('likeChart', [
-                { label: nameA, data: dA[type].total_likes, borderColor: colorA, backgroundColor: bgA, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 },
-                { label: nameB, data: dB[type].total_likes, borderColor: colorB, backgroundColor: bgB, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 }
+                { label: nameA, data: dA[type].total_likes, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 },
+                { label: nameB, data: dB[type].total_likes, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 }
             ]);
 
             createChart('commentChart', [
-                { label: nameA, data: dA[type].total_comments, borderColor: colorA, backgroundColor: bgA, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 },
-                { label: nameB, data: dB[type].total_comments, borderColor: colorB, backgroundColor: bgB, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 }
+                { label: nameA, data: dA[type].total_comments, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 },
+                { label: nameB, data: dB[type].total_comments, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 }
             ]);
         }
 
