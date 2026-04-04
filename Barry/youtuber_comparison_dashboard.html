@@ -103,13 +103,20 @@
 
         /* ★ 全域字體大小變數位：調整這裡可同時更改四張卡片的文字大小 */
         :root {
-            --card-title-size: 11px;  /* 最上方的小類別標題 (原本 10px) */
-            --card-name-size: 13px;   /* YouTuber 名字 (原本 12px) */
-            --card-value-size: 22px;  /* 關鍵數據的大數字 (原本 20px) */
+            /* 最上方的小類別標題 (原本 10px) */
+            --card-title-size: 18px;
+            /* YouTuber 名字 (原本 12px) */
+            --card-name-size: 20px;
+            /* 關鍵數據的大數字 (原本 20px) */
+            --card-value-size: 22px;
 
-            /* ★ 圖表 Tooltip 字體大小變數 */
-            --tooltip-title-size: 14px;
-            --tooltip-body-size: 13px;
+            /* ★ 圖表 Tooltip 字體大小主控變數 (調整這一個即可) */
+            --tooltip-size: 18px;
+            --tooltip-title-size: var(--tooltip-size);
+            --tooltip-body-size: calc(var(--tooltip-size) - 2px);
+
+            /* 折線圖區塊標題字體大小變數 */
+            --chart-section-title-size: 18px;
         }
 
         .nav-item.active {
@@ -200,7 +207,7 @@
                 <h1 class="text-3xl md:text-4xl font-black font-headline tracking-tighter text-on-surface">
                     YouTuber 關鍵數據分析控制台</h1>
             </div>
-            <p class="text-on-surface-variant max-w-2xl mt-2 text-base">自動帶入系統預設頻道對比近期的觀看、互動與發片趨勢，請透過左側選單切換數據視圖。</p>
+            <p class="text-on-surface-variant max-w-2xl mt-2 text-base">自動帶入系統預設頻道對比近期的觀看、互動與發片趨勢，透過左側選單切換數據視圖。</p>
 
             <div
                 class="flex items-center gap-1 mt-6 p-1.5 bg-surface-container-low rounded-full w-fit shadow-sm border border-outline-variant">
@@ -235,128 +242,128 @@
                 <div id="mini-cards-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <!-- 總觀看次數 -->
                     <div
-                        class="bg-surface-container rounded-lg p-6 shadow-lg border-none border border-outline-variant relative overflow-hidden group">
+                        class="bg-surface-container rounded-lg p-6 shadow-lg border-none border border-outline-variant relative group">
                         <div
                             class="absolute -right-6 -top-6 text-on-surface-variant opacity-10 group-hover:scale-110 transition-transform">
                             <span class="material-symbols-outlined text-[100px]">visibility</span>
                         </div>
-                        <p
-                            class="text-on-surface-variant mb-3 font-black tracking-widest uppercase opacity-70"
+                        <p class="text-on-surface-variant mb-3 font-black tracking-widest uppercase opacity-70"
                             style="font-size: var(--card-title-size);">
                             累積觀看次數</p>
 
                         <div class="flex flex-col gap-1 mb-3 relative z-10">
                             <div class="flex justify-between items-end">
-                                <span class="font-bold text-on-surface-variant name-a" style="font-size: var(--card-name-size);">YTer A</span>
+                                <span class="font-bold text-on-surface-variant name-a"
+                                    style="font-size: var(--card-name-size);">YTer A</span>
                                 <span class="font-black font-headline text-primary leading-none"
-                                    style="font-size: var(--card-value-size);"
-                                    id="val-views-a">0</span>
+                                    style="font-size: var(--card-value-size);" id="val-views-a">0</span>
                             </div>
                             <div class="flex justify-between items-end">
-                                <span class="font-bold text-on-surface-variant name-b" style="font-size: var(--card-name-size);">YTer B</span>
+                                <span class="font-bold text-on-surface-variant name-b"
+                                    style="font-size: var(--card-name-size);">YTer B</span>
                                 <span class="font-black font-headline text-on-surface-variant leading-none"
-                                    style="font-size: var(--card-value-size);"
-                                    id="val-views-b">0</span>
+                                    style="font-size: var(--card-value-size);" id="val-views-b">0</span>
                             </div>
                         </div>
 
-                        <div class="relative h-20 w-full z-10">
+                        <div class="relative w-full z-20"
+                            style="height: calc(var(--tooltip-body-size) * 4 + 60px); min-height: 100px;">
                             <canvas id="miniViewsChart"></canvas>
                         </div>
                     </div>
 
                     <!-- 平均觀看 -->
                     <div
-                        class="bg-surface-container rounded-lg p-6 shadow-lg border-none border border-outline-variant relative overflow-hidden group">
+                        class="bg-surface-container rounded-lg p-6 shadow-lg border-none border border-outline-variant relative group">
                         <div
                             class="absolute -right-6 -top-6 text-on-surface-variant opacity-10 group-hover:scale-110 transition-transform">
                             <span class="material-symbols-outlined text-[100px]">monitoring</span>
                         </div>
-                        <p
-                            class="text-on-surface-variant mb-3 font-black tracking-widest uppercase opacity-70"
+                        <p class="text-on-surface-variant mb-3 font-black tracking-widest uppercase opacity-70"
                             style="font-size: var(--card-title-size);">
                             單支影片平均觀看</p>
 
                         <div class="flex flex-col gap-1 mb-3 relative z-10">
                             <div class="flex justify-between items-end">
-                                <span class="font-bold text-on-surface-variant name-a" style="font-size: var(--card-name-size);">YTer A</span>
+                                <span class="font-bold text-on-surface-variant name-a"
+                                    style="font-size: var(--card-name-size);">YTer A</span>
                                 <span class="font-black font-headline text-primary leading-none"
-                                    style="font-size: var(--card-value-size);"
-                                    id="val-avg-a">0</span>
+                                    style="font-size: var(--card-value-size);" id="val-avg-a">0</span>
                             </div>
                             <div class="flex justify-between items-end">
-                                <span class="font-bold text-on-surface-variant name-b" style="font-size: var(--card-name-size);">YTer B</span>
+                                <span class="font-bold text-on-surface-variant name-b"
+                                    style="font-size: var(--card-name-size);">YTer B</span>
                                 <span class="font-black font-headline text-on-surface-variant leading-none"
-                                    style="font-size: var(--card-value-size);"
-                                    id="val-avg-b">0</span>
+                                    style="font-size: var(--card-value-size);" id="val-avg-b">0</span>
                             </div>
                         </div>
 
-                        <div class="relative h-20 w-full z-10">
+                        <div class="relative w-full z-20"
+                            style="height: calc(var(--tooltip-body-size) * 4 + 60px); min-height: 100px;">
                             <canvas id="miniAvgViewsChart"></canvas>
                         </div>
                     </div>
 
                     <!-- 總互動數 -->
                     <div
-                        class="bg-surface-container rounded-lg p-6 shadow-lg border-none border border-outline-variant relative overflow-hidden group">
+                        class="bg-surface-container rounded-lg p-6 shadow-lg border-none border border-outline-variant relative group">
                         <div
                             class="absolute -right-6 -top-6 text-on-surface-variant opacity-10 group-hover:scale-110 transition-transform">
                             <span class="material-symbols-outlined text-[100px]">favorite</span>
                         </div>
-                        <p
-                            class="text-on-surface-variant mb-3 font-black tracking-widest uppercase opacity-70"
+                        <p class="text-on-surface-variant mb-3 font-black tracking-widest uppercase opacity-70"
                             style="font-size: var(--card-title-size);">
                             總互動數 (按讚+留言)</p>
 
                         <div class="flex flex-col gap-1 mb-3 relative z-10">
                             <div class="flex justify-between items-end">
-                                <span class="font-bold text-on-surface-variant name-a" style="font-size: var(--card-name-size);">YTer A</span>
+                                <span class="font-bold text-on-surface-variant name-a"
+                                    style="font-size: var(--card-name-size);">YTer A</span>
                                 <span class="font-black font-headline text-primary leading-none"
-                                    style="font-size: var(--card-value-size);"
-                                    id="val-enc-a">0</span>
+                                    style="font-size: var(--card-value-size);" id="val-enc-a">0</span>
                             </div>
                             <div class="flex justify-between items-end">
-                                <span class="font-bold text-on-surface-variant name-b" style="font-size: var(--card-name-size);">YTer B</span>
+                                <span class="font-bold text-on-surface-variant name-b"
+                                    style="font-size: var(--card-name-size);">YTer B</span>
                                 <span class="font-black font-headline text-on-surface-variant leading-none"
-                                    style="font-size: var(--card-value-size);"
-                                    id="val-enc-b">0</span>
+                                    style="font-size: var(--card-value-size);" id="val-enc-b">0</span>
                             </div>
                         </div>
 
-                        <div class="relative h-20 w-full z-10">
+                        <div class="relative w-full z-20"
+                            style="height: calc(var(--tooltip-body-size) * 4 + 60px); min-height: 100px;">
                             <canvas id="miniEngChart"></canvas>
                         </div>
                     </div>
 
                     <!-- 互動率 -->
                     <div
-                        class="bg-surface-container rounded-lg p-6 shadow-lg border-none border border-outline-variant relative overflow-hidden group">
+                        class="bg-surface-container rounded-lg p-6 shadow-lg border-none border border-outline-variant relative group">
                         <div
                             class="absolute -right-6 -top-6 text-on-surface-variant opacity-10 group-hover:scale-110 transition-transform">
                             <span class="material-symbols-outlined text-[100px]">bolt</span>
                         </div>
-                        <p
-                            class="text-on-surface-variant mb-3 font-black tracking-widest uppercase opacity-70"
+                        <p class="text-on-surface-variant mb-3 font-black tracking-widest uppercase opacity-70"
                             style="font-size: var(--card-title-size);">
                             平均互動率 (Engagement)</p>
 
                         <div class="flex flex-col gap-1 mb-3 relative z-10">
                             <div class="flex justify-between items-end">
-                                <span class="font-bold text-on-surface-variant name-a" style="font-size: var(--card-name-size);">YTer A</span>
+                                <span class="font-bold text-on-surface-variant name-a"
+                                    style="font-size: var(--card-name-size);">YTer A</span>
                                 <span class="font-black font-headline text-primary leading-none"
-                                    style="font-size: var(--card-value-size);"
-                                    id="val-rate-a">0%</span>
+                                    style="font-size: var(--card-value-size);" id="val-rate-a">0%</span>
                             </div>
                             <div class="flex justify-between items-end">
-                                <span class="font-bold text-on-surface-variant name-b" style="font-size: var(--card-name-size);">YTer B</span>
+                                <span class="font-bold text-on-surface-variant name-b"
+                                    style="font-size: var(--card-name-size);">YTer B</span>
                                 <span class="font-black font-headline text-on-surface-variant leading-none"
-                                    style="font-size: var(--card-value-size);"
-                                    id="val-rate-b">0%</span>
+                                    style="font-size: var(--card-value-size);" id="val-rate-b">0%</span>
                             </div>
                         </div>
 
-                        <div class="relative h-20 w-full z-10">
+                        <div class="relative w-full z-20"
+                            style="height: calc(var(--tooltip-body-size) * 4 + 60px); min-height: 100px;">
                             <canvas id="miniRateChart"></canvas>
                         </div>
                     </div>
@@ -365,17 +372,20 @@
                 <div class="grid grid-cols-1 gap-6">
                     <div
                         class="bg-surface-container-low rounded-lg p-8 shadow-xl border-none border border-outline-variant">
-                        <h3 id="dashPublishTitle" class="font-headline font-bold text-lg mb-4">發片產量 (Video Output)</h3>
+                        <h3 id="dashPublishTitle" class="font-headline font-bold mb-4"
+                            style="font-size: var(--chart-section-title-size);">發片產量 (Video Output)</h3>
                         <div class="relative h-[300px] w-full"><canvas id="publishChart"></canvas></div>
                     </div>
                     <div
                         class="bg-surface-container-low rounded-lg p-8 shadow-xl border-none border border-outline-variant">
-                        <h3 id="dashAvgTitle" class="font-headline font-bold text-lg mb-4">每月平均觀看數 (三種類型堆疊)</h3>
+                        <h3 id="dashAvgTitle" class="font-headline font-bold mb-4"
+                            style="font-size: var(--chart-section-title-size);">每月平均觀看數 (三種類型堆疊)</h3>
                         <div class="relative h-64 w-full"><canvas id="avgViewsChart"></canvas></div>
                     </div>
                     <div
                         class="bg-surface-container-low rounded-lg p-8 shadow-xl border-none border border-outline-variant">
-                        <h3 id="dashTotalTitle" class="font-headline font-bold text-lg mb-4">每月總觀看數走勢 (三種類型堆疊)</h3>
+                        <h3 id="dashTotalTitle" class="font-headline font-bold mb-4"
+                            style="font-size: var(--chart-section-title-size);">每月總觀看數走勢 (三種類型堆疊)</h3>
                         <div class="relative h-64 w-full"><canvas id="totalViewsChart"></canvas></div>
                     </div>
                 </div>
@@ -504,9 +514,12 @@
 
         // 讀取 CSS 變數作為圖表預設值
         const getStyleVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-        const ttTitleSize = parseInt(getStyleVar('--tooltip-title-size')) || 14;
-        const ttBodySize = parseInt(getStyleVar('--tooltip-body-size')) || 13;
-        const miniTtBodySize = ttBodySize - 1; // 迷你圖稍小一點點即可
+
+        // 直接讀取主控變數並在 JS 中計算，不再針對迷你圖做差別待遇
+        const baseSize = parseInt(getStyleVar('--tooltip-size')) || 16;
+        const ttTitleSize = baseSize;    // 標題與基礎大小一致
+        const ttBodySize = baseSize - 2; // 內容稍微縮小 2px 以利排版
+        const miniTtBodySize = ttBodySize; // 迷你圖也採用相同的內容大小
 
         // 儲存從 API 取得的真實名字
         let nameA = 'YTer A';
@@ -565,9 +578,10 @@
                             titleColor: '#1c1917',
                             titleFont: { size: ttTitleSize, weight: 'bold' },
                             bodyColor: '#57534e',
-                            bodyFont: { size: miniTtBodySize }, 
-                            padding: 10,       // 加大內距，不再擠在一起
-                            cornerRadius: 8,
+                            bodyFont: { size: miniTtBodySize },
+                            padding: 12,       // 適度加大 Padding，防止文字貼邊
+                            caretSize: 0,      // 移除箭頭可節省一點空間，防止遮擋
+                            cornerRadius: 6,
                             borderColor: 'rgba(0,0,0,0.1)',
                             borderWidth: 1,
                             callbacks: {
@@ -691,7 +705,7 @@
                 // ★ 還原連動：將數據重設為全量
                 const labelsLen = (dashChartOpts.labels || []).length;
                 updateSummaryMetrics(globalVideoType, 0, labelsLen - 1);
-                
+
             } catch (e) {
                 console.error("還原失敗:", e);
             } finally {
@@ -753,7 +767,7 @@
             const data = overviewDataCache;
             const dA = data[CHANNEL_1_ID];
             const dB = data[CHANNEL_2_ID];
-            
+
             // 處理區間切片：如果沒帶參數就代表全量
             const totalLen = (dashChartOpts.labels || []).length;
             const s = (startIndex !== null) ? startIndex : 0;
@@ -763,19 +777,19 @@
             const sumSlice = (arr) => arr.slice(s, e + 1).reduce((a, b) => a + Number(b), 0);
 
             const curA = dA[type]; const curB = dB[type];
-            
+
             // 1. 每月總觀看數
-            const viewsA = sumSlice(curA.total_views); 
+            const viewsA = sumSlice(curA.total_views);
             const viewsB = sumSlice(curB.total_views);
-            
+
             // 2. 發片產量
-            const vidsA = sumSlice(curA.video_counts); 
+            const vidsA = sumSlice(curA.video_counts);
             const vidsB = sumSlice(curB.video_counts);
-            
+
             // 3. 總互動量 (按讚 + 留言)
             const engA = sumSlice(curA.total_likes) + sumSlice(curA.total_comments);
             const engB = sumSlice(curB.total_likes) + sumSlice(curB.total_comments);
-            
+
             // 4. 互動率 (依用戶建議：區間總互動 / 區間總觀看)
             const rA = viewsA > 0 ? ((engA / viewsA) * 100).toFixed(2) : 0;
             const rB = viewsB > 0 ? ((engB / viewsB) * 100).toFixed(2) : 0;
