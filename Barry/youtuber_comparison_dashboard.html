@@ -580,7 +580,7 @@
         let globalVideosData = null; // 全域儲存熱門影片資料
         let overviewDataCache = null; // 全域儲存 Overview 資料以供 Dashboard 圖表連動
         let dashChartOpts = {};  // 全域儲存 Chart.js 選項
-        let globalVideoType = 'all'; // 全域影片類型篩選狀態
+        let globalVideoType = null; // ★ 設為 null 以便在網頁初始載入時正確觸發第一次更新
         let sharedHoverIndex = -1;   // 全域同步 Hover 索引
         let isSyncingZoom = false;   // ★ 防止縮放連動無窮遞迴的旗標
 
@@ -779,6 +779,11 @@
         });
 
         async function updateGlobalFilter(type) {
+            // ★ 優化：如果點選的是當前已選中的類型，則不重複執行
+            if (globalVideoType === type) {
+                console.log(`類型 ${type} 已在作用中，跳過更新。`);
+                return;
+            }
             globalVideoType = type;
 
             // ★ 更新全域主題色彩 (CSS 變數)
