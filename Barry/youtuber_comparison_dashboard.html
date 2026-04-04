@@ -635,6 +635,10 @@
                     chart.options.scales.x.max = safeMax;
                     chart.update('none');
                 });
+
+                // ★ 連動：重算上方數據摘要 (僅計算不重建圖表，確保平滑)
+                updateSummaryMetrics(globalVideoType, safeMin, safeMax);
+
             } finally {
                 isSyncingZoom = false;
             }
@@ -665,6 +669,11 @@
 
                     chart.update('default');
                 });
+
+                // ★ 還原連動：將數據重設為全量
+                const labelsLen = (dashChartOpts.labels || []).length;
+                updateSummaryMetrics(globalVideoType, 0, labelsLen - 1);
+                
             } catch (e) {
                 console.error("還原失敗:", e);
             } finally {
@@ -692,7 +701,8 @@
 
             // 2. 觸發各分頁連動更新
             globalResetZoom();            // ★ 切換時強制回歸初始視野
-            renderDashboardCharts(type);  // 更新 Dashboard (三圖、四卡)
+            renderTrendCharts(type);      // 建立趨勢圖 (僅在此處重建)
+            updateSummaryMetrics(type);   // 更新數據面板 (依目前視野重算)
             updateTopVideosUI();          // 更新影片排行榜
             renderAudienceCharts(type);   // 更新互動趨勢圖
 
@@ -719,7 +729,67 @@
             }
         }
 
-        function renderDashboardCharts(type) {
+        // ★ 新增：更新 Dashboard 最上方四張數據卡片的數值與比例圖
+        function updateSummaryMetrics(type, startIndex = null, endIndex = null) {
+            if (!overviewDataCache) return;
+            const data = overviewDataCache;
+            const dA = data[CHANNEL_1_ID];
+            const dB = data[CHANNEL_2_ID];
+            
+            // 處理區間切片：如果沒帶參數就代表全量
+            const totalLen = (dashChartOpts.labels || []).length;
+            const s = (startIndex !== null) ? startIndex : 0;
+            const e = (endIndex !== null) ? endIndex : (totalLen - 1);
+
+            // 輔助函式：切片並加總
+            const sumSlice = (arr) => arr.slice(s, e + 1).reduce((a, b) => a + Number(b), 0);
+
+            const curA = dA[type]; const curB = dB[type];
+            
+            // 1. 每月總觀看數
+            const viewsA = sumSlice(curA.total_views); 
+            const viewsB = sumSlice(curB.total_views);
+            
+            // 2. 發片產量
+            const vidsA = sumSlice(curA.video_counts); 
+            const vidsB = sumSlice(curB.video_counts);
+            
+            // 3. 總互動量 (按讚 + 留言)
+            const engA = sumSlice(curA.total_likes) + sumSlice(curA.total_comments);
+            const engB = sumSlice(curB.total_likes) + sumSlice(curB.total_comments);
+            
+            // 4. 互動率 (依用戶建議：區間總互動 / 區間總觀看)
+            const rA = viewsA > 0 ? ((engA / viewsA) * 100).toFixed(2) : 0;
+            const rB = viewsB > 0 ? ((engB / viewsB) * 100).toFixed(2) : 0;
+
+            const updateVal = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+            updateVal('val-views-a', formatNum(viewsA)); updateVal('val-views-b', formatNum(viewsB));
+            updateVal('val-avg-a', formatNum(Math.round(viewsA / (vidsA || 1)))); updateVal('val-avg-b', formatNum(Math.round(viewsB / (vidsB || 1))));
+            updateVal('val-enc-a', formatNum(engA)); updateVal('val-enc-b', formatNum(engB));
+            updateVal('val-rate-a', rA + '%'); updateVal('val-rate-b', rB + '%');
+
+            // 5. 更新迷你比例圖 (Horizontal Bars)
+            if (type === 'all') {
+                createMiniCardChart('miniViewsChart', null, null, '', true, [
+                    { label: '影片', data: [sumSlice(dA.video.total_views), sumSlice(dB.video.total_views)], backgroundColor: ['#a24a35', '#8da399'] },
+                    { label: 'Shorts', data: [sumSlice(dA.shorts.total_views), sumSlice(dB.shorts.total_views)], backgroundColor: ['#d86c55', '#5c7368'] },
+                    { label: '直播', data: [sumSlice(dA.stream.total_views), sumSlice(dB.stream.total_views)], backgroundColor: ['#ffac99', '#b0c2b9'] }
+                ]);
+                createMiniCardChart('miniEngChart', null, null, '', true, [
+                    { label: '影片', data: [sumSlice(dA.video.total_likes) + sumSlice(dA.video.total_comments), sumSlice(dB.video.total_likes) + sumSlice(dB.video.total_comments)], backgroundColor: ['#a24a35', '#8da399'] },
+                    { label: 'Shorts', data: [sumSlice(dA.shorts.total_likes) + sumSlice(dA.shorts.total_comments), sumSlice(dB.shorts.total_likes) + sumSlice(dB.shorts.total_comments)], backgroundColor: ['#d86c55', '#5c7368'] },
+                    { label: '直播', data: [sumSlice(dA.stream.total_likes) + sumSlice(dA.stream.total_comments), sumSlice(dB.stream.total_likes) + sumSlice(dB.stream.total_comments)], backgroundColor: ['#ffac99', '#b0c2b9'] }
+                ]);
+            } else {
+                createMiniCardChart('miniViewsChart', viewsA, viewsB);
+                createMiniCardChart('miniEngChart', engA, engB);
+            }
+            createMiniCardChart('miniAvgViewsChart', Math.round(viewsA / (vidsA || 1)), Math.round(viewsB / (vidsB || 1)));
+            createMiniCardChart('miniRateChart', rA, rB, '%');
+        }
+
+        // ★ 重構：僅負責初始化大趨勢圖 (不再負責計算數值)
+        function renderTrendCharts(type) {
             if (!overviewDataCache) return;
             const data = overviewDataCache;
             const dA = data[CHANNEL_1_ID];
@@ -732,41 +802,6 @@
             document.getElementById('dashTotalTitle').innerText = `每月總觀看數走勢 (${typeName})`;
             document.getElementById('dashAvgTitle').innerText = `每月平均觀看數 (${typeName})`;
             document.getElementById('dashPublishTitle').innerText = `每月發片產量 (${typeName})`;
-
-            // --- 核心連動：更新最上方的四張 Mini Metric Cards ---
-            const curA = dA[type]; const curB = dB[type];
-            const viewsA = sumArray(curA.total_views); const viewsB = sumArray(curB.total_views);
-            const vidsA = sumArray(curA.video_counts); const vidsB = sumArray(curB.video_counts);
-            const engA = sumArray(curA.total_likes) + sumArray(curA.total_comments);
-            const engB = sumArray(curB.total_likes) + sumArray(curB.total_comments);
-            const rA = viewsA > 0 ? ((engA / viewsA) * 100).toFixed(2) : 0;
-            const rB = viewsB > 0 ? ((engB / viewsB) * 100).toFixed(2) : 0;
-
-            const updateVal = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
-            updateVal('val-views-a', formatNum(viewsA)); updateVal('val-views-b', formatNum(viewsB));
-            updateVal('val-avg-a', formatNum(Math.round(viewsA / (vidsA || 1)))); updateVal('val-avg-b', formatNum(Math.round(viewsB / (vidsB || 1))));
-            updateVal('val-enc-a', formatNum(engA)); updateVal('val-enc-b', formatNum(engB));
-            updateVal('val-rate-a', rA + '%'); updateVal('val-rate-b', rB + '%');
-
-            // 更新 Mini 圖表比例 (如果是 'all' 則維持堆疊顯示內容，否則顯示單一類型)
-            if (type === 'all') {
-                createMiniCardChart('miniViewsChart', null, null, '', true, [
-                    { label: '影片', data: [sumArray(dA.video.total_views), sumArray(dB.video.total_views)], backgroundColor: ['#a24a35', '#8da399'] },
-                    { label: 'Shorts', data: [sumArray(dA.shorts.total_views), sumArray(dB.shorts.total_views)], backgroundColor: ['#d86c55', '#5c7368'] },
-                    { label: '直播', data: [sumArray(dA.stream.total_views), sumArray(dB.stream.total_views)], backgroundColor: ['#ffac99', '#b0c2b9'] }
-                ]);
-                createMiniCardChart('miniEngChart', null, null, '', true, [
-                    { label: '影片', data: [sumArray(dA.video.total_likes) + sumArray(dA.video.total_comments), sumArray(dB.video.total_likes) + sumArray(dB.video.total_comments)], backgroundColor: ['#a24a35', '#8da399'] },
-                    { label: 'Shorts', data: [sumArray(dA.shorts.total_likes) + sumArray(dA.shorts.total_comments), sumArray(dB.shorts.total_likes) + sumArray(dB.shorts.total_comments)], backgroundColor: ['#d86c55', '#5c7368'] },
-                    { label: '直播', data: [sumArray(dA.stream.total_likes) + sumArray(dA.stream.total_comments), sumArray(dB.stream.total_likes) + sumArray(dB.stream.total_comments)], backgroundColor: ['#ffac99', '#b0c2b9'] }
-                ]);
-            } else {
-                createMiniCardChart('miniViewsChart', viewsA, viewsB);
-                createMiniCardChart('miniEngChart', engA, engB);
-            }
-            createMiniCardChart('miniAvgViewsChart', Math.round(viewsA / (vidsA || 1)), Math.round(viewsB / (vidsB || 1)));
-            createMiniCardChart('miniRateChart', rA, rB, '%');
-            // --- 結束 Mini Metric Cards 更新 ---
 
             const mkLineChart = (id, datasets) => {
                 if (charts[id]) charts[id].destroy();
