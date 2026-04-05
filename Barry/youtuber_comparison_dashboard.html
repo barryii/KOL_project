@@ -221,15 +221,15 @@
                 <span class="material-symbols-outlined">dashboard</span>
                 <span class="font-medium text-sm">總覽 Dashboard</span>
             </button>
-            <button onclick="switchTab('tab-content', this)"
-                class="nav-item w-full flex items-center space-x-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface rounded-lg transition-all duration-300">
-                <span class="material-symbols-outlined">movie</span>
-                <span class="font-medium text-sm">影片表現 Content</span>
-            </button>
             <button onclick="switchTab('tab-audience', this)"
                 class="nav-item w-full flex items-center space-x-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface rounded-lg transition-all duration-300">
                 <span class="material-symbols-outlined">groups</span>
                 <span class="font-medium text-sm">粉絲互動 Audience</span>
+            </button>
+            <button onclick="switchTab('tab-content', this)"
+                class="nav-item w-full flex items-center space-x-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface rounded-lg transition-all duration-300">
+                <span class="material-symbols-outlined">movie</span>
+                <span class="font-medium text-sm">影片表現 Content</span>
             </button>
             <button onclick="switchTab('tab-analysis', this)"
                 class="nav-item w-full flex items-center space-x-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface rounded-lg transition-all duration-300">
@@ -274,14 +274,14 @@
                 <h2 class="text-xl font-bold font-headline text-on-surface">總覽摘要 Dashboard</h2>
             </div>
 
-            <div id="header-tab-content"
-                class="header-tab-section hidden flex-col mt-4 pt-4 border-t border-outline-variant/30">
-                <h2 class="text-xl font-bold font-headline text-on-surface">影片表現 Content</h2>
-            </div>
-
             <div id="header-tab-audience"
                 class="header-tab-section hidden flex-col mt-4 pt-4 border-t border-outline-variant/30">
                 <h2 class="text-xl font-bold font-headline text-on-surface">粉絲互動 Audience</h2>
+            </div>
+
+            <div id="header-tab-content"
+                class="header-tab-section hidden flex-col mt-4 pt-4 border-t border-outline-variant/30">
+                <h2 class="text-xl font-bold font-headline text-on-surface">影片表現 Content</h2>
             </div>
 
             <div id="header-tab-analysis"
@@ -466,57 +466,7 @@
                 </div>
             </div>
 
-            <!-- 分頁 2 : 影片表現 Content -->
-            <div id="tab-content" class="tab-section hidden mt-0">
-
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <div
-                        class="lg:col-span-12 bg-surface-container-low rounded-lg p-8 shadow-xl border-none border border-outline-variant flex flex-col min-h-[400px]">
-                        <div class="flex flex-col gap-4 mb-6">
-                            <h3 class="font-headline font-bold text-lg flex items-center gap-2">
-                                <span class="material-symbols-outlined text-primary-fixed">local_fire_department</span>
-                                歷史熱門表現影片 排行榜
-                            </h3>
-                            <div class="flex gap-2 text-xs w-full flex-wrap">
-                                <select id="vidFilterCh"
-                                    class="bg-surface-container border-none shadow-sm rounded-lg p-2 flex-1 min-w-[20%] outline-none text-on-surface cursor-pointer font-bold"
-                                    onchange="updateTopVideosUI()">
-                                    <option value="all">👑 綜合榜單</option>
-                                    <option value="ch1" id="vid-filter-name-a">YTer A</option>
-                                    <option value="ch2" id="vid-filter-name-b">YTer B</option>
-                                </select>
-                                <select id="vidFilterLimit"
-                                    class="bg-surface-container border-none shadow-sm rounded-lg p-2 flex-1 min-w-[20%] outline-none text-on-surface cursor-pointer font-bold"
-                                    onchange="updateTopVideosUI()">
-                                    <option value="5">🏆 前 5 部</option>
-                                    <option value="10" selected>🏆 前 10 部</option>
-                                    <option value="20">🏆 前 20 部</option>
-                                    <option value="50">🏆 前 50 部</option>
-                                    <option value="100">🏆 前 100 部</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="overflow-x-auto hide-scrollbar flex-1">
-                            <table class="w-full text-left border-collapse">
-                                <thead>
-                                    <tr
-                                        class="text-on-surface-variant text-xs font-bold uppercase tracking-wider border-b border-outline-variant">
-                                        <th class="py-3 px-2">創作者</th>
-                                        <th class="py-3 px-2">影片標題</th>
-                                        <th class="py-3 px-2 whitespace-nowrap">觀看次數</th>
-                                        <th class="py-3 px-2 whitespace-nowrap">互動率</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="top-videos-body" class="text-sm">
-                                    <!-- JS 動態寫入 -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 分頁 3 : 粉絲互動 Audience -->
+            <!-- 分頁 2 : 粉絲互動 Audience -->
             <div id="tab-audience" class="tab-section hidden mt-0">
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -568,6 +518,56 @@
                         <div class="space-y-3 flex-1 overflow-y-auto hide-scrollbar max-h-[880px]"
                             id="top-commenters-list">
                             <!-- JS 動態寫入 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 分頁 3 : 影片表現 Content -->
+            <div id="tab-content" class="tab-section hidden mt-0">
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div
+                        class="lg:col-span-12 bg-surface-container-low rounded-lg p-8 shadow-xl border-none border border-outline-variant flex flex-col min-h-[400px]">
+                        <div class="flex flex-col gap-4 mb-6">
+                            <h3 class="font-headline font-bold text-lg flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary-fixed">local_fire_department</span>
+                                歷史熱門表現影片 排行榜
+                            </h3>
+                            <div class="flex gap-2 text-xs w-full flex-wrap">
+                                <select id="vidFilterCh"
+                                    class="bg-surface-container border-none shadow-sm rounded-lg p-2 flex-1 min-w-[20%] outline-none text-on-surface cursor-pointer font-bold"
+                                    onchange="updateTopVideosUI()">
+                                    <option value="all">👑 綜合榜單</option>
+                                    <option value="ch1" id="vid-filter-name-a">YTer A</option>
+                                    <option value="ch2" id="vid-filter-name-b">YTer B</option>
+                                </select>
+                                <select id="vidFilterLimit"
+                                    class="bg-surface-container border-none shadow-sm rounded-lg p-2 flex-1 min-w-[20%] outline-none text-on-surface cursor-pointer font-bold"
+                                    onchange="updateTopVideosUI()">
+                                    <option value="5">🏆 前 5 部</option>
+                                    <option value="10" selected>🏆 前 10 部</option>
+                                    <option value="20">🏆 前 20 部</option>
+                                    <option value="50">🏆 前 50 部</option>
+                                    <option value="100">🏆 前 100 部</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto hide-scrollbar flex-1">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr
+                                        class="text-on-surface-variant text-xs font-bold uppercase tracking-wider border-b border-outline-variant">
+                                        <th class="py-3 px-2">創作者</th>
+                                        <th class="py-3 px-2">影片標題</th>
+                                        <th class="py-3 px-2 whitespace-nowrap">觀看次數</th>
+                                        <th class="py-3 px-2 whitespace-nowrap">互動率</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="top-videos-body" class="text-sm">
+                                    <!-- JS 動態寫入 -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
