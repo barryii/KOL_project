@@ -632,6 +632,24 @@
         const CHANNEL_1_ID = 'UC9i2Qgd5lizhVgJrdnxunKw';
         const CHANNEL_2_ID = 'UCa2YiSXNTkmOA-QTKdzzbSQ';
 
+        // ★ 頻道分群自定義名稱 (可在此隨時修改)
+        const CLUSTER_NAMES_A = {
+            0: "均標",
+            1: "頂標",
+            2: "前標",
+            3: "特別突出"
+        };
+        const CLUSTER_NAMES_B = {
+            0: "均標",
+            1: "特別突出",
+            2: "頂標",
+            3: "前標"
+        };
+
+        // ★ 頻道分群自定義顯示順序 (數字為 Cluster ID)
+        const CLUSTER_ORDER_A = [0, 2, 1, 3];
+        const CLUSTER_ORDER_B = [0, 3, 2, 1];
+
         const getStyleVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
         const baseSize = parseInt(getStyleVar('--tooltip-size')) || 16;
         const ttTitleSize = baseSize;
@@ -751,7 +769,7 @@
         }
 
         // ★ 只繪製（不抓資料），從 rawData 中取特定頻道的資料渲染單一圖表
-        function drawSingleScatterChart(canvasId, chartId, list, yKey, yLabel) {
+        function drawSingleScatterChart(canvasId, chartId, list, yKey, yLabel, channelTag) {
             const ctx = document.getElementById(canvasId);
             if (!ctx) return;
             const clusters = {};
@@ -760,8 +778,24 @@
                 if (!clusters[cLabel]) clusters[cLabel] = [];
                 clusters[cLabel].push({ x: v.view_count, y: v[yKey], title: v.title });
             });
-            const datasets = Object.keys(clusters).sort().map(cId => ({
-                label: `Cluster ${cId}`,
+
+            // 根據頻道選擇名稱表與顯示順序
+            const nameMap = (channelTag === 'A') ? CLUSTER_NAMES_A : CLUSTER_NAMES_B;
+            const orderMap = (channelTag === 'A') ? CLUSTER_ORDER_A : CLUSTER_ORDER_B;
+
+            // 依照自定義順序產生 datasets
+            const sortedIds = [...Object.keys(clusters)];
+            sortedIds.sort((a, b) => {
+                const idxA = orderMap.indexOf(parseInt(a));
+                const idxB = orderMap.indexOf(parseInt(b));
+                // 如果 ID 不在順序表，就排在最後
+                const posA = idxA === -1 ? 999 : idxA;
+                const posB = idxB === -1 ? 999 : idxB;
+                return posA - posB;
+            });
+
+            const datasets = sortedIds.map(cId => ({
+                label: nameMap[cId] || `Cluster ${cId}`,
                 data: clusters[cId],
                 backgroundColor: getClusterColor(parseInt(cId)),
                 borderColor: 'rgba(255,255,255,0.6)',
@@ -800,9 +834,12 @@
                                 // toggle：原本可見就隱藏，原本隱藏就顯示
                                 const makeVisible = !currentlyVisible;
 
-                                // 同步套用到所有四張散佈圖
-                                const scatterIds = ['scatterA_likes', 'scatterA_comments', 'scatterB_likes', 'scatterB_comments'];
-                                scatterIds.forEach(id => {
+                                // 同步連動同一頻道的兩張圖
+                                const sameChannelIds = (channelTag === 'A')
+                                    ? ['scatterA_likes', 'scatterA_comments']
+                                    : ['scatterB_likes', 'scatterB_comments'];
+
+                                sameChannelIds.forEach(id => {
                                     const chart = charts[id];
                                     if (!chart) return;
                                     chart.data.datasets.forEach((ds, i) => {
@@ -817,7 +854,7 @@
                         },
                         tooltip: {
                             callbacks: {
-                                label: c => [` Cluster ${c.dataset.label.replace('Cluster ', '')}`, ` ${c.raw.title}`, ` 觀看: ${formatNum(c.raw.x)}`, ` ${yLabel}: ${formatNum(c.raw.y)}`]
+                                label: c => [` 分群: ${c.dataset.label}`, ` ${c.raw.title}`, ` 觀看: ${formatNum(c.raw.x)}`, ` ${yLabel}: ${formatNum(c.raw.y)}`]
                             }
                         }
                     },
@@ -846,10 +883,10 @@
             if (titleA) titleA.textContent = nameA;
             if (titleB) titleB.textContent = nameB;
 
-            drawSingleScatterChart('scatterA_likes', 'scatterA_likes', listA, 'like_count', '按讚數');
-            drawSingleScatterChart('scatterA_comments', 'scatterA_comments', listA, 'comment_count', '留言數');
-            drawSingleScatterChart('scatterB_likes', 'scatterB_likes', listB, 'like_count', '按讚數');
-            drawSingleScatterChart('scatterB_comments', 'scatterB_comments', listB, 'comment_count', '留言數');
+            drawSingleScatterChart('scatterA_likes', 'scatterA_likes', listA, 'like_count', '按讚數', 'A');
+            drawSingleScatterChart('scatterA_comments', 'scatterA_comments', listA, 'comment_count', '留言數', 'A');
+            drawSingleScatterChart('scatterB_likes', 'scatterB_likes', listB, 'like_count', '按讚數', 'B');
+            drawSingleScatterChart('scatterB_comments', 'scatterB_comments', listB, 'comment_count', '留言數', 'B');
         }
 
         // ★ 主入口：cache 有效時直接重繪，否則才發 API
