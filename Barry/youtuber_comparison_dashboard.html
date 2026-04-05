@@ -168,9 +168,13 @@
         }
 
         .dash-filter-active {
-            background: linear-gradient(135deg, #CF5800 0%, #FF7F5C 100%) !important;
             color: #ffffff !important;
-            box-shadow: 0 4px 12px rgba(162, 74, 53, 0.3);
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+
+        #global-filter-indicator {
+            background: linear-gradient(135deg, #CF5800 0%, #FF7F5C 100%);
         }
 
         /* 散佈圖尺度切換按鈕樣式 */
@@ -254,16 +258,19 @@
                 </div>
 
                 <div
-                    class="flex items-center gap-1 p-1.5 bg-surface-container-low rounded-full w-fit shadow-sm border border-outline-variant shrink-0">
+                    class="relative flex items-center gap-1 p-1.5 bg-surface-container-low rounded-full w-fit shadow-sm border border-outline-variant shrink-0">
+                    <!-- 滑動背景指示器 -->
+                    <div id="global-filter-indicator" class="absolute h-[calc(100%-12px)] bg-primary-fixed shadow-md rounded-full transition-all duration-300 ease-out z-0"></div>
+                    
                     <span
-                        class="text-[12px] font-black text-on-surface-variant uppercase tracking-widest pl-4 pr-3 py-1 border-r border-outline-variant/50 mr-2">影片類型</span>
+                        class="relative z-10 text-[12px] font-black text-on-surface-variant uppercase tracking-widest pl-4 pr-3 py-1 border-r border-outline-variant/50 mr-2">影片類型</span>
                     <button id="globalFilter-all" onclick="updateGlobalFilter('all')"
-                        class="dash-filter-btn dash-filter-active">🎬 全部</button>
-                    <button id="globalFilter-video" onclick="updateGlobalFilter('video')" class="dash-filter-btn">📹
+                        class="dash-filter-btn relative z-10">🎬 全部</button>
+                    <button id="globalFilter-video" onclick="updateGlobalFilter('video')" class="dash-filter-btn relative z-10">📹
                         一般影片</button>
-                    <button id="globalFilter-shorts" onclick="updateGlobalFilter('shorts')" class="dash-filter-btn">⚡
+                    <button id="globalFilter-shorts" onclick="updateGlobalFilter('shorts')" class="dash-filter-btn relative z-10">⚡
                         Shorts</button>
-                    <button id="globalFilter-stream" onclick="updateGlobalFilter('stream')" class="dash-filter-btn">🔴
+                    <button id="globalFilter-stream" onclick="updateGlobalFilter('stream')" class="dash-filter-btn relative z-10">🔴
                         直播</button>
                 </div>
             </div>
@@ -558,10 +565,11 @@
                                 <thead>
                                     <tr
                                         class="text-on-surface-variant text-xs font-bold uppercase tracking-wider border-b border-outline-variant">
-                                        <th class="py-3 px-2">創作者</th>
+                                        <th class="py-3 px-2 whitespace-nowrap text-center w-28">創作者</th>
                                         <th class="py-3 px-2">影片標題</th>
-                                        <th class="py-3 px-2 whitespace-nowrap">觀看次數</th>
-                                        <th class="py-3 px-2 whitespace-nowrap">互動率</th>
+                                        <th class="py-3 px-6 whitespace-nowrap text-center w-32">影片類型</th>
+                                        <th class="py-3 px-2 whitespace-nowrap text-center w-36">觀看次數</th>
+                                        <th class="py-3 px-2 whitespace-nowrap text-center w-24">互動率</th>
                                     </tr>
                                 </thead>
                                 <tbody id="top-videos-body" class="text-sm">
@@ -989,7 +997,16 @@
             root.style.setProperty('--yter-b-color', theme.b.primary);
             document.querySelectorAll('.dash-filter-btn').forEach(btn => btn.classList.remove('dash-filter-active'));
             const activeBtn = document.getElementById(`globalFilter-${type}`);
-            if (activeBtn) activeBtn.classList.add('dash-filter-active');
+            if (activeBtn) {
+                activeBtn.classList.add('dash-filter-active');
+                
+                // ★ 滑動動畫處理
+                const indicator = document.getElementById('global-filter-indicator');
+                if (indicator) {
+                    indicator.style.left = activeBtn.offsetLeft + 'px';
+                    indicator.style.width = activeBtn.offsetWidth + 'px';
+                }
+            }
 
             renderTrendCharts(type);
             updateSummaryMetrics(type, currentZoomMin, currentZoomMax);
@@ -1424,26 +1441,28 @@
 
             allVids.sort((a, b) => b.view_count - a.view_count);
 
-            const typeLabel = { video: '📹', shorts: '⚡', stream: '🔴' };
+            const typeLabel = { video: '一般影片', shorts: 'Shorts', stream: '直播' };
 
             allVids.slice(0, limitFilter).forEach((v, idx) => {
                 const eng = ((v.like_count + v.comment_count) / (v.view_count || 1) * 100).toFixed(2);
-                const typeIcon = typeLabel[v.type] || '🎬';
+                const typeText = typeLabel[v.type] || '其他';
                 const thumbUrl = `https://i.ytimg.com/vi/${v.video_id}/mqdefault.jpg`;
                 const videoUrl = `https://www.youtube.com/watch?v=${v.video_id}`;
                 const tr = document.createElement('tr'); tr.className = 'border-b border-outline-variant hover:bg-surface-container transition-colors';
                 tr.innerHTML = `
-                    <td class="py-3 px-2"><span class="text-xs font-bold px-2 py-1 rounded-full ${v.badge}">${v.labelName}</span></td>
+                    <td class="py-3 px-2 text-center whitespace-nowrap"><span class="text-xs font-bold px-2 py-1 rounded-full ${v.badge}">${v.labelName}</span></td>
                     <td class="py-3 px-2">
                         <a href="${videoUrl}" target="_blank" rel="noopener" class="flex items-center gap-3 group/vid">
                             <img src="${thumbUrl}" alt="" class="w-24 h-[54px] object-cover rounded-md shrink-0 shadow-sm group-hover/vid:shadow-lg transition-shadow" loading="lazy" />
                             <div>
-                                <div class="font-medium text-sm line-clamp-2 leading-tight group-hover/vid:text-primary transition-colors" title="${v.title}">${typeIcon} ${v.title}</div>
+                                <div class="font-medium text-sm line-clamp-2 leading-tight group-hover/vid:text-primary transition-colors" title="${v.title}">${v.title}</div>
                                 <div class="text-xs text-on-surface-variant mt-1">${v.published_date}</div>
                             </div>
                         </a>
                     </td>
-                    <td class="py-3 px-2 font-bold">${formatNum(v.view_count)}</td><td class="py-3 px-2 text-primary-container font-black">${eng}%</td>
+                    <td class="py-3 px-6 text-center font-medium text-on-surface-variant whitespace-nowrap">${typeText}</td>
+                    <td class="py-3 px-2 font-bold whitespace-nowrap text-center">${formatNum(v.view_count)}</td>
+                    <td class="py-3 px-2 text-primary-container font-black whitespace-nowrap text-center">${eng}%</td>
                 `;
                 tbody.appendChild(tr);
             });
