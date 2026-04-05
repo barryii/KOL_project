@@ -732,8 +732,17 @@
             document.querySelectorAll('.scatter-scale-btn').forEach(btn => btn.classList.remove('active'));
             const activeBtn = document.getElementById(`btn-scatter-${scaleType === 'linear' ? 'linear' : 'log'}`);
             if (activeBtn) activeBtn.classList.add('active');
-            // ★ 從快取重繪（有動畫），不重新發 API
-            renderScatterFromCache();
+
+            // ★ 直接修改現有圖表的 scale（保留 Cluster 隱藏狀態），不重建
+            const scatterIds = ['scatterA_likes', 'scatterA_comments', 'scatterB_likes', 'scatterB_comments'];
+            scatterIds.forEach(id => {
+                const chart = charts[id];
+                if (!chart) return;
+                chart.options.scales.x.type = scatterScaleType;
+                chart.options.scales.x.title.text = '觀看次數 (Views)' + (scatterScaleType === 'logarithmic' ? ' (Log)' : '');
+                chart.options.scales.y.beginAtZero = scatterScaleType !== 'logarithmic';
+                chart.update('scale');
+            });
         }
 
         function getClusterColor(idx) {
@@ -767,9 +776,45 @@
                 data: { datasets },
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    animation: false,
+                    animation: { duration: 0 },
+                    transitions: {
+                        scale: {
+                            animation: { duration: 400, easing: 'easeOutQuart' }
+                        }
+                    },
                     plugins: {
-                        legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } },
+                        legend: {
+                            position: 'right',
+                            labels: { boxWidth: 10, font: { size: 10 } },
+                            onClick: (e, legendItem, legend) => {
+                                const clickedLabel = legendItem.text;
+                                const sourceChart = legend.chart;
+
+                                // 從觸發點擊的圖確認當前狀態
+                                let currentlyVisible = true;
+                                sourceChart.data.datasets.forEach((ds, i) => {
+                                    if (ds.label === clickedLabel) {
+                                        currentlyVisible = sourceChart.isDatasetVisible(i);
+                                    }
+                                });
+                                // toggle：原本可見就隱藏，原本隱藏就顯示
+                                const makeVisible = !currentlyVisible;
+
+                                // 同步套用到所有四張散佈圖
+                                const scatterIds = ['scatterA_likes', 'scatterA_comments', 'scatterB_likes', 'scatterB_comments'];
+                                scatterIds.forEach(id => {
+                                    const chart = charts[id];
+                                    if (!chart) return;
+                                    chart.data.datasets.forEach((ds, i) => {
+                                        if (ds.label === clickedLabel) {
+                                            chart.setDatasetVisibility(i, makeVisible);
+                                        }
+                                    });
+                                    // 使用對應的 transition mode 觸發縮放動畫
+                                    chart.update('scale');
+                                });
+                            }
+                        },
                         tooltip: {
                             callbacks: {
                                 label: c => [` Cluster ${c.dataset.label.replace('Cluster ', '')}`, ` ${c.raw.title}`, ` 觀看: ${formatNum(c.raw.x)}`, ` ${yLabel}: ${formatNum(c.raw.y)}`]
@@ -1212,7 +1257,25 @@
                     axis: 'x' // 趨勢圖明確鎖定 X 軸區間偵測
                 },
                 plugins: {
-                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } },
+                    legend: {
+                        position: 'bottom',
+                        labels: { usePointStyle: true, padding: 20 },
+                        onClick: (e, legendItem, legend) => {
+                            const clickedIndex = legendItem.datasetIndex;
+                            const sourceChart = legend.chart;
+                            const isVisible = sourceChart.isDatasetVisible(clickedIndex);
+                            const makeVisible = !isVisible;
+
+                            // 同步套用到所有趨勢折線圖
+                            const trendIds = ['totalViewsChart', 'avgViewsChart', 'publishChart', 'likeChart', 'commentChart'];
+                            trendIds.forEach(id => {
+                                const chart = charts[id];
+                                if (!chart) return;
+                                chart.setDatasetVisibility(clickedIndex, makeVisible);
+                                chart.update();
+                            });
+                        }
+                    },
                     tooltip: {
                         enabled: true,
                         position: 'average', // 使用平均位置防止在兩線間「跳動」
