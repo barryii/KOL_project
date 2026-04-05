@@ -260,17 +260,22 @@
                 <div
                     class="relative flex items-center gap-1 p-1.5 bg-surface-container-low rounded-full w-fit shadow-sm border border-outline-variant shrink-0">
                     <!-- 滑動背景指示器 -->
-                    <div id="global-filter-indicator" class="absolute h-[calc(100%-12px)] bg-primary-fixed shadow-md rounded-full transition-all duration-300 ease-out z-0"></div>
-                    
+                    <div id="global-filter-indicator"
+                        class="absolute h-[calc(100%-12px)] bg-primary-fixed shadow-md rounded-full transition-all duration-300 ease-out z-0">
+                    </div>
+
                     <span
                         class="relative z-10 text-[12px] font-black text-on-surface-variant uppercase tracking-widest pl-4 pr-3 py-1 border-r border-outline-variant/50 mr-2">影片類型</span>
                     <button id="globalFilter-all" onclick="updateGlobalFilter('all')"
                         class="dash-filter-btn relative z-10">🎬 全部</button>
-                    <button id="globalFilter-video" onclick="updateGlobalFilter('video')" class="dash-filter-btn relative z-10">📹
+                    <button id="globalFilter-video" onclick="updateGlobalFilter('video')"
+                        class="dash-filter-btn relative z-10">📹
                         一般影片</button>
-                    <button id="globalFilter-shorts" onclick="updateGlobalFilter('shorts')" class="dash-filter-btn relative z-10">⚡
+                    <button id="globalFilter-shorts" onclick="updateGlobalFilter('shorts')"
+                        class="dash-filter-btn relative z-10">⚡
                         Shorts</button>
-                    <button id="globalFilter-stream" onclick="updateGlobalFilter('stream')" class="dash-filter-btn relative z-10">🔴
+                    <button id="globalFilter-stream" onclick="updateGlobalFilter('stream')"
+                        class="dash-filter-btn relative z-10">🔴
                         直播</button>
                 </div>
             </div>
@@ -553,8 +558,8 @@
                                     class="bg-surface-container border-none shadow-sm rounded-lg p-2 flex-1 min-w-[20%] outline-none text-on-surface cursor-pointer font-bold"
                                     onchange="updateTopVideosUI()">
                                     <option value="5">🏆 前 5 部</option>
-                                    <option value="10" selected>🏆 前 10 部</option>
-                                    <option value="20">🏆 前 20 部</option>
+                                    <option value="10">🏆 前 10 部</option>
+                                    <option value="20" selected>🏆 前 20 部</option>
                                     <option value="50">🏆 前 50 部</option>
                                     <option value="100">🏆 前 100 部</option>
                                 </select>
@@ -712,6 +717,8 @@
         let currentZoomMax = null;
         let scatterScaleType = 'linear';
         let globalScatterCache = null;  // { type, data } — avoids re-fetching on scale toggle
+        let hiddenClustersA = new Set();
+        let hiddenClustersB = new Set();
 
         const formatNum = num => num.toLocaleString('en-US');
         const sumArray = arr => arr.reduce((a, b) => a + Number(b), 0);
@@ -822,23 +829,51 @@
                 return posA - posB;
             });
 
-            const datasets = sortedIds.map(cId => ({
-                label: nameMap[cId] || `Cluster ${cId}`,
-                data: clusters[cId],
-                backgroundColor: getClusterColor(parseInt(cId)),
-                borderColor: 'rgba(255,255,255,0.6)',
-                borderWidth: 1.5,
-                pointStyle: 'circle',
-                radius: 5, hoverRadius: 8
-            }));
+            const datasets = sortedIds.map(cId => {
+                const label = nameMap[cId] || `Cluster ${cId}`;
+                const isHidden = (channelTag === 'A') ? hiddenClustersA.has(label) : hiddenClustersB.has(label);
+                return {
+                    label: label,
+                    data: clusters[cId],
+                    hidden: isHidden,
+                    backgroundColor: getClusterColor(parseInt(cId)),
+                    borderColor: 'rgba(255,255,255,0.6)',
+                    borderWidth: 1.5,
+                    pointStyle: 'circle',
+                    radius: 5, hoverRadius: 8
+                };
+            });
 
-            if (charts[chartId]) charts[chartId].destroy();
-            charts[chartId] = new Chart(ctx, {
-                type: 'scatter',
-                data: { datasets },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    animation: { duration: 0 },
+            if (charts[chartId]) {
+                const chart = charts[chartId];
+                
+                // 更新現有 datasets，讓 Chart.js 將其視為同一個物件而產生平滑飛行動畫
+                datasets.forEach((newDs, i) => {
+                    if (chart.data.datasets[i]) {
+                        chart.data.datasets[i].data = newDs.data;
+                        chart.data.datasets[i].label = newDs.label;
+                        chart.data.datasets[i].hidden = newDs.hidden;
+                        chart.data.datasets[i].backgroundColor = newDs.backgroundColor;
+                    } else {
+                        chart.data.datasets.push(newDs);
+                    }
+                });
+                // 如果舊資料集比較多，就截斷多餘的
+                if (chart.data.datasets.length > datasets.length) {
+                    chart.data.datasets.splice(datasets.length);
+                }
+
+                chart.options.scales.x.type = scatterScaleType;
+                chart.options.scales.x.title.text = '觀看次數 (Views)' + (scatterScaleType === 'logarithmic' ? ' (Log)' : '');
+                chart.options.scales.y.beginAtZero = scatterScaleType !== 'logarithmic';
+                chart.update();
+            } else {
+                charts[chartId] = new Chart(ctx, {
+                    type: 'scatter',
+                    data: { datasets },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        animation: { duration: 600, easing: 'easeOutQuart' },
                     transitions: {
                         scale: {
                             animation: { duration: 400, easing: 'easeOutQuart' }
@@ -866,6 +901,13 @@
                                 const sameChannelIds = (channelTag === 'A')
                                     ? ['scatterA_likes', 'scatterA_comments']
                                     : ['scatterB_likes', 'scatterB_comments'];
+                                    
+                                const setRef = (channelTag === 'A') ? hiddenClustersA : hiddenClustersB;
+                                if (makeVisible) {
+                                    setRef.delete(clickedLabel);
+                                } else {
+                                    setRef.add(clickedLabel);
+                                }
 
                                 sameChannelIds.forEach(id => {
                                     const chart = charts[id];
@@ -892,10 +934,10 @@
                             title: { display: true, text: '觀看次數 (Views)' + (scatterScaleType === 'logarithmic' ? ' (Log)' : '') },
                             grid: { color: gridColor }
                         },
-                        y: { title: { display: true, text: yLabel }, grid: { color: gridColor }, beginAtZero: scatterScaleType !== 'logarithmic' }
                     }
                 }
             });
+            }
         }
 
         // ★ 使用快取渲染四張散佈圖（不重新發 API）
@@ -999,7 +1041,7 @@
             const activeBtn = document.getElementById(`globalFilter-${type}`);
             if (activeBtn) {
                 activeBtn.classList.add('dash-filter-active');
-                
+
                 // ★ 滑動動畫處理
                 const indicator = document.getElementById('global-filter-indicator');
                 if (indicator) {
@@ -1008,11 +1050,14 @@
                 }
             }
 
-            renderTrendCharts(type);
-            updateSummaryMetrics(type, currentZoomMin, currentZoomMax);
-            updateTopVideosUI();
-            renderAudienceCharts(type);
-            if (currentTabId === 'tab-analysis') renderClusteringCharts(type);
+            // 延遲圖表渲染，確保主執行緒能優先觸發滑塊的 CSS 動畫
+            setTimeout(() => {
+                renderTrendCharts(type);
+                updateSummaryMetrics(type, currentZoomMin, currentZoomMax);
+                updateTopVideosUI();
+                renderAudienceCharts(type);
+                if (currentTabId === 'tab-analysis') renderClusteringCharts(type);
+            }, 10);
 
             try {
                 const listContainer = document.getElementById('top-commenters-list');
