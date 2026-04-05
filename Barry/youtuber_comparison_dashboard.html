@@ -241,25 +241,64 @@
 
     <!-- Main Content -->
     <main class="lg:ml-64 pt-24 px-6 pb-12">
-        <header class="mb-10">
-            <div class="flex items-end space-x-4 mb-2">
-                <h1 class="text-3xl md:text-4xl font-black font-headline tracking-tighter text-on-surface">
-                    YouTuber 關鍵數據分析控制台</h1>
-            </div>
-            <p class="text-on-surface-variant max-w-2xl mt-2 text-base">自動帶入系統預設頻道對比近期的觀看、互動與發片趨勢，透過左側選單切換數據視圖。</p>
+        <header id="main-header"
+            class="sticky top-16 z-40 bg-background/95 backdrop-blur-md pt-8 pb-4 -mx-6 px-6 -mt-8 mb-6 border-b border-outline-variant/50 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] transition-all duration-300">
+            <div class="flex flex-col xl:flex-row xl:items-end justify-between gap-4">
+                <div>
+                    <div class="flex items-end space-x-4 mb-2">
+                        <h1 class="text-3xl md:text-3xl font-black font-headline tracking-tighter text-on-surface">
+                            YouTuber 關鍵數據分析控制台</h1>
+                    </div>
+                    <p class="text-on-surface-variant max-w-2xl mt-1 text-sm">自動帶入系統預設頻道對比近期的觀看、互動與發片趨勢，透過左側選單切換數據視圖。
+                    </p>
+                </div>
 
-            <div
-                class="flex items-center gap-1 mt-6 p-1.5 bg-surface-container-low rounded-full w-fit shadow-sm border border-outline-variant">
-                <span
-                    class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest pl-4 pr-3 py-1 border-r border-outline-variant/50 mr-2">影片類型</span>
-                <button id="globalFilter-all" onclick="updateGlobalFilter('all')"
-                    class="dash-filter-btn dash-filter-active">🎬 全部</button>
-                <button id="globalFilter-video" onclick="updateGlobalFilter('video')" class="dash-filter-btn">📹
-                    一般影片</button>
-                <button id="globalFilter-shorts" onclick="updateGlobalFilter('shorts')" class="dash-filter-btn">⚡
-                    Shorts</button>
-                <button id="globalFilter-stream" onclick="updateGlobalFilter('stream')" class="dash-filter-btn">🔴
-                    直播</button>
+                <div
+                    class="flex items-center gap-1 p-1.5 bg-surface-container-low rounded-full w-fit shadow-sm border border-outline-variant shrink-0">
+                    <span
+                        class="text-[12px] font-black text-on-surface-variant uppercase tracking-widest pl-4 pr-3 py-1 border-r border-outline-variant/50 mr-2">影片類型</span>
+                    <button id="globalFilter-all" onclick="updateGlobalFilter('all')"
+                        class="dash-filter-btn dash-filter-active">🎬 全部</button>
+                    <button id="globalFilter-video" onclick="updateGlobalFilter('video')" class="dash-filter-btn">📹
+                        一般影片</button>
+                    <button id="globalFilter-shorts" onclick="updateGlobalFilter('shorts')" class="dash-filter-btn">⚡
+                        Shorts</button>
+                    <button id="globalFilter-stream" onclick="updateGlobalFilter('stream')" class="dash-filter-btn">🔴
+                        直播</button>
+                </div>
+            </div>
+
+            <!-- 動態切換的標題區 -->
+            <div id="header-tab-dashboard"
+                class="header-tab-section flex flex-col mt-4 pt-4 border-t border-outline-variant/30">
+                <h2 class="text-xl font-bold font-headline text-on-surface">總覽摘要 Dashboard</h2>
+            </div>
+
+            <div id="header-tab-content"
+                class="header-tab-section hidden flex-col mt-4 pt-4 border-t border-outline-variant/30">
+                <h2 class="text-xl font-bold font-headline text-on-surface">影片表現 Content</h2>
+            </div>
+
+            <div id="header-tab-audience"
+                class="header-tab-section hidden flex-col mt-4 pt-4 border-t border-outline-variant/30">
+                <h2 class="text-xl font-bold font-headline text-on-surface">粉絲互動 Audience</h2>
+            </div>
+
+            <div id="header-tab-analysis"
+                class="header-tab-section hidden flex-col xl:flex-row xl:items-end justify-between gap-4 mt-4 pt-4 border-t border-outline-variant/30">
+                <div>
+                    <h2 class="text-xl font-bold font-headline text-on-surface mb-1">影片內容分群分佈分析</h2>
+                    <p class="text-sm text-on-surface-variant">基於 K-Means 分群標籤，依頻道分開呈現「按讚互動」與「留言參與」的分佈。</p>
+                </div>
+                <div
+                    class="flex p-1 bg-surface-container-high rounded-full w-fit border border-outline-variant/30 shrink-0">
+                    <button id="btn-scatter-linear" onclick="setScatterScale('linear')"
+                        class="scatter-scale-btn active px-5 py-1.5 text-xs font-bold rounded-full transition-all duration-300">線性
+                        (Linear)</button>
+                    <button id="btn-scatter-log" onclick="setScatterScale('logarithmic')"
+                        class="scatter-scale-btn px-5 py-1.5 text-xs font-bold rounded-full transition-all duration-300">對數
+                        (Log)</button>
+                </div>
             </div>
         </header>
 
@@ -273,10 +312,7 @@
         <div id="dashboard-content" class="hidden">
 
             <!-- 分頁 1 : 總覽 Dashboard -->
-            <div id="tab-dashboard" class="tab-section block">
-                <h2 id="dash-overview-title"
-                    class="text-xl font-bold font-headline mb-4 text-on-surface border-b border-outline-variant pb-2">
-                    總覽摘要 Dashboard</h2>
+            <div id="tab-dashboard" class="tab-section block mt-0">
 
                 <div id="mini-cards-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <!-- 總觀看次數 -->
@@ -431,9 +467,7 @@
             </div>
 
             <!-- 分頁 2 : 影片表現 Content -->
-            <div id="tab-content" class="tab-section hidden">
-                <h2 class="text-xl font-bold font-headline mb-4 text-on-surface border-b border-outline-variant pb-2">
-                    影片表現 Content</h2>
+            <div id="tab-content" class="tab-section hidden mt-0">
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div
@@ -483,9 +517,7 @@
             </div>
 
             <!-- 分頁 3 : 粉絲互動 Audience -->
-            <div id="tab-audience" class="tab-section hidden">
-                <h2 class="text-xl font-bold font-headline mb-4 text-on-surface border-b border-outline-variant pb-2">
-                    粉絲互動 Audience</h2>
+            <div id="tab-audience" class="tab-section hidden mt-0">
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-8 flex flex-col gap-6">
@@ -542,24 +574,7 @@
             </div>
 
             <!-- 分頁 4 : 內容分聚 Analysis -->
-            <div id="tab-analysis" class="tab-section hidden">
-                <div
-                    class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-outline-variant pb-4">
-                    <div>
-                        <h2 class="text-xl font-bold font-headline text-on-surface">影片內容分群分佈分析</h2>
-                        <p class="text-sm text-on-surface-variant">基於 K-Means 分群標籤，依頻道分開呈現「按讚互動」與「留言參與」的分佈。</p>
-                    </div>
-
-                    <!-- Linear / Log 切換按鈕組 (控制四張圖) -->
-                    <div class="flex p-1 bg-surface-container-high rounded-full w-fit border border-outline-variant/30">
-                        <button id="btn-scatter-linear" onclick="setScatterScale('linear')"
-                            class="scatter-scale-btn active px-5 py-1.5 text-xs font-bold rounded-full transition-all duration-300">線性
-                            (Linear)</button>
-                        <button id="btn-scatter-log" onclick="setScatterScale('logarithmic')"
-                            class="scatter-scale-btn px-5 py-1.5 text-xs font-bold rounded-full transition-all duration-300">對數
-                            (Log)</button>
-                    </div>
-                </div>
+            <div id="tab-analysis" class="tab-section hidden mt-0">
 
                 <!-- 頻道 A (千千) -->
                 <div id="scatter-section-a" class="mb-8">
@@ -734,6 +749,11 @@
             currentTabId = targetId;
             document.querySelectorAll('.tab-section').forEach(el => { el.classList.remove('block'); el.classList.add('hidden'); });
             document.getElementById(targetId).classList.remove('hidden'); document.getElementById(targetId).classList.add('block');
+
+            // ★ 新增：切換 sticky header 內容
+            document.querySelectorAll('.header-tab-section').forEach(el => { el.classList.remove('flex'); el.classList.add('hidden'); });
+            const headerEl = document.getElementById('header-' + targetId);
+            if (headerEl) { headerEl.classList.remove('hidden'); headerEl.classList.add('flex'); }
             document.querySelectorAll('.nav-item').forEach(btn => {
                 btn.classList.remove('active', 'border-r-4', 'border-[#ff5540]', 'bg-[rgba(162,74,53,0.1)]');
                 btn.classList.add('hover:bg-surface-container-high');
