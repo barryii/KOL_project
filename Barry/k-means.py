@@ -52,6 +52,11 @@ def preview_kmeans_results(channel: Chienseating | HowHowEat, video_type: str = 
     kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
     df['cluster_label'] = kmeans.fit_predict(X_scaled)
 
+    # 將 cluster_label 依據該群的平均觀看次數重新排序，保證 0=最低觀看, n=最高觀看
+    cluster_view_means = df.groupby('cluster_label')['view_count'].mean().sort_values()
+    mapping = {old_id: new_id for new_id, old_id in enumerate(cluster_view_means.index)}
+    df['cluster_label'] = df['cluster_label'].map(mapping)
+
     # 計算群組數量並建立自訂圖例標籤
     cluster_counts = df['cluster_label'].value_counts().to_dict()
     df['legend_label'] = df['cluster_label'].apply(
@@ -151,5 +156,7 @@ def preview_kmeans_results(channel: Chienseating | HowHowEat, video_type: str = 
         db.save_video_batch_cluster(video_data)
 
 if __name__ == '__main__':
-    preview_kmeans_results(Chienseating())
-    preview_kmeans_results(HowHowEat())
+    for vt in VideoType:
+        print(f"Running K-Means for {vt.value}")
+        preview_kmeans_results(Chienseating(), vt.value)
+        preview_kmeans_results(HowHowEat(), vt.value)

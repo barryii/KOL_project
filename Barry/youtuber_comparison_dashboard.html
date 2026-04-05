@@ -661,22 +661,23 @@
         const CHANNEL_2_ID = 'UCa2YiSXNTkmOA-QTKdzzbSQ';
 
         // ★ 頻道分群自定義名稱 (可在此隨時修改)
+        // 因為後端 K-Means 分析已重新排序（0=最低觀看，越往上觀看越高），因此分類變得非常單純
         const CLUSTER_NAMES_A = {
             0: "均標",
-            1: "頂標",
-            2: "前標",
-            3: "特別突出"
+            1: "前標",
+            2: "特別突出",
+            3: "頂標"
         };
         const CLUSTER_NAMES_B = {
             0: "均標",
-            1: "特別突出",
-            2: "頂標",
-            3: "前標"
+            1: "前標",
+            2: "特別突出",
+            3: "頂標"
         };
 
         // ★ 頻道分群自定義顯示順序 (數字為 Cluster ID)
-        const CLUSTER_ORDER_A = [0, 2, 1, 3];
-        const CLUSTER_ORDER_B = [0, 3, 2, 1];
+        const CLUSTER_ORDER_A = [0, 1, 3, 2];
+        const CLUSTER_ORDER_B = [0, 1, 3, 2];
 
         const getStyleVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
         const baseSize = parseInt(getStyleVar('--tooltip-size')) || 16;
@@ -799,7 +800,8 @@
         }
 
         function getClusterColor(idx) {
-            const colors = ['#440154', '#3b528b', '#21918c', '#5ec962', '#fde725'];
+            // 0=均標(紫), 1=前標(綠), 2=頂標(青), 3=特別突出(深藍)
+            const colors = ['#440154', '#5ec962', '#21918c', '#3b528b', '#fde725'];
             return colors[idx % colors.length];
         }
 
@@ -818,23 +820,21 @@
             const nameMap = (channelTag === 'A') ? CLUSTER_NAMES_A : CLUSTER_NAMES_B;
             const orderMap = (channelTag === 'A') ? CLUSTER_ORDER_A : CLUSTER_ORDER_B;
 
-            // 依照自定義順序產生 datasets
-            const sortedIds = [...Object.keys(clusters)];
-            sortedIds.sort((a, b) => {
-                const idxA = orderMap.indexOf(parseInt(a));
-                const idxB = orderMap.indexOf(parseInt(b));
-                // 如果 ID 不在順序表，就排在最後
-                const posA = idxA === -1 ? 999 : idxA;
-                const posB = idxB === -1 ? 999 : idxB;
-                return posA - posB;
+            // 無論有沒有資料，始終按照 orderMap 產生固定的 datasets 列表
+            // 確保 Chart.js 裡的 dataset 索引（順序）與圖例永遠固定。這樣切換時點的飛行動畫才不會錯亂
+            const allClusterIds = [...orderMap];
+            Object.keys(clusters).forEach(id => {
+                if (!allClusterIds.includes(parseInt(id)) && !allClusterIds.includes(id)) {
+                    allClusterIds.push(id);
+                }
             });
 
-            const datasets = sortedIds.map(cId => {
+            const datasets = allClusterIds.map(cId => {
                 const label = nameMap[cId] || `Cluster ${cId}`;
                 const isHidden = (channelTag === 'A') ? hiddenClustersA.has(label) : hiddenClustersB.has(label);
                 return {
                     label: label,
-                    data: clusters[cId],
+                    data: clusters[cId] || [], // 若該分類無影片則給空陣列
                     hidden: isHidden,
                     backgroundColor: getClusterColor(parseInt(cId)),
                     borderColor: 'rgba(255,255,255,0.6)',
@@ -846,7 +846,7 @@
 
             if (charts[chartId]) {
                 const chart = charts[chartId];
-                
+
                 // 更新現有 datasets，讓 Chart.js 將其視為同一個物件而產生平滑飛行動畫
                 datasets.forEach((newDs, i) => {
                     if (chart.data.datasets[i]) {
@@ -874,69 +874,69 @@
                     options: {
                         responsive: true, maintainAspectRatio: false,
                         animation: { duration: 600, easing: 'easeOutQuart' },
-                    transitions: {
-                        scale: {
-                            animation: { duration: 400, easing: 'easeOutQuart' }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: { boxWidth: 10, font: { size: 10 } },
-                            onClick: (e, legendItem, legend) => {
-                                const clickedLabel = legendItem.text;
-                                const sourceChart = legend.chart;
+                        transitions: {
+                            scale: {
+                                animation: { duration: 400, easing: 'easeOutQuart' }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: { boxWidth: 10, font: { size: 10 } },
+                                onClick: (e, legendItem, legend) => {
+                                    const clickedLabel = legendItem.text;
+                                    const sourceChart = legend.chart;
 
-                                // 從觸發點擊的圖確認當前狀態
-                                let currentlyVisible = true;
-                                sourceChart.data.datasets.forEach((ds, i) => {
-                                    if (ds.label === clickedLabel) {
-                                        currentlyVisible = sourceChart.isDatasetVisible(i);
-                                    }
-                                });
-                                // toggle：原本可見就隱藏，原本隱藏就顯示
-                                const makeVisible = !currentlyVisible;
-
-                                // 同步連動同一頻道的兩張圖
-                                const sameChannelIds = (channelTag === 'A')
-                                    ? ['scatterA_likes', 'scatterA_comments']
-                                    : ['scatterB_likes', 'scatterB_comments'];
-                                    
-                                const setRef = (channelTag === 'A') ? hiddenClustersA : hiddenClustersB;
-                                if (makeVisible) {
-                                    setRef.delete(clickedLabel);
-                                } else {
-                                    setRef.add(clickedLabel);
-                                }
-
-                                sameChannelIds.forEach(id => {
-                                    const chart = charts[id];
-                                    if (!chart) return;
-                                    chart.data.datasets.forEach((ds, i) => {
+                                    // 從觸發點擊的圖確認當前狀態
+                                    let currentlyVisible = true;
+                                    sourceChart.data.datasets.forEach((ds, i) => {
                                         if (ds.label === clickedLabel) {
-                                            chart.setDatasetVisibility(i, makeVisible);
+                                            currentlyVisible = sourceChart.isDatasetVisible(i);
                                         }
                                     });
-                                    // 使用對應的 transition mode 觸發縮放動畫
-                                    chart.update('scale');
-                                });
+                                    // toggle：原本可見就隱藏，原本隱藏就顯示
+                                    const makeVisible = !currentlyVisible;
+
+                                    // 同步連動同一頻道的兩張圖
+                                    const sameChannelIds = (channelTag === 'A')
+                                        ? ['scatterA_likes', 'scatterA_comments']
+                                        : ['scatterB_likes', 'scatterB_comments'];
+
+                                    const setRef = (channelTag === 'A') ? hiddenClustersA : hiddenClustersB;
+                                    if (makeVisible) {
+                                        setRef.delete(clickedLabel);
+                                    } else {
+                                        setRef.add(clickedLabel);
+                                    }
+
+                                    sameChannelIds.forEach(id => {
+                                        const chart = charts[id];
+                                        if (!chart) return;
+                                        chart.data.datasets.forEach((ds, i) => {
+                                            if (ds.label === clickedLabel) {
+                                                chart.setDatasetVisibility(i, makeVisible);
+                                            }
+                                        });
+                                        // 使用對應的 transition mode 觸發縮放動畫
+                                        chart.update('scale');
+                                    });
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: c => [` 分群: ${c.dataset.label}`, ` ${c.raw.title}`, ` 觀看: ${formatNum(c.raw.x)}`, ` ${yLabel}: ${formatNum(c.raw.y)}`]
+                                }
                             }
                         },
-                        tooltip: {
-                            callbacks: {
-                                label: c => [` 分群: ${c.dataset.label}`, ` ${c.raw.title}`, ` 觀看: ${formatNum(c.raw.x)}`, ` ${yLabel}: ${formatNum(c.raw.y)}`]
-                            }
+                        scales: {
+                            x: {
+                                type: scatterScaleType,
+                                title: { display: true, text: '觀看次數 (Views)' + (scatterScaleType === 'logarithmic' ? ' (Log)' : '') },
+                                grid: { color: gridColor }
+                            },
                         }
-                    },
-                    scales: {
-                        x: {
-                            type: scatterScaleType,
-                            title: { display: true, text: '觀看次數 (Views)' + (scatterScaleType === 'logarithmic' ? ' (Log)' : '') },
-                            grid: { color: gridColor }
-                        },
                     }
-                }
-            });
+                });
             }
         }
 
