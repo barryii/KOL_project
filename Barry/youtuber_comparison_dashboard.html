@@ -172,6 +172,21 @@
             color: #ffffff !important;
             box-shadow: 0 4px 12px rgba(162, 74, 53, 0.3);
         }
+
+        /* 散佈圖尺度切換按鈕樣式 */
+        .scatter-scale-btn {
+            background: transparent;
+            color: #57534e;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .scatter-scale-btn.active {
+            background: #ffffff;
+            color: #CF5800;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 
@@ -215,6 +230,11 @@
                 class="nav-item w-full flex items-center space-x-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface rounded-lg transition-all duration-300">
                 <span class="material-symbols-outlined">groups</span>
                 <span class="font-medium text-sm">粉絲互動 Audience</span>
+            </button>
+            <button onclick="switchTab('tab-analysis', this)"
+                class="nav-item w-full flex items-center space-x-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface rounded-lg transition-all duration-300">
+                <span class="material-symbols-outlined">analytics</span>
+                <span class="font-medium text-sm">內容分聚 Analysis</span>
             </button>
         </nav>
     </aside>
@@ -521,30 +541,106 @@
                 </div>
             </div>
 
+            <!-- 分頁 4 : 內容分聚 Analysis -->
+            <div id="tab-analysis" class="tab-section hidden">
+                <div
+                    class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-outline-variant pb-4">
+                    <div>
+                        <h2 class="text-xl font-bold font-headline text-on-surface">影片內容分群分佈分析</h2>
+                        <p class="text-sm text-on-surface-variant">基於 K-Means 分群標籤，依頻道分開呈現「按讚互動」與「留言參與」的分佈。</p>
+                    </div>
+
+                    <!-- Linear / Log 切換按鈕組 (控制四張圖) -->
+                    <div class="flex p-1 bg-surface-container-high rounded-full w-fit border border-outline-variant/30">
+                        <button id="btn-scatter-linear" onclick="setScatterScale('linear')"
+                            class="scatter-scale-btn active px-5 py-1.5 text-xs font-bold rounded-full transition-all duration-300">線性
+                            (Linear)</button>
+                        <button id="btn-scatter-log" onclick="setScatterScale('logarithmic')"
+                            class="scatter-scale-btn px-5 py-1.5 text-xs font-bold rounded-full transition-all duration-300">對數
+                            (Log)</button>
+                    </div>
+                </div>
+
+                <!-- 頻道 A (千千) -->
+                <div id="scatter-section-a" class="mb-8">
+                    <h3 class="font-headline font-bold text-base mb-4 flex items-center gap-2 text-on-surface-variant">
+                        <span class="w-3 h-3 rounded-full inline-block" style="background: #a24a35;"></span>
+                        <span id="scatter-title-a">YTer A</span> 分群分佈
+                    </h3>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-surface-container-low rounded-xl p-6 shadow-xl border border-outline-variant/30">
+                            <h4 class="font-headline font-bold text-base mb-1 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary text-base">favorite</span>
+                                觀看次數 vs 按讚數
+                            </h4>
+                            <p class="text-xs text-on-surface-variant mb-4">各顏色代表不同分群</p>
+                            <div class="relative h-[480px] w-full">
+                                <canvas id="scatterA_likes"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-surface-container-low rounded-xl p-6 shadow-xl border border-outline-variant/30">
+                            <h4 class="font-headline font-bold text-base mb-1 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-secondary text-base">forum</span>
+                                觀看次數 vs 留言數
+                            </h4>
+                            <p class="text-xs text-on-surface-variant mb-4">各顏色代表不同分群</p>
+                            <div class="relative h-[480px] w-full">
+                                <canvas id="scatterA_comments"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 頻道 B (豪豪) -->
+                <div id="scatter-section-b">
+                    <h3 class="font-headline font-bold text-base mb-4 flex items-center gap-2 text-on-surface-variant">
+                        <span class="w-3 h-3 rounded-full inline-block" style="background: #5c7368;"></span>
+                        <span id="scatter-title-b">YTer B</span> 分群分佈
+                    </h3>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-surface-container-low rounded-xl p-6 shadow-xl border border-outline-variant/30">
+                            <h4 class="font-headline font-bold text-base mb-1 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary text-base">favorite</span>
+                                觀看次數 vs 按讚數
+                            </h4>
+                            <p class="text-xs text-on-surface-variant mb-4">各顏色代表不同分群</p>
+                            <div class="relative h-[480px] w-full">
+                                <canvas id="scatterB_likes"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-surface-container-low rounded-xl p-6 shadow-xl border border-outline-variant/30">
+                            <h4 class="font-headline font-bold text-base mb-1 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-secondary text-base">forum</span>
+                                觀看次數 vs 留言數
+                            </h4>
+                            <p class="text-xs text-on-surface-variant mb-4">各顏色代表不同分群</p>
+                            <div class="relative h-[480px] w-full">
+                                <canvas id="scatterB_comments"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         </div>
     </main>
 
     <script>
-        // ★ API 基礎路徑變數 (方便之後切換到雲端或生產環境)
+        // ★ API 基礎路徑變數
         const API_BASE_URL = 'http://localhost:8000';
-
         const CHANNEL_1_ID = 'UC9i2Qgd5lizhVgJrdnxunKw';
         const CHANNEL_2_ID = 'UCa2YiSXNTkmOA-QTKdzzbSQ';
 
-        // 讀取 CSS 變數作為圖表預設值
         const getStyleVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-
-        // 直接讀取主控變數並在 JS 中計算，不再針對迷你圖做差別待遇
         const baseSize = parseInt(getStyleVar('--tooltip-size')) || 16;
-        const ttTitleSize = baseSize;    // 標題與基礎大小一致
-        const ttBodySize = baseSize - 2; // 內容稍微縮小 2px 以利排版
-        const miniTtBodySize = ttBodySize; // 迷你圖也採用相同的內容大小
+        const ttTitleSize = baseSize;
+        const ttBodySize = baseSize - 2;
+        const miniTtBodySize = ttBodySize;
 
-        // 儲存從 API 取得的真實名字
         let nameA = 'YTer A';
         let nameB = 'YTer B';
 
-        // ★ 從 CSS 抓取色階變數
         const ch1Dark = getStyleVar('--color-ch1-dark') || '#a24a35';
         const ch1Med = getStyleVar('--color-ch1-medium') || '#d86c55';
         const ch1Lite = getStyleVar('--color-ch1-light') || '#ffac99';
@@ -552,283 +648,260 @@
         const ch2Med = getStyleVar('--color-ch2-medium') || '#8da399';
         const ch2Lite = getStyleVar('--color-ch2-light') || '#b0c2b9';
 
-        // ★ 色彩主題映射表
         const THEME_CONFIG = {
-            all: {
-                a: { primary: ch1Dark, bg: 'rgba(162, 74, 53, 0.1)' },
-                b: { primary: ch2Med, bg: 'rgba(141, 163, 153, 0.2)' }
-            },
-            video: {
-                a: { primary: ch1Dark, bg: 'rgba(162, 74, 53, 0.1)' },
-                b: { primary: ch2Dark, bg: 'rgba(92, 115, 104, 0.2)' }
-            },
-            shorts: {
-                a: { primary: ch1Med, bg: 'rgba(216, 108, 85, 0.1)' },
-                b: { primary: ch2Med, bg: 'rgba(141, 163, 153, 0.2)' }
-            },
-            stream: {
-                a: { primary: ch1Lite, bg: 'rgba(255, 172, 153, 0.1)' },
-                b: { primary: ch2Lite, bg: 'rgba(176, 194, 185, 0.2)' }
-            }
+            all: { a: { primary: ch1Dark, bg: 'rgba(162, 74, 53, 0.1)' }, b: { primary: ch2Med, bg: 'rgba(141, 163, 153, 0.2)' } },
+            video: { a: { primary: ch1Dark, bg: 'rgba(162, 74, 53, 0.1)' }, b: { primary: ch2Dark, bg: 'rgba(92, 115, 104, 0.2)' } },
+            shorts: { a: { primary: ch1Med, bg: 'rgba(216, 108, 85, 0.1)' }, b: { primary: ch2Med, bg: 'rgba(141, 163, 153, 0.2)' } },
+            stream: { a: { primary: ch1Lite, bg: 'rgba(255, 172, 153, 0.1)' }, b: { primary: ch2Lite, bg: 'rgba(176, 194, 185, 0.2)' } }
         };
 
         const gridColor = 'rgba(0, 0, 0, 0.05)';
         const classBadgeA = 'yter-badge-a';
         const classBadgeB = 'yter-badge-b';
         let charts = {};
-        let globalFansData = null; // 全域儲存撈回來的鐵粉資料
-        let globalVideosData = null; // 全域儲存熱門影片資料
-        let overviewDataCache = null; // 全域儲存 Overview 資料以供 Dashboard 圖表連動
-        let dashChartOpts = {};  // 全域儲存 Chart.js 選項
-        let globalVideoType = null; // ★ 設為 null 以便在網頁初始載入時正確觸發第一次更新
-        let sharedHoverIndex = -1;   // 全域同步 Hover 索引
-        let isSyncingZoom = false;   // ★ 防止縮放連動無窮遞迴的旗標
-
-        // ★ 全域縮放狀態紀錄：讓切換類型時能維持縮放視野
+        let globalFansData = null;
+        let globalVideosData = null;
+        let overviewDataCache = null;
+        let dashChartOpts = {};
+        let globalVideoType = '';
+        let currentTabId = 'tab-dashboard';
+        let sharedHoverIndex = -1;
+        let isSyncingZoom = false;
         let currentZoomMin = null;
         let currentZoomMax = null;
+        let scatterScaleType = 'linear';
+        let globalScatterCache = null;  // { type, data } — avoids re-fetching on scale toggle
 
         const formatNum = num => num.toLocaleString('en-US');
         const sumArray = arr => arr.reduce((a, b) => a + Number(b), 0);
 
         const createMiniCardChart = (id, valA, valB, tooltipSuffix = '', isStacked = false, datasets = null) => {
             if (charts[id]) charts[id].destroy();
-
-            // ★ 動態獲取目前的配色
             const theme = THEME_CONFIG[globalVideoType] || THEME_CONFIG.all;
             const currentA = theme.a.primary;
             const currentB = theme.b.primary;
-
             let ds = datasets;
             if (!ds) {
                 ds = [{ data: [valA, valB], backgroundColor: [currentA, currentB], borderRadius: 4, barThickness: 16 }];
             } else {
-                // 如果是堆疊圖，確保 barThickness 統一
                 ds.forEach(d => { d.barThickness = 16; d.borderRadius = 0; });
-                // 最後一個 dataset 給圓角
                 if (ds.length > 0) ds[ds.length - 1].borderRadius = 4;
             }
-
             charts[id] = new Chart(document.getElementById(id), {
                 type: 'bar',
-                data: {
-                    labels: [nameA, nameB],
-                    datasets: ds
-                },
+                data: { labels: [nameA, nameB], datasets: ds },
                 options: {
-                    indexAxis: 'y',
-                    responsive: true, maintainAspectRatio: false,
-                    animation: { duration: 400 }, // 加入微量平滑動畫
+                    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                    animation: { duration: 400 },
                     interaction: { mode: 'index', intersect: false, axis: 'y' },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
-                            enabled: true,
-                            position: 'average', // ★ 讓提示窗穩定在中心點，避免亂跳
-                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                            titleColor: '#1c1917',
-                            titleFont: { size: ttTitleSize, weight: 'bold' },
-                            bodyColor: '#57534e',
-                            bodyFont: { size: miniTtBodySize },
-                            padding: 12,       // 適度加大 Padding，防止文字貼邊
-                            caretSize: 0,      // 移除箭頭可節省一點空間，防止遮擋
-                            cornerRadius: 6,
-                            borderColor: 'rgba(0,0,0,0.1)',
-                            borderWidth: 1,
-                            callbacks: {
-                                label: function (context) {
-                                    return ' ' + (context.dataset.label ? context.dataset.label + ': ' : '') + formatNum(context.raw) + tooltipSuffix;
-                                }
-                            }
+                            enabled: true, position: 'average', backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            titleColor: '#1c1917', titleFont: { size: ttTitleSize, weight: 'bold' },
+                            bodyColor: '#57534e', bodyFont: { size: miniTtBodySize },
+                            padding: 12, caretSize: 0, cornerRadius: 6, borderColor: 'rgba(0,0,0,0.1)', borderWidth: 1,
+                            callbacks: { label: ctx => ' ' + (ctx.dataset.label ? ctx.dataset.label + ': ' : '') + formatNum(ctx.raw) + tooltipSuffix }
                         }
                     },
                     layout: { padding: { left: 0, right: 30 } },
-                    scales: {
-                        x: { stacked: isStacked, display: false, grid: { display: false } },
-                        y: {
-                            stacked: isStacked,
-                            grid: { display: false, drawBorder: false },
-                            ticks: {
-                                display: false // 既然上面有名字了，圖表左側就不用重複顯示名字，讓圖表更寬
-                            }
-                        }
-                    }
+                    scales: { x: { stacked: isStacked, display: false }, y: { stacked: isStacked, grid: { display: false }, ticks: { display: false } } }
                 }
             });
         };
 
         function switchTab(targetId, btnElement) {
+            // ★ 已在這個分頁就不做任何事（避免重複發 API 或無意義的重繪）
+            if (currentTabId === targetId) return;
+            currentTabId = targetId;
             document.querySelectorAll('.tab-section').forEach(el => { el.classList.remove('block'); el.classList.add('hidden'); });
             document.getElementById(targetId).classList.remove('hidden'); document.getElementById(targetId).classList.add('block');
-
             document.querySelectorAll('.nav-item').forEach(btn => {
-                btn.classList.remove('active', 'border-r-4', 'border-[#ff5540]');
-                btn.className = btn.className.replace('bg-[rgba(255,85,64,0.1)]', 'hover:bg-surface-container-high');
+                btn.classList.remove('active', 'border-r-4', 'border-[#ff5540]', 'bg-[rgba(162,74,53,0.1)]');
+                btn.classList.add('hover:bg-surface-container-high');
             });
-            btnElement.classList.add('active');
+            btnElement.classList.add('active', 'bg-[rgba(162,74,53,0.1)]');
             Object.values(charts).forEach(chart => { if (chart) chart.resize(); });
+            if (targetId === 'tab-analysis') renderClusteringCharts(globalVideoType);
         }
 
-        // --- 全域圖表同步函式 ---
+        function setScatterScale(scaleType) {
+            // ★ 已是當前模式就不做任何事
+            if (scatterScaleType === scaleType) return;
+            scatterScaleType = scaleType;
+            document.querySelectorAll('.scatter-scale-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById(`btn-scatter-${scaleType === 'linear' ? 'linear' : 'log'}`);
+            if (activeBtn) activeBtn.classList.add('active');
+            // ★ 從快取重繪（有動畫），不重新發 API
+            renderScatterFromCache();
+        }
+
+        function getClusterColor(idx) {
+            const colors = ['#440154', '#3b528b', '#21918c', '#5ec962', '#fde725'];
+            return colors[idx % colors.length];
+        }
+
+        // ★ 只繪製（不抓資料），從 rawData 中取特定頻道的資料渲染單一圖表
+        function drawSingleScatterChart(canvasId, chartId, list, yKey, yLabel) {
+            const ctx = document.getElementById(canvasId);
+            if (!ctx) return;
+            const clusters = {};
+            list.forEach(v => {
+                const cLabel = v.cluster_label !== undefined && v.cluster_label !== null ? v.cluster_label : 'N/A';
+                if (!clusters[cLabel]) clusters[cLabel] = [];
+                clusters[cLabel].push({ x: v.view_count, y: v[yKey], title: v.title });
+            });
+            const datasets = Object.keys(clusters).sort().map(cId => ({
+                label: `Cluster ${cId}`,
+                data: clusters[cId],
+                backgroundColor: getClusterColor(parseInt(cId)),
+                borderColor: 'rgba(255,255,255,0.6)',
+                borderWidth: 1.5,
+                pointStyle: 'circle',
+                radius: 5, hoverRadius: 8
+            }));
+
+            if (charts[chartId]) charts[chartId].destroy();
+            charts[chartId] = new Chart(ctx, {
+                type: 'scatter',
+                data: { datasets },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    animation: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: c => [` Cluster ${c.dataset.label.replace('Cluster ', '')}`, ` ${c.raw.title}`, ` 觀看: ${formatNum(c.raw.x)}`, ` ${yLabel}: ${formatNum(c.raw.y)}`]
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: scatterScaleType,
+                            title: { display: true, text: '觀看次數 (Views)' + (scatterScaleType === 'logarithmic' ? ' (Log)' : '') },
+                            grid: { color: gridColor }
+                        },
+                        y: { title: { display: true, text: yLabel }, grid: { color: gridColor }, beginAtZero: scatterScaleType !== 'logarithmic' }
+                    }
+                }
+            });
+        }
+
+        // ★ 使用快取渲染四張散佈圖（不重新發 API）
+        function renderScatterFromCache() {
+            if (!globalScatterCache) return;
+            const rawData = globalScatterCache.data;
+            const listA = rawData[CHANNEL_1_ID] || [];
+            const listB = rawData[CHANNEL_2_ID] || [];
+
+            // 更新頻道名稱標題
+            const titleA = document.getElementById('scatter-title-a');
+            const titleB = document.getElementById('scatter-title-b');
+            if (titleA) titleA.textContent = nameA;
+            if (titleB) titleB.textContent = nameB;
+
+            drawSingleScatterChart('scatterA_likes', 'scatterA_likes', listA, 'like_count', '按讚數');
+            drawSingleScatterChart('scatterA_comments', 'scatterA_comments', listA, 'comment_count', '留言數');
+            drawSingleScatterChart('scatterB_likes', 'scatterB_likes', listB, 'like_count', '按讚數');
+            drawSingleScatterChart('scatterB_comments', 'scatterB_comments', listB, 'comment_count', '留言數');
+        }
+
+        // ★ 主入口：cache 有效時直接重繪，否則才發 API
+        async function renderClusteringCharts(type) {
+            if (globalScatterCache && globalScatterCache.type === type) {
+                // 資料已快取，直接重繪（例如 Log/Linear 切換時）
+                renderScatterFromCache();
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/video_scatter?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}&video_type=${type}`);
+                const rawData = await res.json();
+                globalScatterCache = { type, data: rawData };
+                renderScatterFromCache();
+            } catch (err) { console.error("渲染散佈圖失敗", err); }
+        }
+
         function syncChartsTooltip(index, skipChartId = null) {
             sharedHoverIndex = index;
             const syncIds = ['totalViewsChart', 'avgViewsChart', 'publishChart', 'likeChart', 'commentChart'];
-
             syncIds.forEach(id => {
-                const chart = charts[id];
-                if (!chart || id === skipChartId) return;
-
-                if (index === -1) {
-                    chart.tooltip.setActiveElements([], { x: 0, y: 0 });
-                } else {
+                const chart = charts[id]; if (!chart || id === skipChartId) return;
+                if (index === -1) { chart.tooltip.setActiveElements([], { x: 0, y: 0 }); }
+                else {
                     const meta = chart.getDatasetMeta(0);
                     if (meta && meta.data[index]) {
-                        chart.tooltip.setActiveElements([
-                            { datasetIndex: 0, index: index },
-                            { datasetIndex: 1, index: index }
-                        ], { x: meta.data[index].x, y: meta.data[index].y });
+                        chart.tooltip.setActiveElements([{ datasetIndex: 0, index: index }, { datasetIndex: 1, index: index }], { x: meta.data[index].x, y: meta.data[index].y });
                     }
                 }
                 chart.update('none');
             });
         }
 
-        // ★ 全域圖表縮放同步
         function syncChartsZoom(min, max, skipChartId = null) {
             if (isSyncingZoom) return;
             isSyncingZoom = true;
             try {
                 const syncIds = ['totalViewsChart', 'avgViewsChart', 'publishChart', 'likeChart', 'commentChart'];
                 const labelsLen = (dashChartOpts.labels || []).length;
-
-                // 校準數值，確保不超出範圍且為整數索引
                 let safeMin = Math.max(0, Math.min(labelsLen - 1, Math.floor(min)));
                 let safeMax = Math.max(0, Math.min(labelsLen - 1, Math.ceil(max)));
-
-                // ★ 強制保持至少 1 個單位的間距 (防止縮放到 0 寬度)
-                if (safeMax <= safeMin) {
-                    if (safeMax < labelsLen - 1) safeMax = safeMin + 1;
-                    else if (safeMin > 0) safeMin = safeMax - 1;
-                }
-
+                if (safeMax <= safeMin) { if (safeMax < labelsLen - 1) safeMax = safeMin + 1; else if (safeMin > 0) safeMin = safeMax - 1; }
                 syncIds.forEach(id => {
-                    const chart = charts[id];
-                    if (!chart || id === skipChartId) return;
-                    chart.options.scales.x.min = safeMin;
-                    chart.options.scales.x.max = safeMax;
-                    chart.update('none');
+                    const chart = charts[id]; if (!chart || id === skipChartId) return;
+                    chart.options.scales.x.min = safeMin; chart.options.scales.x.max = safeMax; chart.update('none');
                 });
-
-                // ★ 連動：重算上方數據摘要 (僅計算不重建圖表，確保平滑)
                 updateSummaryMetrics(globalVideoType, safeMin, safeMax);
-
-                // ★ 紀錄目前的縮放狀態至全域，供切換類型時使用
-                currentZoomMin = safeMin;
-                currentZoomMax = safeMax;
-
-            } finally {
-                isSyncingZoom = false;
-            }
+                currentZoomMin = safeMin; currentZoomMax = safeMax;
+            } finally { isSyncingZoom = false; }
         }
 
-        // ★ 全域縮放還原 (實作物理重設，不仰賴插件快取)
         function globalResetZoom() {
             if (isSyncingZoom) return;
+            if (currentZoomMin === null && currentZoomMax === null) return;
             isSyncingZoom = true;
             try {
-                console.log("發動物理縮放還原...");
                 const syncIds = ['totalViewsChart', 'avgViewsChart', 'publishChart', 'likeChart', 'commentChart'];
                 syncIds.forEach(id => {
-                    const chart = charts[id];
-                    if (!chart) return;
-
-                    // 強制從選項層級清除限制 (使用 undefined 才是正確重設)
-                    if (chart.options.scales && chart.options.scales.x) {
-                        chart.options.scales.x.min = undefined;
-                        chart.options.scales.x.max = undefined;
-                    }
-
-                    // 同步清理全域模板中的殘留
-                    if (dashChartOpts.lineOpt && dashChartOpts.lineOpt.scales && dashChartOpts.lineOpt.scales.x) {
-                        dashChartOpts.lineOpt.scales.x.min = undefined;
-                        dashChartOpts.lineOpt.scales.x.max = undefined;
-                    }
-
+                    const chart = charts[id]; if (!chart) return;
+                    if (chart.options.scales && chart.options.scales.x) { chart.options.scales.x.min = undefined; chart.options.scales.x.max = undefined; }
                     chart.update('default');
                 });
-
-                // ★ 還原連動：將數據與全域變數重設為全量
-                const labelsLen = (dashChartOpts.labels || []).length;
-                currentZoomMin = null;
-                currentZoomMax = null;
-                updateSummaryMetrics(globalVideoType, 0, labelsLen - 1);
-
-            } catch (e) {
-                console.error("還原失敗:", e);
-            } finally {
-                isSyncingZoom = false;
-            }
+                currentZoomMin = null; currentZoomMax = null;
+                updateSummaryMetrics(globalVideoType, 0, (dashChartOpts.labels || []).length - 1);
+            } finally { isSyncingZoom = false; }
         }
 
-        // ★ 全域事件委派：處理所有趨勢圖的雙擊還原
-        document.addEventListener('dblclick', (e) => {
+        document.addEventListener('dblclick', e => {
             const syncIds = ['totalViewsChart', 'avgViewsChart', 'publishChart', 'likeChart', 'commentChart'];
-            if (e.target.tagName === 'CANVAS' && syncIds.includes(e.target.id)) {
-                globalResetZoom();
-            }
+            if (e.target.tagName === 'CANVAS' && syncIds.includes(e.target.id)) globalResetZoom();
         });
 
         async function updateGlobalFilter(type) {
-            // ★ 優化：如果點選的是當前已選中的類型，則不重複執行
-            if (globalVideoType === type) {
-                console.log(`類型 ${type} 已在作用中，跳過更新。`);
-                return;
-            }
+            if (globalVideoType === type) return;
             globalVideoType = type;
-
-            // ★ 更新全域主題色彩 (CSS 變數)
+            globalScatterCache = null;  // ★ 影片類型變更時清除 scatter 快取，強制重新拉取
             const theme = THEME_CONFIG[type] || THEME_CONFIG.all;
             const root = document.documentElement;
             root.style.setProperty('--yter-a-color', theme.a.primary);
-            root.style.setProperty('--yter-a-bg', theme.a.bg);
             root.style.setProperty('--yter-b-color', theme.b.primary);
-            root.style.setProperty('--yter-b-bg', theme.b.bg);
-
-            // 1. 更新 UI 按鈕樣式 (Header)
-            document.querySelectorAll('.dash-filter-btn').forEach(btn => {
-                btn.classList.remove('dash-filter-active');
-            });
+            document.querySelectorAll('.dash-filter-btn').forEach(btn => btn.classList.remove('dash-filter-active'));
             const activeBtn = document.getElementById(`globalFilter-${type}`);
             if (activeBtn) activeBtn.classList.add('dash-filter-active');
 
-            // 2. 觸發各分頁連動更新
-            // globalResetZoom();        // ★ 移除：不再強制重設，以維持縮放視野
-            renderTrendCharts(type);      // 建立趨勢圖
-            updateSummaryMetrics(type, currentZoomMin, currentZoomMax); // ★ 使用目前的縮放範圍
-            updateTopVideosUI();          // 更新影片排行榜
-            renderAudienceCharts(type);   // 更新互動趨勢圖
+            renderTrendCharts(type);
+            updateSummaryMetrics(type, currentZoomMin, currentZoomMax);
+            updateTopVideosUI();
+            renderAudienceCharts(type);
+            if (currentTabId === 'tab-analysis') renderClusteringCharts(type);
 
-            // 3. ★ 全域連動：重新抓取符合該類型的鐵粉排行榜
             try {
-                // UI 提示：抓取中
                 const listContainer = document.getElementById('top-commenters-list');
                 if (listContainer) listContainer.innerHTML = '<div class="flex justify-center p-8"><span class="material-symbols-outlined animate-spin text-2xl opacity-30">progress_activity</span></div>';
-
                 const res = await fetch(`${API_BASE_URL}/api/top_fans?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}&top_n=200&video_type=${type}`);
                 globalFansData = await res.json();
-
-                // 更新標題圖示與文字
-                const iconMap = { all: 'forum', video: 'movie', shorts: 'bolt', stream: 'live_tv' };
-                const labelMap = { all: '頻道全量', video: '一般影片', shorts: 'Shorts', stream: '直播' };
-                const titleIcon = document.getElementById('fan-leaderboard-icon');
-                const titleText = document.getElementById('fan-leaderboard-type-label');
-                if (titleIcon) titleIcon.innerText = iconMap[type] || 'forum';
-                if (titleText) titleText.innerText = labelMap[type] || '';
-
                 updateTopCommentersUI();
-            } catch (e) {
-                console.error("更新鐵粉榜單失敗", e);
-            }
+            } catch (e) { console.error("更新鐵粉失敗", e); }
         }
 
         // ★ 新增：更新 Dashboard 最上方四張數據卡片的數值與比例圖

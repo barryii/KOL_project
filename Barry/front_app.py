@@ -239,3 +239,90 @@ def get_channel_info():
         c2.channel_id: c2.channel_display_name
     }
 
+# http://localhost:8000/api/video_clusters?channel1_id=UC9i2Qgd5lizhVgJrdnxunKw&channel2_id=UCa2YiSXNTkmOA-QTKdzzbSQ
+@app.get("/api/video_clusters")
+def get_video_clusters(
+    channel1_id: str = Query(..., description="第一個頻道的 ID"),
+    channel2_id: str = Query(..., description="第二個頻道的 ID"),
+    video_type: str = Query("all", description="篩選特定的影片類型範疇")
+):
+    with DBManager().connect_to_db_readonly() as connection:
+        with connection.cursor(dictionary=True) as cursor:
+            type_filter = ""
+            params = [channel1_id, channel2_id]
+            if video_type != "all":
+                type_filter = " AND `type` = %s "
+                params.append(video_type)
+            
+            sql = f"""
+                SELECT 
+                    channel_id,
+                    cluster_label,
+                    COUNT(*) as video_count,
+                    AVG(view_count) as avg_views,
+                    AVG(like_count) as avg_likes,
+                    AVG(comment_count) as avg_comments
+                FROM videos
+                WHERE channel_id IN (%s, %s) 
+                  AND cluster_label IS NOT NULL
+                  {type_filter}
+                GROUP BY channel_id, cluster_label
+                ORDER BY cluster_label ASC
+            """
+            cursor.execute(sql, tuple(params))
+            results = cursor.fetchall()
+            
+            # 格式化為前端易用的結構
+            data = {channel1_id: [], channel2_id: []}
+            import decimal
+            for row in results:
+                c_id = row['channel_id']
+                # 處理 Decimal 類型轉換為 float 以便 JSON 序列化
+                for key in ['avg_views', 'avg_likes', 'avg_comments']:
+                    if isinstance(row[key], decimal.Decimal):
+                        row[key] = float(row[key])
+                    data[c_id].append(row)
+            
+            return data
+
+# http://localhost:8000/api/video_scatter?channel1_id=UC9i2Qgd5lizhVgJrdnxunKw&channel2_id=UCa2YiSXNTkmOA-QTKdzzbSQ
+@app.get("/api/video_scatter")
+def get_video_scatter(
+    channel1_id: str = Query(..., description="第一個頻道的 ID"),
+    channel2_id: str = Query(..., description="第二個頻道的 ID"),
+    video_type: str = Query("all", description="篩選特定的影片類型範疇")
+):
+    with DBManager().connect_to_db_readonly() as connection:
+        with connection.cursor(dictionary=True) as cursor:
+            type_filter = ""
+            params = [channel1_id, channel2_id]
+            if video_type != "all":
+                type_filter = " AND `type` = %s "
+                params.append(video_type)
+            
+            sql = f"""
+                SELECT 
+                    channel_id,
+                    video_id,
+                    title,
+                    view_count,
+                    like_count,
+                    comment_count,
+                    cluster_label
+                FROM videos
+                WHERE channel_id IN (%s, %s) 
+                  AND cluster_label IS NOT NULL
+                  {type_filter}
+                ORDER BY view_count DESC
+            """
+            cursor.execute(sql, tuple(params))
+            results = cursor.fetchall()
+            
+            data = {channel1_id: [], channel2_id: []}
+            for row in results:
+                c_id = row['channel_id']
+                if c_id in data:
+                    data[c_id].append(row)
+            
+            return data
+
