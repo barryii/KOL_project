@@ -585,16 +585,22 @@ def get_forecast(
         future = m.make_future_dataframe(periods=periods, freq="MS")
         forecast = m.predict(future)
 
-        hist_ds = set(df["ds"].dt.strftime("%Y-%m"))
+        # 建立實際觀看數的查找表 (ds_str -> actual_y)
+        actual_map = {row["ds"].strftime("%Y-%m"): max(floor_val, int(round(row["y"])))
+                      for _, row in df.iterrows()}
+        hist_ds = set(actual_map.keys())
+
         out = []
         for _, row in forecast.iterrows():
             ds_str = row["ds"].strftime("%Y-%m")
+            is_forecast = ds_str not in hist_ds
             out.append({
                 "ds": ds_str,
+                "actual":     actual_map.get(ds_str),           # 歷史點才有，預測點為 None
                 "yhat":       max(floor_val, int(round(row["yhat"]))),
                 "yhat_lower": max(floor_val, int(round(row["yhat_lower"]))),
                 "yhat_upper": max(floor_val, int(round(row["yhat_upper"]))),
-                "is_forecast": ds_str not in hist_ds,
+                "is_forecast": is_forecast,
             })
         result[ch_id] = {"status": "success", "data": out, "floor": floor_val}
 
