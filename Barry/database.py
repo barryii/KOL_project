@@ -198,6 +198,55 @@ class DBManager:
                 cursor.executemany(sql, topN_comment_data)
                 connection.commit()
 
+    def save_topN_comment_seperate_batch(self, topN_comment_data: list[tuple[str, str, str, str, int, int, datetime]]) -> None:
+        """
+        topN_comment_data = [
+            (comment_id, video_id, channel_id, author_id, author_name, text_content, like_count, reply_count, published_at),
+            ...
+        ]
+        comment_id VARCHAR(50) PRIMARY KEY,
+        video_id VARCHAR(11),
+        channel_id VARCHAR(24),
+        author_id VARCHAR(24),
+        author_name VARCHAR(100),
+        text_content TEXT,
+        like_count INT,
+        reply_count INT,
+        sentiment VARCHAR(20),
+        sentiment_score INT,
+        topic_tag VARCHAR(50),
+        published_at DATETIME,
+        FOREIGN KEY (video_id) REFERENCES videos(video_id) ON DELETE CASCADE
+        """
+        with self.connect_to_db() as connection:
+            with connection.cursor() as cursor:
+                sql = """
+                INSERT INTO topN_comments_seperate (
+                    comment_id, 
+                    video_id, 
+                    channel_id, 
+                    author_id, 
+                    author_name, 
+                    text_content, 
+                    like_count, 
+                    reply_count, 
+                    sentiment, 
+                    sentiment_score, 
+                    topic_tag, 
+                    published_at
+                ) VALUES (
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                ) ON DUPLICATE KEY UPDATE
+                    like_count = VALUES(like_count),
+                    reply_count = VALUES(reply_count),
+                    sentiment = VALUES(sentiment),
+                    sentiment_score = VALUES(sentiment_score),
+                    topic_tag = VALUES(topic_tag),
+                    published_at = VALUES(published_at)
+                """
+                cursor.executemany(sql, topN_comment_data)
+                connection.commit()
+
     def save_kol_data(self, kol_name: str, followers: int, engagement_rate: float) -> None:
         """存入 KOL 成效資料"""
         with self.connect_to_db() as connection:
