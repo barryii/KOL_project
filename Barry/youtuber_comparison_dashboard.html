@@ -213,7 +213,8 @@
             /* 移除延遲，讓游標跟隨零時差 */
             top: -100px;
             left: -100px;
-            display: none; /* 預設關閉 */
+            display: none;
+            /* 預設關閉 */
         }
     </style>
 </head>
@@ -538,17 +539,29 @@
                             <div class="flex flex-col gap-3 text-sm w-full">
                                 <div class="flex gap-3 w-full flex-col xl:flex-row flex-wrap">
                                     <!-- 頻道切換按鈕群組 -->
-                                    <div class="flex bg-surface-container rounded-full p-1 w-full xl:w-auto relative shadow-inner gap-[2px]">
-                                        <button onclick="toggleFanChannel('ch1')" id="filter-name-a" class="flex-1 xl:flex-none pl-5 pr-2 py-1.5 text-sm font-bold rounded-l-full transition-colors truncate bg-[#CF5800] text-white shadow-sm">YTer A 粉絲</button>
-                                        <button onclick="toggleFanChannel('ch2')" id="filter-name-b" class="flex-1 xl:flex-none pl-2 pr-5 py-1.5 text-sm font-bold rounded-r-full transition-colors truncate bg-[#CF5800] text-white shadow-sm">YTer B 粉絲</button>
+                                    <div
+                                        class="flex bg-surface-container rounded-full p-1 w-full xl:w-auto relative shadow-inner gap-[2px]">
+                                        <button onclick="toggleFanChannel('ch1')" id="filter-name-a"
+                                            class="flex-1 xl:flex-none pl-5 pr-2 py-1.5 text-sm font-bold rounded-l-full transition-colors truncate bg-[#CF5800] text-white shadow-sm">YTer
+                                            A 粉絲</button>
+                                        <button onclick="toggleFanChannel('ch2')" id="filter-name-b"
+                                            class="flex-1 xl:flex-none pl-2 pr-5 py-1.5 text-sm font-bold rounded-r-full transition-colors truncate bg-[#CF5800] text-white shadow-sm">YTer
+                                            B 粉絲</button>
                                     </div>
 
                                     <!-- 排序切換按鈕群組 -->
-                                    <div class="flex bg-surface-container rounded-full p-1 w-full xl:w-auto relative shadow-inner shrink-0 min-w-[160px]">
-                                        <div id="fan-sort-indicator" class="absolute top-1 bottom-1 rounded-full bg-[#CF5800] transition-all duration-300 ease-out z-0 shadow-sm" style="left: 4px; width: calc(50% - 4px);"></div>
-                                        
-                                        <button onclick="setFanSort('comment_count', this)" class="fan-sort-btn dash-filter-active flex-1 text-center py-1.5 px-4 text-sm font-bold relative z-10 transition-colors text-white">📝 留言</button>
-                                        <button onclick="setFanSort('total_likes', this)" class="fan-sort-btn flex-1 text-center py-1.5 px-4 text-sm font-bold relative z-10 transition-colors text-on-surface-variant">❤️ 愛心</button>
+                                    <div
+                                        class="flex bg-surface-container rounded-full p-1 w-full xl:w-auto relative shadow-inner shrink-0 min-w-[160px]">
+                                        <div id="fan-sort-indicator"
+                                            class="absolute top-1 bottom-1 rounded-full bg-[#CF5800] transition-all duration-300 ease-out z-0 shadow-sm"
+                                            style="left: 4px; width: calc(50% - 4px);"></div>
+
+                                        <button onclick="setFanSort('comment_count', this)"
+                                            class="fan-sort-btn dash-filter-active flex-1 text-center py-1.5 px-4 text-sm font-bold relative z-10 transition-colors text-white">📝
+                                            留言</button>
+                                        <button onclick="setFanSort('total_likes', this)"
+                                            class="fan-sort-btn flex-1 text-center py-1.5 px-4 text-sm font-bold relative z-10 transition-colors text-on-surface-variant">❤️
+                                            愛心</button>
                                     </div>
 
                                     <!-- 數量選單 -->
@@ -609,11 +622,19 @@
                                         <th class="py-3 px-2 whitespace-nowrap text-center w-28">創作者</th>
                                         <th class="py-3 px-2">影片標題</th>
                                         <th class="py-3 px-6 whitespace-nowrap text-center w-32">影片類型</th>
-                                        <th class="py-3 px-2 whitespace-nowrap text-center w-36 cursor-pointer hover:text-primary transition-colors select-none group" onclick="toggleVideoSort('view_count')">
-                                            <div class="flex items-center justify-center gap-1">觀看次數 <span id="sort-icon-view" class="text-[12px] material-symbols-outlined font-black">arrow_downward</span></div>
+                                        <th class="py-3 px-2 whitespace-nowrap text-center w-36 cursor-pointer hover:text-primary transition-colors select-none group"
+                                            onclick="toggleVideoSort('view_count')">
+                                            <div class="flex items-center justify-center gap-1">觀看次數 <span
+                                                    id="sort-icon-view"
+                                                    class="text-[12px] material-symbols-outlined font-black">arrow_downward</span>
+                                            </div>
                                         </th>
-                                        <th class="py-3 px-2 whitespace-nowrap text-center w-28 cursor-pointer hover:text-primary transition-colors select-none group" onclick="toggleVideoSort('engagement')">
-                                            <div class="flex items-center justify-center gap-1">互動率 <span id="sort-icon-eng" class="text-[12px] material-symbols-outlined font-black opacity-30">swap_vert</span></div>
+                                        <th class="py-3 px-2 whitespace-nowrap text-center w-28 cursor-pointer hover:text-primary transition-colors select-none group"
+                                            onclick="toggleVideoSort('engagement')">
+                                            <div class="flex items-center justify-center gap-1">互動率 <span
+                                                    id="sort-icon-eng"
+                                                    class="text-[12px] material-symbols-outlined font-black opacity-30">swap_vert</span>
+                                            </div>
                                         </th>
                                     </tr>
                                 </thead>
@@ -1551,11 +1572,11 @@
                 currentVideoSort = col;
                 currentVideoSortDesc = true;
             }
-            
+
             // 更新 UI 圖示
             document.getElementById('sort-icon-view').innerText = currentVideoSort === 'view_count' ? (currentVideoSortDesc ? 'arrow_downward' : 'arrow_upward') : 'swap_vert';
             document.getElementById('sort-icon-view').className = currentVideoSort === 'view_count' ? 'text-[12px] material-symbols-outlined font-black text-primary' : 'text-[12px] material-symbols-outlined font-black opacity-30 group-hover:opacity-60 transition-opacity';
-            
+
             document.getElementById('sort-icon-eng').innerText = currentVideoSort === 'engagement' ? (currentVideoSortDesc ? 'arrow_downward' : 'arrow_upward') : 'swap_vert';
             document.getElementById('sort-icon-eng').className = currentVideoSort === 'engagement' ? 'text-[12px] material-symbols-outlined font-black text-primary' : 'text-[12px] material-symbols-outlined font-black opacity-30 group-hover:opacity-60 transition-opacity';
 
@@ -1660,7 +1681,7 @@
                     isFanCh2Active = true;
                 }
             }
-            
+
             const btn1 = document.getElementById('filter-name-a');
             const btn2 = document.getElementById('filter-name-b');
 
@@ -1779,7 +1800,7 @@
             const icon = btn.querySelector('.material-symbols-outlined');
             if (isCursorFollowerEnabled) {
                 follower.style.display = 'block';
-                icon.classList.add('text-primary'); 
+                icon.classList.add('text-primary');
             } else {
                 follower.style.display = 'none';
                 icon.classList.remove('text-primary');
