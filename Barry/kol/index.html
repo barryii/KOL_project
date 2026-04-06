@@ -258,22 +258,22 @@
             <button onclick="switchTab('tab-audience', this)"
                 class="nav-item w-full flex items-center space-x-3 px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface rounded-lg transition-all duration-300">
                 <span class="material-symbols-outlined">groups</span>
-                <span class="font-medium text-sm">粉絲互動 Audience</span>
+                <span class="font-medium text-sm">觀眾互動 Audience</span>
             </button>
             <button onclick="switchTab('tab-content', this)"
                 class="nav-item w-full flex items-center space-x-3 px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface rounded-lg transition-all duration-300">
                 <span class="material-symbols-outlined">movie</span>
-                <span class="font-medium text-sm">影片表現 Content</span>
+                <span class="font-medium text-sm">影片表現 Rank</span>
             </button>
             <button onclick="switchTab('tab-analysis', this)"
                 class="nav-item w-full flex items-center space-x-3 px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface rounded-lg transition-all duration-300">
                 <span class="material-symbols-outlined">analytics</span>
-                <span class="font-medium text-sm">內容分聚 Analysis</span>
+                <span class="font-medium text-sm">內容分群 Cluster</span>
             </button>
             <button onclick="switchTab('tab-predict', this)"
                 class="nav-item w-full flex items-center space-x-3 px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface rounded-lg transition-all duration-300">
-                <span class="material-symbols-outlined">bolt</span>
-                <span class="font-medium text-sm">AI 流量預測</span>
+                <span class="material-symbols-outlined">auto_awesome</span>
+                <span class="font-medium text-sm">流量預測 Predict</span>
             </button>
         </nav>
     </aside>
@@ -323,17 +323,12 @@
 
             <div id="header-tab-audience"
                 class="header-tab-section hidden flex-col mt-4 pt-4 border-t border-outline-variant/30">
-                <h2 class="text-xl font-bold font-headline text-on-surface">粉絲互動 Audience</h2>
+                <h2 class="text-xl font-bold font-headline text-on-surface">觀眾互動 Audience</h2>
             </div>
 
             <div id="header-tab-content"
                 class="header-tab-section hidden flex-col mt-4 pt-4 border-t border-outline-variant/30">
-                <h2 class="text-xl font-bold font-headline text-on-surface">影片表現 Content</h2>
-            </div>
-
-            <div id="header-tab-predict"
-                class="header-tab-section hidden flex-col mt-4 pt-4 border-t border-outline-variant/30">
-                <h2 class="text-xl font-bold font-headline text-on-surface">AI 流量預測</h2>
+                <h2 class="text-xl font-bold font-headline text-on-surface">影片表現 Rank</h2>
             </div>
 
             <div id="header-tab-analysis"
@@ -355,6 +350,11 @@
                     <button id="btn-scatter-log" onclick="setScatterScale('logarithmic')"
                         class="scatter-scale-btn px-5 py-1.5 text-xs font-bold rounded-full">對數
                         (Log)</button>
+                </div>
+
+                <div id="header-tab-predict"
+                    class="header-tab-section hidden flex-col mt-4 pt-4 border-t border-outline-variant/30">
+                    <h2 class="text-xl font-bold font-headline text-on-surface">流量預測 Predict</h2>
                 </div>
             </div>
         </header>
@@ -523,7 +523,7 @@
                 </div>
             </div>
 
-            <!-- 分頁 2 : 粉絲互動 Audience -->
+            <!-- 分頁 2 : 觀眾互動 Audience -->
             <div id="tab-audience" class="tab-section hidden mt-0">
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -601,7 +601,7 @@
                 </div>
             </div>
 
-            <!-- 分頁 3 : 影片表現 Content -->
+            <!-- 分頁 3 : 影片表現 Rank -->
             <div id="tab-content" class="tab-section hidden mt-0">
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -620,11 +620,13 @@
                                         style="left: 4px; width: calc(100% - 8px);"></div>
 
                                     <button onclick="toggleVidChannel('ch1')" id="vid-btn-name-a"
-                                        class="z-10 relative px-2.5 py-1.5 text-xs font-bold rounded-l-full transition-all text-white">YTer A</button>
+                                        class="z-10 relative px-2.5 py-1.5 text-xs font-bold rounded-l-full transition-all text-white">YTer
+                                        A</button>
                                     <button onclick="toggleVidChannel('ch2')" id="vid-btn-name-b"
-                                        class="z-10 relative px-2.5 py-1.5 text-xs font-bold rounded-r-full transition-all text-white">YTer B</button>
+                                        class="z-10 relative px-2.5 py-1.5 text-xs font-bold rounded-r-full transition-all text-white">YTer
+                                        B</button>
                                 </div>
-                                
+
                                 <select id="vidFilterLimit"
                                     class="bg-surface-container border-none shadow-sm rounded-full py-1.5 pl-4 pr-8 outline-none text-on-surface cursor-pointer font-bold text-xs hover:bg-surface-container-high transition-colors min-w-[110px]"
                                     onchange="updateTopVideosUI()">
@@ -670,7 +672,7 @@
                 </div>
             </div>
 
-            <!-- 分頁 4 : 內容分聚 Analysis -->
+            <!-- 分頁 4 : 內容分群 Cluster -->
             <div id="tab-analysis" class="tab-section hidden mt-0">
 
                 <!-- 頻道 A (千千) -->
@@ -740,7 +742,7 @@
                             <span class="material-symbols-outlined text-tertiary">mood</span>
                             鐵粉留言情緒分佈 (Top Fans Sentiment)
                         </h3>
-                        <p class="text-sm text-on-surface-variant">根據鐵粉的留言情緒分數與獲得的按讚數進行分佈，觀察正面/負面情緒的互動差異。</p>
+                        <p class="text-sm text-on-surface-variant">根據愛心數排序前1000的粉絲留言的情緒分數與獲得的按讚數進行分佈，觀察正面/負面情緒的互動差異。</p>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <!-- YTer A 鐵粉情緒 -->
@@ -775,7 +777,7 @@
             </div>
         </div>
 
-        <!-- 分頁 5 : AI 流量預測 -->
+        <!-- 分頁 5 : 流量預測 Predict -->
         <div id="tab-predict" class="tab-section hidden mt-0">
             <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
@@ -816,7 +818,7 @@
                         </div>
                         <button id="predict-btn" onclick="doPredict()"
                             class="flex items-center justify-center gap-2 bg-primary text-white font-bold py-3 px-6 rounded-lg hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                            <span class="material-symbols-outlined text-base">bolt</span>開始 AI 流量預測
+                            <span class="material-symbols-outlined text-base">bolt</span>開始流量預測
                         </button>
                     </div>
 
@@ -1723,7 +1725,7 @@
                 setTimeout(() => {
                     const vidIndicator = document.getElementById('vid-ch-indicator');
                     const fanIndicator = document.getElementById('fan-ch-indicator');
-                    
+
                     if (vidIndicator) {
                         vidIndicator.style.left = '4px';
                         vidIndicator.style.width = 'calc(100% - 8px)';
@@ -2228,7 +2230,7 @@
                 alert('預測失敗：' + e.message);
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<span class="material-symbols-outlined text-base">bolt</span>開始 AI 流量預測';
+                btn.innerHTML = '<span class="material-symbols-outlined text-base">bolt</span>開始流量預測';
             }
         }
 
