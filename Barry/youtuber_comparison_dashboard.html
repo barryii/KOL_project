@@ -183,18 +183,42 @@
             color: #57534e;
             cursor: pointer;
             border: none;
-            transition: all 0.3s ease;
+            transition: color 0.3s ease;
+            position: relative;
+            z-index: 10;
         }
 
         .scatter-scale-btn.active {
-            background: #ffffff;
             color: #CF5800;
+        }
+
+        #scatter-scale-indicator {
+            background: #ffffff;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* ★ 實體鼠標跟隨背景 (報告用) */
+        #cursor-follower {
+            pointer-events: none;
+            position: fixed;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(239, 68, 68, 0.5); /* 實體且半透明的紅色 */
+            border: 2px solid rgba(239, 68, 68, 0.8);
+            border-radius: 50%;
+            z-index: 9999; /* 報告用的指標通常要在最上層 */
+            transform: translate(-50%, -50%);
+            /* 移除延遲，讓游標跟隨零時差 */
+            top: -100px;
+            left: -100px;
         }
     </style>
 </head>
 
-<body class="bg-background text-on-surface font-body selection:bg-primary/30 min-h-screen">
+<body class="bg-background text-on-surface font-body selection:bg-primary/30 min-h-screen relative">
+    
+    <!-- ★ 鼠標跟隨背景元素 -->
+    <div id="cursor-follower"></div>
 
     <!-- TopNavBar -->
     <nav
@@ -303,12 +327,17 @@
                     <p class="text-sm text-on-surface-variant">基於 K-Means 分群標籤，依頻道分開呈現「按讚互動」與「留言參與」的分佈。</p>
                 </div>
                 <div
-                    class="flex p-1 bg-surface-container-high rounded-full w-fit border border-outline-variant/30 shrink-0">
+                    class="relative flex p-1 bg-surface-container-high rounded-full w-fit border border-outline-variant/30 shrink-0">
+                    <!-- 尺度切換滑動背景 -->
+                    <div id="scatter-scale-indicator"
+                        class="absolute h-[calc(100%-8px)] bg-white shadow-sm rounded-full transition-all duration-300 ease-out z-0 top-1">
+                    </div>
+
                     <button id="btn-scatter-linear" onclick="setScatterScale('linear')"
-                        class="scatter-scale-btn active px-5 py-1.5 text-xs font-bold rounded-full transition-all duration-300">線性
+                        class="scatter-scale-btn active px-5 py-1.5 text-xs font-bold rounded-full">線性
                         (Linear)</button>
                     <button id="btn-scatter-log" onclick="setScatterScale('logarithmic')"
-                        class="scatter-scale-btn px-5 py-1.5 text-xs font-bold rounded-full transition-all duration-300">對數
+                        class="scatter-scale-btn px-5 py-1.5 text-xs font-bold rounded-full">對數
                         (Log)</button>
                 </div>
             </div>
@@ -713,6 +742,8 @@
         let globalVideoType = '';
         let currentTabId = 'tab-dashboard';
         let sharedHoverIndex = -1;
+        let globalFilterTask = null;      // ★ 指向正在倒數的 UI 渲染任務
+        let currentAbortController = null; // ★ 用於控制資料請求的取消
         let isSyncingZoom = false;
         let currentZoomMin = null;
         let currentZoomMax = null;
@@ -776,7 +807,18 @@
             });
             btnElement.classList.add('active', 'bg-[rgba(162,74,53,0.1)]');
             Object.values(charts).forEach(chart => { if (chart) chart.resize(); });
-            if (targetId === 'tab-analysis') renderClusteringCharts(globalVideoType);
+            if (targetId === 'tab-analysis') {
+                renderClusteringCharts(globalVideoType);
+                // 初始化尺度切換指示器位置
+                setTimeout(() => {
+                    const activeBtn = document.querySelector('.scatter-scale-btn.active');
+                    const indicator = document.getElementById('scatter-scale-indicator');
+                    if (activeBtn && indicator) {
+                        indicator.style.left = activeBtn.offsetLeft + 'px';
+                        indicator.style.width = activeBtn.offsetWidth + 'px';
+                    }
+                }, 50);
+            }
         }
 
         function setScatterScale(scaleType) {
@@ -785,7 +827,15 @@
             scatterScaleType = scaleType;
             document.querySelectorAll('.scatter-scale-btn').forEach(btn => btn.classList.remove('active'));
             const activeBtn = document.getElementById(`btn-scatter-${scaleType === 'linear' ? 'linear' : 'log'}`);
-            if (activeBtn) activeBtn.classList.add('active');
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+                // 滑動動畫處理
+                const indicator = document.getElementById('scatter-scale-indicator');
+                if (indicator) {
+                    indicator.style.left = activeBtn.offsetLeft + 'px';
+                    indicator.style.width = activeBtn.offsetWidth + 'px';
+                }
+            }
 
             // ★ 直接修改現有圖表的 scale（保留 Cluster 隱藏狀態），不重建
             const scatterIds = ['scatterA_likes', 'scatterA_comments', 'scatterB_likes', 'scatterB_comments'];
@@ -795,7 +845,8 @@
                 chart.options.scales.x.type = scatterScaleType;
                 chart.options.scales.x.title.text = '觀看次數 (Views)' + (scatterScaleType === 'logarithmic' ? ' (Log)' : '');
                 chart.options.scales.y.beginAtZero = scatterScaleType !== 'logarithmic';
-                chart.update('scale');
+                // 使用預設 update 觸發順滑動畫
+                chart.update();
             });
         }
 
@@ -1050,22 +1101,39 @@
                 }
             }
 
+            // ★ 任務取消：如果已有正在排隊的任務，先把它清掉，避免重複繪製
+            if (globalFilterTask) clearTimeout(globalFilterTask);
+
             // 延遲圖表渲染，確保主執行緒能優先觸發滑塊的 CSS 動畫
-            setTimeout(() => {
+            globalFilterTask = setTimeout(() => {
                 renderTrendCharts(type);
                 updateSummaryMetrics(type, currentZoomMin, currentZoomMax);
                 updateTopVideosUI();
                 renderAudienceCharts(type);
                 if (currentTabId === 'tab-analysis') renderClusteringCharts(type);
+                globalFilterTask = null;
             }, 10);
 
             try {
+                // ★ 請求取消：如果前一個請求還沒回來，直接取消它，避免髒資料覆蓋
+                if (currentAbortController) currentAbortController.abort();
+                currentAbortController = new AbortController();
+
                 const listContainer = document.getElementById('top-commenters-list');
                 if (listContainer) listContainer.innerHTML = '<div class="flex justify-center p-8"><span class="material-symbols-outlined animate-spin text-2xl opacity-30">progress_activity</span></div>';
-                const res = await fetch(`${API_BASE_URL}/api/top_fans?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}&top_n=200&video_type=${type}`);
+                
+                const res = await fetch(`${API_BASE_URL}/api/top_fans?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}&top_n=200&video_type=${type}`, {
+                    signal: currentAbortController.signal
+                });
                 globalFansData = await res.json();
                 updateTopCommentersUI();
-            } catch (e) { console.error("更新鐵粉失敗", e); }
+            } catch (e) {
+                if (e.name === 'AbortError') {
+                    console.log("Fetch 請求已取消 (切換太快)");
+                } else {
+                    console.error("更新鐵粉失敗", e);
+                }
+            }
         }
 
         // ★ 新增：更新 Dashboard 最上方四張數據卡片的數值與比例圖
@@ -1558,8 +1626,18 @@
                 const initial = fan.name ? fan.name.charAt(0).toUpperCase() : '?';
                 const el = document.createElement('div'); el.className = 'flex items-center p-3 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors group mb-1 shadow-sm';
 
-                const valToShow = sortFilter === 'total_likes' ? formatNum(fan.total_likes) : formatNum(fan.comment_count);
-                const unitToShow = sortFilter === 'total_likes' ? '顆愛心 ❤️' : '則留言';
+                let primaryVal, primaryUnit, secondaryVal, secondaryUnit;
+                if (sortFilter === 'total_likes') {
+                    primaryVal = formatNum(fan.total_likes);
+                    primaryUnit = '顆愛心 ❤️';
+                    secondaryVal = formatNum(fan.comment_count);
+                    secondaryUnit = '則留言 💬';
+                } else {
+                    primaryVal = formatNum(fan.comment_count);
+                    primaryUnit = '則留言 💬';
+                    secondaryVal = formatNum(fan.total_likes);
+                    secondaryUnit = '顆愛心 ❤️';
+                }
 
                 el.innerHTML = `
                     <div class="font-black text-on-surface-variant w-4 text-center mr-2 opacity-30 group-hover:opacity-100 transition-opacity">${idx + 1}</div>
@@ -1567,13 +1645,31 @@
                         <p class="text-sm font-bold truncate" title="${fan.name}">${fan.name}</p>
                         <div class="flex items-center gap-2 mt-0.5"><span class="text-xs px-2 py-0.5 rounded-full font-bold ${fan.colorClass}">${fan.labelName} 粉絲</span></div>
                     </div>
-                    <div class="text-right"><div class="font-black text-on-surface text-lg leading-tight drop-shadow-sm">${valToShow}</div><div class="text-[10px] tracking-wider font-bold text-on-surface-variant mt-[2px]">${unitToShow}</div></div>
+                    <div class="text-right flex flex-col justify-center">
+                        <div class="flex items-baseline justify-end gap-1">
+                            <span class="font-black text-on-surface text-lg leading-tight drop-shadow-sm">${primaryVal}</span>
+                            <span class="text-[10px] tracking-wider font-bold text-on-surface-variant">${primaryUnit}</span>
+                        </div>
+                        <div class="flex items-baseline justify-end gap-1 mt-[2px] opacity-60">
+                            <span class="font-bold text-on-surface text-xs leading-tight">${secondaryVal}</span>
+                            <span class="text-[9px] tracking-wider font-bold text-on-surface-variant">${secondaryUnit}</span>
+                        </div>
+                    </div>
                 `;
                 listContainer.appendChild(el);
             });
         }
 
         window.addEventListener('DOMContentLoaded', fetchAndRenderDashboard);
+
+        // ★ 鼠標跟隨特效邏輯
+        document.addEventListener('mousemove', (e) => {
+            const follower = document.getElementById('cursor-follower');
+            if (follower) {
+                follower.style.left = e.clientX + 'px';
+                follower.style.top = e.clientY + 'px';
+            }
+        });
     </script>
 </body>
 
