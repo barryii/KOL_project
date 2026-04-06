@@ -227,7 +227,9 @@
     <!-- TopNavBar -->
     <nav
         class="fixed top-0 w-full z-50 bg-ffffff/80 backdrop-blur-[20px] flex justify-between items-center px-8 h-12 shadow-lg">
-        <a href="https://barryyy.com/kol" class="text-2xl font-black tracking-tighter text-primary font-headline leading-none hover:opacity-80 transition-opacity">Youtuber Compare</a>
+        <a href="https://barryyy.com/kol"
+            class="text-2xl font-black tracking-tighter text-primary font-headline leading-none hover:opacity-80 transition-opacity">Youtuber
+            Compare</a>
         <div class="flex items-center space-x-4">
             <button onclick="toggleCursorFollower(this)" title="開關報告用雷射筆"
                 class="text-on-surface-variant hover:bg-surface-container-highest transition-all p-2 rounded-full active:scale-95 duration-200 flex items-center justify-center">
@@ -721,24 +723,28 @@
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <!-- YTer A 鐵粉情緒 -->
-                        <div class="bg-surface-container-low rounded-xl p-6 shadow-xl border border-outline-variant/30 relative">
+                        <div
+                            class="bg-surface-container-low rounded-xl p-6 shadow-xl border border-outline-variant/30 relative">
                             <h4 class="font-headline font-bold text-base mb-1 flex items-center gap-2">
                                 <span class="w-3 h-3 rounded-full inline-block" style="background: #a24a35;"></span>
                                 <span id="fan-scatter-title-a">YTer A</span> 鐵粉情緒
                             </h4>
-                            <p class="text-xs text-on-surface-variant mb-4">X軸: 情緒分數 (Score) | Y軸: 留言按讚數 (Likes) (稍微抖動處理以防重疊)</p>
+                            <p class="text-xs text-on-surface-variant mb-4">X軸: 情緒分數 (Score) | Y軸: 留言按讚數 (Likes)
+                                (稍微抖動處理以防重疊)</p>
                             <div class="relative h-[480px] w-full">
                                 <canvas id="fanScatterA"></canvas>
                             </div>
                         </div>
 
                         <!-- YTer B 鐵粉情緒 -->
-                        <div class="bg-surface-container-low rounded-xl p-6 shadow-xl border border-outline-variant/30 relative">
+                        <div
+                            class="bg-surface-container-low rounded-xl p-6 shadow-xl border border-outline-variant/30 relative">
                             <h4 class="font-headline font-bold text-base mb-1 flex items-center gap-2">
                                 <span class="w-3 h-3 rounded-full inline-block" style="background: #5c7368;"></span>
                                 <span id="fan-scatter-title-b">YTer B</span> 鐵粉情緒
                             </h4>
-                            <p class="text-xs text-on-surface-variant mb-4">X軸: 情緒分數 (Score) | Y軸: 留言按讚數 (Likes) (稍微抖動處理以防重疊)</p>
+                            <p class="text-xs text-on-surface-variant mb-4">X軸: 情緒分數 (Score) | Y軸: 留言按讚數 (Likes)
+                                (稍微抖動處理以防重疊)</p>
                             <div class="relative h-[480px] w-full">
                                 <canvas id="fanScatterB"></canvas>
                             </div>
@@ -1125,20 +1131,20 @@
                 const sLabel = v.sentiment || 'Unknown';
                 if (!clusters[sLabel]) clusters[sLabel] = [];
                 // slight jitter trick to avoid points overlapping perfectly
-                const jitterX = (Math.random() - 0.5) * 0.2; 
-                clusters[sLabel].push({ 
-                    x: (v.sentiment_score !== undefined ? v.sentiment_score : 0) + jitterX, 
-                    y: v.like_count || 0, 
-                    title: v.author_name || 'Anonymous', 
-                    text: v.text_content || '' 
+                const jitterX = (Math.random() - 0.5) * 0.2;
+                clusters[sLabel].push({
+                    x: (v.sentiment_score !== undefined ? v.sentiment_score : 0) + jitterX,
+                    y: v.like_count || 0,
+                    title: v.author_name || 'Anonymous',
+                    text: v.text_content || ''
                 });
             });
 
             // ensure ordering of labels: Positive, Neutral, Negative
             const order = ['Positive', 'Neutral', 'Negative', 'Unknown'];
             const sortedLabels = Object.keys(clusters).sort((a, b) => {
-                let ia = order.indexOf(a); if(ia === -1) ia = 99;
-                let ib = order.indexOf(b); if(ib === -1) ib = 99;
+                let ia = order.indexOf(a); if (ia === -1) ia = 99;
+                let ib = order.indexOf(b); if (ib === -1) ib = 99;
                 return ia - ib;
             });
 
@@ -1156,11 +1162,11 @@
                 const chart = charts[chartId];
                 datasets.forEach((newDs, i) => {
                     if (chart.data.datasets[i]) {
-                         chart.data.datasets[i].data = newDs.data;
-                         chart.data.datasets[i].label = newDs.label;
-                         chart.data.datasets[i].backgroundColor = newDs.backgroundColor;
+                        chart.data.datasets[i].data = newDs.data;
+                        chart.data.datasets[i].label = newDs.label;
+                        chart.data.datasets[i].backgroundColor = newDs.backgroundColor;
                     } else {
-                         chart.data.datasets.push(newDs);
+                        chart.data.datasets.push(newDs);
                     }
                 });
                 if (chart.data.datasets.length > datasets.length) {
@@ -1211,14 +1217,14 @@
 
         async function fetchAndRenderFanSentiment(type) {
             if (globalFanSentimentCache && globalFanSentimentCache.type === type) {
-                 renderFanSentimentFromCache();
-                 return;
+                renderFanSentimentFromCache();
+                return;
             }
             try {
-                 const res = await fetch(`${API_BASE_URL}/api/fan_sentiment_scatter?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}&video_type=${type}`);
-                 const rawData = await res.json();
-                 globalFanSentimentCache = { type, data: rawData };
-                 renderFanSentimentFromCache();
+                const res = await fetch(`${API_BASE_URL}/api/fan_sentiment_scatter?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}&video_type=${type}`);
+                const rawData = await res.json();
+                globalFanSentimentCache = { type, data: rawData };
+                renderFanSentimentFromCache();
             } catch (err) { console.error("渲染鐵粉情緒失敗", err); }
         }
 
@@ -1417,10 +1423,22 @@
 
                 // ★ 動態獲取目前的配色
                 const theme = THEME_CONFIG[globalVideoType] || THEME_CONFIG.all;
-                datasets[0].borderColor = theme.a.primary;
-                datasets[0].backgroundColor = theme.a.bg;
-                datasets[1].borderColor = theme.b.primary;
-                datasets[1].backgroundColor = theme.b.bg;
+                if (datasets[0]) {
+                    datasets[0].borderColor = theme.a.primary;
+                    datasets[0].backgroundColor = theme.a.bg;
+                }
+                if (datasets[1]) {
+                    datasets[1].borderColor = theme.b.primary;
+                    datasets[1].backgroundColor = theme.b.bg;
+                }
+                // ★ 新增：第三條合計線 (中性深色)
+                if (datasets[2]) {
+                    datasets[2].borderColor = '#373831'; // on-surface
+                    datasets[2].backgroundColor = 'transparent';
+                    datasets[2].borderWidth = 4; // 加粗
+                    datasets[2].pointRadius = 0; // 隱藏點，讓視覺乾淨
+                    datasets[2].borderDash = [5, 3]; // 使用虛線區分合計項
+                }
 
                 // ★ 真正深層隔離配置：避免 plugins.zoom 物件共用
                 const instanceOpt = JSON.parse(JSON.stringify(lineOpt));
@@ -1458,15 +1476,25 @@
                 });
             };
 
+            // --- 加強：計算合計數值 ---
+            const totalSum = dA[type].total_views.map((v, i) => v + dB[type].total_views[i]);
+            const weightedAvg = dA[type].total_views.map((v, i) => {
+                const combined_v = v + dB[type].total_views[i];
+                const combined_c = dA[type].video_counts[i] + dB[type].video_counts[i];
+                return combined_c > 0 ? Math.round(combined_v / combined_c) : 0;
+            });
+
             // 統一使用折線圖 (加強版 Area Chart)
             mkLineChart('totalViewsChart', [
                 { label: nameA, data: dA[type].total_views, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 },
-                { label: nameB, data: dB[type].total_views, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 }
+                { label: nameB, data: dB[type].total_views, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 },
+                { label: '全頻道合計', data: totalSum, tension: 0.3, fill: false }
             ]);
 
             mkLineChart('avgViewsChart', [
                 { label: nameA, data: dA[type].avg_views, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 },
-                { label: nameB, data: dB[type].avg_views, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 }
+                { label: nameB, data: dB[type].avg_views, tension: 0.3, fill: true, borderWidth: 3, pointRadius: 2 },
+                { label: '全頻道加權平均', data: weightedAvg, tension: 0.3, fill: false }
             ]);
 
             mkLineChart('publishChart', [
