@@ -540,37 +540,45 @@ def get_forecast(
     channel2_id: str = Query(...),
     periods: int = Query(6, description="預測未來幾個月"),
     metric: str = Query("avg_views", description="avg_views 或 total_views"),
+    video_type: str = Query("all", description="影片類型篩選"),
 ):
     if not HAS_PROPHET:
         return {"status": "error", "message": "請先安裝 prophet: pip install prophet"}
 
     with DBManager().connect_to_db_readonly() as connection:
         with connection.cursor(dictionary=True) as cursor:
-            sql = """
+            type_filter = "" if video_type == "all" else " AND type = %s"
+            params = [channel1_id, channel2_id]
+            if video_type != "all":
+                params.append(video_type)
+            sql = f"""
                 SELECT
                     channel_id,
                     DATE_FORMAT(published_at, '%Y-%m-01') AS ds,
-                    COUNT(video_id)              AS video_count,
-                    AVG(view_count)              AS avg_views,
-                    SUM(view_count)              AS total_views
+                    COUNT(video_id)  AS video_count,
+                    AVG(view_count)  AS avg_views,
+                    SUM(view_count)  AS total_views
                 FROM videos
-                WHERE channel_id IN (%s, %s)
+                WHERE channel_id IN (%s, %s){type_filter}
                 GROUP BY channel_id, ds
                 ORDER BY ds ASC
             """
-            cursor.execute(sql, (channel1_id, channel2_id))
+            cursor.execute(sql, tuple(params))
             rows = cursor.fetchall()
 
     result = {}
     for ch_id in [channel1_id, channel2_id]:
         ch_rows = [r for r in rows if r["channel_id"] == ch_id]
         if len(ch_rows) < 3:
-            result[ch_id] = {"status": "error", "message": "資料不足"}
+            result[ch_id] = {"status": "error", "message": "資料不足（該影片類型歷史資料少於 3 個月）"}
             continue
 
         df = pd.DataFrame(ch_rows)[["ds", metric]].rename(columns={metric: "y"})
         df["ds"] = pd.to_datetime(df["ds"])
         df["y"] = pd.to_numeric(df["y"], errors="coerce").fillna(0)
+
+        # 計算觀看數下限（歷史第 10 百分位，確保預測不會預測出不合理的低值）
+        floor_val = max(1, int(df["y"].quantile(0.10)))
 
         m = Prophet(yearly_seasonality=True, weekly_seasonality=False, daily_seasonality=False)
         m.fit(df)
@@ -583,12 +591,12 @@ def get_forecast(
             ds_str = row["ds"].strftime("%Y-%m")
             out.append({
                 "ds": ds_str,
-                "yhat":       max(0, int(round(row["yhat"]))),
-                "yhat_lower": max(0, int(round(row["yhat_lower"]))),
-                "yhat_upper": max(0, int(round(row["yhat_upper"]))),
+                "yhat":       max(floor_val, int(round(row["yhat"]))),
+                "yhat_lower": max(floor_val, int(round(row["yhat_lower"]))),
+                "yhat_upper": max(floor_val, int(round(row["yhat_upper"]))),
                 "is_forecast": ds_str not in hist_ds,
             })
-        result[ch_id] = {"status": "success", "data": out}
+        result[ch_id] = {"status": "success", "data": out, "floor": floor_val}
 
     return result
 
