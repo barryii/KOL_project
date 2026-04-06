@@ -241,29 +241,29 @@
 
     <!-- SideNavBar -->
     <aside
-        class="h-screen w-64 fixed left-0 top-0 z-40 bg-surface-container-lowest flex flex-col py-6 border-r border-outline-variant hidden lg:flex pt-16">
-        <div class="px-6 mb-8 mt-2">
+        class="h-screen w-56 fixed left-0 top-0 z-40 bg-surface-container-lowest flex flex-col py-6 border-r border-outline-variant hidden lg:flex pt-16">
+        <div class="px-5 mb-5 mt-1">
             <h2 class="text-lg font-bold text-on-surface font-headline">分析視圖切換</h2>
             <p class="text-xs text-on-surface-variant uppercase tracking-widest mt-1">View Modules</p>
         </div>
-        <nav class="flex-1 px-4 space-y-2">
+        <nav class="flex-1 px-3 space-y-1">
             <button onclick="switchTab('tab-dashboard', this)"
-                class="nav-item active w-full flex items-center space-x-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface rounded-lg transition-all duration-300">
+                class="nav-item active w-full flex items-center space-x-3 px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface rounded-lg transition-all duration-300">
                 <span class="material-symbols-outlined">dashboard</span>
                 <span class="font-medium text-sm">總覽 Dashboard</span>
             </button>
             <button onclick="switchTab('tab-audience', this)"
-                class="nav-item w-full flex items-center space-x-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface rounded-lg transition-all duration-300">
+                class="nav-item w-full flex items-center space-x-3 px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface rounded-lg transition-all duration-300">
                 <span class="material-symbols-outlined">groups</span>
                 <span class="font-medium text-sm">粉絲互動 Audience</span>
             </button>
             <button onclick="switchTab('tab-content', this)"
-                class="nav-item w-full flex items-center space-x-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface rounded-lg transition-all duration-300">
+                class="nav-item w-full flex items-center space-x-3 px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface rounded-lg transition-all duration-300">
                 <span class="material-symbols-outlined">movie</span>
                 <span class="font-medium text-sm">影片表現 Content</span>
             </button>
             <button onclick="switchTab('tab-analysis', this)"
-                class="nav-item w-full flex items-center space-x-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface rounded-lg transition-all duration-300">
+                class="nav-item w-full flex items-center space-x-3 px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface rounded-lg transition-all duration-300">
                 <span class="material-symbols-outlined">analytics</span>
                 <span class="font-medium text-sm">內容分聚 Analysis</span>
             </button>
@@ -271,7 +271,7 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="lg:ml-64 pt-20 px-6 pb-12">
+    <main class="lg:ml-56 pt-20 px-6 pb-12">
         <header id="main-header"
             class="sticky top-12 z-40 bg-background/95 backdrop-blur-md pt-8 pb-4 -mx-6 px-6 -mt-8 mb-6 border-b border-outline-variant/50 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] transition-all duration-300">
             <div class="flex flex-col xl:flex-row xl:items-end justify-between gap-4">
