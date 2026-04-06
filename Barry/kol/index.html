@@ -393,11 +393,14 @@
                         <!-- 歷史範圍 -->
                         <div class="flex flex-col gap-1">
                             <span class="text-xs font-bold uppercase tracking-wider text-on-surface-variant px-1">歷史範圍</span>
-                            <div onclick="advanceForecastGroup('range')" class="relative flex p-1 bg-surface-container-high rounded-full border border-outline-variant/30 cursor-pointer select-none shadow-sm">
+                            <div class="relative flex p-1 bg-surface-container-high rounded-full border border-outline-variant/30 shadow-sm">
                                 <div id="fc-range-indicator" class="absolute h-[calc(100%-8px)] bg-white shadow-md rounded-full transition-all duration-300 ease-out z-0 top-1"></div>
-                                <span class="fc-range-btn relative z-10 px-4 py-1.5 text-xs font-bold rounded-full text-on-surface-variant transition-colors" data-val="12">1 年</span>
-                                <span class="fc-range-btn relative z-10 px-4 py-1.5 text-xs font-bold rounded-full text-primary transition-colors" data-val="24">2 年</span>
-                                <span class="fc-range-btn relative z-10 px-4 py-1.5 text-xs font-bold rounded-full text-on-surface-variant transition-colors" data-val="0">全部</span>
+                                <span class="fc-range-btn relative z-10 px-4 py-1.5 text-xs font-bold rounded-full text-on-surface-variant transition-colors cursor-pointer" onclick="setForecastRange('12', this)" data-val="12">1 年</span>
+                                <span class="fc-range-btn relative z-10 px-4 py-1.5 text-xs font-bold rounded-full text-primary transition-colors cursor-pointer" onclick="setForecastRange('24', this)" data-val="24">2 年</span>
+                                <span class="fc-range-btn relative z-10 px-4 py-1.5 text-xs font-bold rounded-full text-on-surface-variant transition-colors cursor-pointer" onclick="setForecastRange('36', this)" data-val="36">3 年</span>
+                                <span class="fc-range-btn relative z-10 px-4 py-1.5 text-xs font-bold rounded-full text-on-surface-variant transition-colors cursor-pointer" onclick="setForecastRange('48', this)" data-val="48">4 年</span>
+                                <span class="fc-range-btn relative z-10 px-4 py-1.5 text-xs font-bold rounded-full text-on-surface-variant transition-colors cursor-pointer" onclick="setForecastRange('60', this)" data-val="60">5 年</span>
+                                <span class="fc-range-btn relative z-10 px-4 py-1.5 text-xs font-bold rounded-full text-on-surface-variant transition-colors cursor-pointer" onclick="setForecastRange('0', this)" data-val="0">全部</span>
                             </div>
                         </div>
                     </div>

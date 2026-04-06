@@ -577,16 +577,23 @@ def get_forecast(
         df["ds"] = pd.to_datetime(df["ds"])
         df["y"] = pd.to_numeric(df["y"], errors="coerce").fillna(0)
 
-        # 計算觀看數下限（歷史第 10 百分位，確保預測不會預測出不合理的低值）
-        floor_val = max(1, int(df["y"].quantile(0.10)))
+        # 歷史第 5 百分位作為輸出夾限，防止預測出不合理的極低值
+        floor_val = max(1, int(df["y"].quantile(0.05)))
 
-        m = Prophet(yearly_seasonality=True, weekly_seasonality=False, daily_seasonality=False)
+        m = Prophet(
+            growth="linear",
+            yearly_seasonality=True,
+            weekly_seasonality=False,
+            daily_seasonality=False,
+            changepoint_prior_scale=0.01,  # 保守趨勢，不過度追隨短期波動
+            changepoint_range=0.9,         # 允許配適到近 90% 的資料，抓到近期趨勢
+        )
         m.fit(df)
         future = m.make_future_dataframe(periods=periods, freq="MS")
         forecast = m.predict(future)
 
         # 建立實際觀看數的查找表 (ds_str -> actual_y)
-        actual_map = {row["ds"].strftime("%Y-%m"): max(floor_val, int(round(row["y"])))
+        actual_map = {row["ds"].strftime("%Y-%m"): int(round(row["y"]))
                       for _, row in df.iterrows()}
         hist_ds = set(actual_map.keys())
 
