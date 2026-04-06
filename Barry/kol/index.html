@@ -879,7 +879,7 @@
             Object.values(charts).forEach(chart => { if (chart) chart.resize(); });
             if (targetId === 'tab-analysis') {
                 renderClusteringCharts(globalVideoType);
-                fetchAndRenderFanSentiment();
+                fetchAndRenderFanSentiment(globalVideoType);
                 // 初始化尺度切換指示器位置
                 setTimeout(() => {
                     const activeBtn = document.querySelector('.scatter-scale-btn.active');
@@ -1196,7 +1196,7 @@
 
         function renderFanSentimentFromCache() {
             if (!globalFanSentimentCache) return;
-            const rawData = globalFanSentimentCache;
+            const rawData = globalFanSentimentCache.data;
             const listA = rawData[CHANNEL_1_ID] || [];
             const listB = rawData[CHANNEL_2_ID] || [];
 
@@ -1209,14 +1209,15 @@
             drawFanSentimentChart('fanScatterB', 'fanScatterB', listB, 'B');
         }
 
-        async function fetchAndRenderFanSentiment() {
-            if (globalFanSentimentCache) {
+        async function fetchAndRenderFanSentiment(type) {
+            if (globalFanSentimentCache && globalFanSentimentCache.type === type) {
                  renderFanSentimentFromCache();
                  return;
             }
             try {
-                 const res = await fetch(`${API_BASE_URL}/api/fan_sentiment_scatter?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}`);
-                 globalFanSentimentCache = await res.json();
+                 const res = await fetch(`${API_BASE_URL}/api/fan_sentiment_scatter?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}&video_type=${type}`);
+                 const rawData = await res.json();
+                 globalFanSentimentCache = { type, data: rawData };
                  renderFanSentimentFromCache();
             } catch (err) { console.error("渲染鐵粉情緒失敗", err); }
         }
@@ -1280,6 +1281,7 @@
             if (globalVideoType === type) return;
             globalVideoType = type;
             globalScatterCache = null;  // ★ 影片類型變更時清除 scatter 快取，強制重新拉取
+            globalFanSentimentCache = null; // ★ 清除鐵粉情緒快取
             const theme = THEME_CONFIG[type] || THEME_CONFIG.all;
             const root = document.documentElement;
             root.style.setProperty('--yter-a-color', theme.a.primary);
@@ -1306,7 +1308,10 @@
                 updateSummaryMetrics(type, currentZoomMin, currentZoomMax);
                 updateTopVideosUI();
                 renderAudienceCharts(type);
-                if (currentTabId === 'tab-analysis') renderClusteringCharts(type);
+                if (currentTabId === 'tab-analysis') {
+                    renderClusteringCharts(type);
+                    fetchAndRenderFanSentiment(type);
+                }
                 globalFilterTask = null;
             }, 10);
 

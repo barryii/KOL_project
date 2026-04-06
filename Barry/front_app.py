@@ -332,10 +332,17 @@ def get_video_scatter(
 def get_fan_sentiment_scatter(
     channel1_id: str = Query(..., description="第一個頻道的 ID"),
     channel2_id: str = Query(..., description="第二個頻道的 ID"),
+    video_type: str = Query("all", description="篩選特定的影片類型範疇")
 ):
     with DBManager().connect_to_db_readonly() as connection:
         with connection.cursor(dictionary=True) as cursor:
-            sql = """
+            type_filter = ""
+            params = [channel1_id, channel2_id]
+            if video_type != "all":
+                type_filter = " AND `type` = %s "
+                params.append(video_type)
+
+            sql = f"""
                 SELECT 
                     channel_id,
                     author_name,
@@ -347,8 +354,9 @@ def get_fan_sentiment_scatter(
                 FROM topN_comments_seperate
                 WHERE channel_id IN (%s, %s)
                   AND sentiment IS NOT NULL
+                  {type_filter}
             """
-            cursor.execute(sql, (channel1_id, channel2_id))
+            cursor.execute(sql, tuple(params))
             results = cursor.fetchall()
             
             data = {channel1_id: [], channel2_id: []}
