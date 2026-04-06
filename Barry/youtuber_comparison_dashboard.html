@@ -605,8 +605,12 @@
                                         <th class="py-3 px-2 whitespace-nowrap text-center w-28">創作者</th>
                                         <th class="py-3 px-2">影片標題</th>
                                         <th class="py-3 px-6 whitespace-nowrap text-center w-32">影片類型</th>
-                                        <th class="py-3 px-2 whitespace-nowrap text-center w-36">觀看次數</th>
-                                        <th class="py-3 px-2 whitespace-nowrap text-center w-24">互動率</th>
+                                        <th class="py-3 px-2 whitespace-nowrap text-center w-36 cursor-pointer hover:text-primary transition-colors select-none group" onclick="toggleVideoSort('view_count')">
+                                            <div class="flex items-center justify-center gap-1">觀看次數 <span id="sort-icon-view" class="text-[12px] material-symbols-outlined font-black">arrow_downward</span></div>
+                                        </th>
+                                        <th class="py-3 px-2 whitespace-nowrap text-center w-28 cursor-pointer hover:text-primary transition-colors select-none group" onclick="toggleVideoSort('engagement')">
+                                            <div class="flex items-center justify-center gap-1">互動率 <span id="sort-icon-eng" class="text-[12px] material-symbols-outlined font-black opacity-30">swap_vert</span></div>
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody id="top-videos-body" class="text-sm">
@@ -1532,6 +1536,28 @@
             dashChartOpts = { commonOpt, lineOpt, labels, hoverLinePlugin };
         }
 
+        // ★ 影片表現的排序狀態
+        let currentVideoSort = 'view_count';
+        let currentVideoSortDesc = true;
+
+        function toggleVideoSort(col) {
+            if (currentVideoSort === col) {
+                currentVideoSortDesc = !currentVideoSortDesc;
+            } else {
+                currentVideoSort = col;
+                currentVideoSortDesc = true;
+            }
+            
+            // 更新 UI 圖示
+            document.getElementById('sort-icon-view').innerText = currentVideoSort === 'view_count' ? (currentVideoSortDesc ? 'arrow_downward' : 'arrow_upward') : 'swap_vert';
+            document.getElementById('sort-icon-view').className = currentVideoSort === 'view_count' ? 'text-[12px] material-symbols-outlined font-black text-primary' : 'text-[12px] material-symbols-outlined font-black opacity-30 group-hover:opacity-60 transition-opacity';
+            
+            document.getElementById('sort-icon-eng').innerText = currentVideoSort === 'engagement' ? (currentVideoSortDesc ? 'arrow_downward' : 'arrow_upward') : 'swap_vert';
+            document.getElementById('sort-icon-eng').className = currentVideoSort === 'engagement' ? 'text-[12px] material-symbols-outlined font-black text-primary' : 'text-[12px] material-symbols-outlined font-black opacity-30 group-hover:opacity-60 transition-opacity';
+
+            updateTopVideosUI();
+        }
+
         function updateTopVideosUI() {
             const tbody = document.getElementById('top-videos-body');
             if (!globalVideosData || !tbody) return;
@@ -1555,7 +1581,18 @@
                 allVids = allVids.filter(v => v.type === typeFilter);
             }
 
-            allVids.sort((a, b) => b.view_count - a.view_count);
+            // ★ 動態排序邏輯
+            allVids.sort((a, b) => {
+                let valA, valB;
+                if (currentVideoSort === 'engagement') {
+                    valA = ((a.like_count + a.comment_count) / (a.view_count || 1));
+                    valB = ((b.like_count + b.comment_count) / (b.view_count || 1));
+                } else {
+                    valA = a.view_count;
+                    valB = b.view_count;
+                }
+                return currentVideoSortDesc ? (valB - valA) : (valA - valB);
+            });
 
             const typeLabel = { video: '一般影片', shorts: 'Shorts', stream: '直播' };
 
