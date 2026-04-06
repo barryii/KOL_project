@@ -1,5 +1,6 @@
 name = "kol-project"
 compatibility_date = "2026-04-06"
+workers_dev = false
 
 [assets]
 directory = "./dist"
