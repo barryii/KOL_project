@@ -631,10 +631,10 @@
                                 熱門鐵粉 <span id="fan-leaderboard-type-label" class="text-primary">頻道全量</span> 排行榜
                             </h3>
                             <div class="flex flex-col gap-3 text-sm w-full">
-                                <div class="flex gap-3 w-full flex-col xl:flex-row flex-wrap">
+                                <div class="flex gap-3 w-full flex-wrap flex-row">
                                     <!-- 頻道切換按鈕群組 -->
                                     <div
-                                        class="flex bg-surface-container rounded-full p-1 w-full xl:w-auto relative shadow-inner gap-[2px]">
+                                        class="flex bg-surface-container rounded-full p-1 flex-1 min-w-[220px] relative shadow-inner gap-[2px]">
                                         <!-- 滑動背景指示器 -->
                                         <div id="fan-ch-indicator"
                                             class="absolute top-1 bottom-1 rounded-full bg-[#CF5800] transition-all duration-300 ease-out z-0 shadow-sm"
@@ -650,7 +650,7 @@
 
                                     <!-- 排序切換按鈕群組 -->
                                     <div
-                                        class="flex bg-surface-container rounded-full p-1 w-full xl:w-auto relative shadow-inner shrink-0 min-w-[160px]">
+                                        class="flex bg-surface-container rounded-full p-1 relative shadow-inner shrink-0 min-w-[160px]">
                                         <div id="fan-sort-indicator"
                                             class="absolute top-1 bottom-1 rounded-full bg-[#CF5800] transition-all duration-300 ease-out z-0 shadow-sm"
                                             style="left: 4px; width: calc(50% - 4px);"></div>
@@ -665,7 +665,7 @@
 
                                     <!-- 數量選單 -->
                                     <select id="fanFilterLimit"
-                                        class="bg-surface-container border-none shadow-sm rounded-full py-1.5 px-4 w-full xl:flex-1 outline-none text-on-surface cursor-pointer font-bold text-sm hover:bg-surface-container-high transition-colors text-center xl:text-left"
+                                        class="bg-surface-container border-none shadow-sm rounded-full py-1.5 px-4 shrink-0 outline-none text-on-surface cursor-pointer font-bold text-sm hover:bg-surface-container-high transition-colors text-center"
                                         onchange="updateTopCommentersUI()">
                                         <option value="10">🏆 前 10 名</option>
                                         <option value="20">🏆 前 20 名</option>
