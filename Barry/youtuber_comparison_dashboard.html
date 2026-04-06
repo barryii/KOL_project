@@ -213,6 +213,7 @@
             /* 移除延遲，讓游標跟隨零時差 */
             top: -100px;
             left: -100px;
+            display: none; /* 預設關閉 */
         }
     </style>
 </head>
@@ -225,15 +226,15 @@
     <!-- TopNavBar -->
     <nav
         class="fixed top-0 w-full z-50 bg-ffffff/80 backdrop-blur-[20px] flex justify-between items-center px-8 h-12 shadow-lg">
-        <div class="text-2xl font-black tracking-tighter text-primary font-headline">Youtuber Compare</div>
+        <div class="text-2xl font-black tracking-tighter text-primary font-headline leading-none">Youtuber Compare</div>
         <div class="flex items-center space-x-4">
-            <button
-                class="text-on-surface-variant hover:bg-surface-container-highest transition-all p-2 rounded-full active:scale-95 duration-200">
-                <span class="material-symbols-outlined">notifications</span>
+            <button onclick="toggleCursorFollower(this)" title="開關報告用雷射筆"
+                class="text-on-surface-variant hover:bg-surface-container-highest transition-all p-2 rounded-full active:scale-95 duration-200 flex items-center justify-center">
+                <span class="material-symbols-outlined block">radio_button_checked</span>
             </button>
             <button
-                class="text-on-surface-variant hover:bg-surface-container-highest transition-all p-2 rounded-full active:scale-95 duration-200">
-                <span class="material-symbols-outlined">settings</span>
+                class="text-on-surface-variant hover:bg-surface-container-highest transition-all p-2 rounded-full active:scale-95 duration-200 flex items-center justify-center">
+                <span class="material-symbols-outlined block">settings</span>
             </button>
         </div>
     </nav>
@@ -1664,8 +1665,24 @@
 
         window.addEventListener('DOMContentLoaded', fetchAndRenderDashboard);
 
+        // ★ 報告用鼠標開關邏輯
+        let isCursorFollowerEnabled = false;
+        function toggleCursorFollower(btn) {
+            isCursorFollowerEnabled = !isCursorFollowerEnabled;
+            const follower = document.getElementById('cursor-follower');
+            const icon = btn.querySelector('.material-symbols-outlined');
+            if (isCursorFollowerEnabled) {
+                follower.style.display = 'block';
+                icon.classList.add('text-primary'); 
+            } else {
+                follower.style.display = 'none';
+                icon.classList.remove('text-primary');
+            }
+        }
+
         // ★ 鼠標跟隨特效邏輯
         document.addEventListener('mousemove', (e) => {
+            if (!isCursorFollowerEnabled) return;
             const follower = document.getElementById('cursor-follower');
             if (follower) {
                 follower.style.left = e.clientX + 'px';
