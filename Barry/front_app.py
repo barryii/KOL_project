@@ -36,7 +36,13 @@ except ImportError:
     HAS_SNOWNLP = False
 
 # ============ Model Loading ============
-_MODEL_DIR = os.path.join(os.path.dirname(__file__), '..', 'Nick', 'models')
+_base = os.path.dirname(os.path.abspath(__file__))
+_MODEL_DIR = (
+    os.path.join(_base, '..', 'Nick', 'models')   # 本機：Barry/../Nick/models
+    if os.path.isdir(os.path.join(_base, '..', 'Nick', 'models'))
+    else os.path.join(_base, 'Nick', 'models')     # NAS/Docker：/app/Nick/models
+)
+print(f"📂 MODEL_DIR = {os.path.abspath(_MODEL_DIR)}")
 MODEL_VERSION = None
 _model = None
 _vectorizer = None
@@ -55,11 +61,12 @@ try:
         _model = CatBoostRegressor(); _model.load_model(v7); MODEL_VERSION = "V7"
     else:
         raise FileNotFoundError("V8/V7 not found")
-except Exception:
+except Exception as e:
+    print(f"⚠️ CatBoost 載入失敗：{e}")
     try:
         _model = joblib.load(os.path.join(_MODEL_DIR, 'view_predictor.pkl')); MODEL_VERSION = "V6"
-    except Exception:
-        pass
+    except Exception as e2:
+        print(f"⚠️ V6 pkl 載入失敗：{e2}")
 
 try:
     _vectorizer   = joblib.load(os.path.join(_MODEL_DIR, 'vectorizer.pkl'))
@@ -68,8 +75,9 @@ try:
     _kol_base_stats = joblib.load(os.path.join(_MODEL_DIR, 'kol_base_stats.pkl'))
     _exclude_words  = joblib.load(os.path.join(_MODEL_DIR, 'exclude_words.pkl'))
     _exclude_words.update({'美食', '食物', '吃東西'})
-except Exception:
-    pass
+    print(f"✅ 模型載入成功（{MODEL_VERSION}），KOL 數：{len(_kol_list) if _kol_list else 0}")
+except Exception as e:
+    print(f"⚠️ 輔助檔案載入失敗：{e}")
 
 _KOL_NAME_MAP = {
     "HowHowEat": "豪豪", "howhoweat": "豪豪",
