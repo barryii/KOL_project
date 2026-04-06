@@ -203,10 +203,12 @@
             position: fixed;
             width: 40px;
             height: 40px;
-            background-color: rgba(239, 68, 68, 0.5); /* 實體且半透明的紅色 */
+            background-color: rgba(239, 68, 68, 0.5);
+            /* 實體且半透明的紅色 */
             border: 2px solid rgba(239, 68, 68, 0.8);
             border-radius: 50%;
-            z-index: 9999; /* 報告用的指標通常要在最上層 */
+            z-index: 9999;
+            /* 報告用的指標通常要在最上層 */
             transform: translate(-50%, -50%);
             /* 移除延遲，讓游標跟隨零時差 */
             top: -100px;
@@ -216,13 +218,13 @@
 </head>
 
 <body class="bg-background text-on-surface font-body selection:bg-primary/30 min-h-screen relative">
-    
+
     <!-- ★ 鼠標跟隨背景元素 -->
     <div id="cursor-follower"></div>
 
     <!-- TopNavBar -->
     <nav
-        class="fixed top-0 w-full z-50 bg-ffffff/80 backdrop-blur-[20px] flex justify-between items-center px-8 h-16 shadow-lg">
+        class="fixed top-0 w-full z-50 bg-ffffff/80 backdrop-blur-[20px] flex justify-between items-center px-8 h-12 shadow-lg">
         <div class="text-2xl font-black tracking-tighter text-primary font-headline">Youtuber Compare</div>
         <div class="flex items-center space-x-4">
             <button
@@ -238,7 +240,7 @@
 
     <!-- SideNavBar -->
     <aside
-        class="h-screen w-64 fixed left-0 top-0 z-40 bg-surface-container-lowest flex flex-col py-6 border-r border-outline-variant hidden lg:flex pt-20">
+        class="h-screen w-64 fixed left-0 top-0 z-40 bg-surface-container-lowest flex flex-col py-6 border-r border-outline-variant hidden lg:flex pt-16">
         <div class="px-6 mb-8 mt-2">
             <h2 class="text-lg font-bold text-on-surface font-headline">分析視圖切換</h2>
             <p class="text-xs text-on-surface-variant uppercase tracking-widest mt-1">View Modules</p>
@@ -268,9 +270,9 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="lg:ml-64 pt-24 px-6 pb-12">
+    <main class="lg:ml-64 pt-20 px-6 pb-12">
         <header id="main-header"
-            class="sticky top-16 z-40 bg-background/95 backdrop-blur-md pt-8 pb-4 -mx-6 px-6 -mt-8 mb-6 border-b border-outline-variant/50 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] transition-all duration-300">
+            class="sticky top-12 z-40 bg-background/95 backdrop-blur-md pt-8 pb-4 -mx-6 px-6 -mt-8 mb-6 border-b border-outline-variant/50 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] transition-all duration-300">
             <div class="flex flex-col xl:flex-row xl:items-end justify-between gap-4">
                 <div>
                     <div class="flex items-end space-x-4 mb-2">
@@ -1121,7 +1123,7 @@
 
                 const listContainer = document.getElementById('top-commenters-list');
                 if (listContainer) listContainer.innerHTML = '<div class="flex justify-center p-8"><span class="material-symbols-outlined animate-spin text-2xl opacity-30">progress_activity</span></div>';
-                
+
                 const res = await fetch(`${API_BASE_URL}/api/top_fans?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}&top_n=200&video_type=${type}`, {
                     signal: currentAbortController.signal
                 });
