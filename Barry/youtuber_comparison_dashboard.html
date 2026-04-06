@@ -1636,18 +1636,28 @@
 
         function toggleFanChannel(ch) {
             if (ch === 'ch1') {
-                if (isFanCh1Active && !isFanCh2Active) {
+                if (isFanCh1Active && isFanCh2Active) {
+                    // Both on -> isolate A
+                    isFanCh2Active = false;
+                } else if (isFanCh1Active && !isFanCh2Active) {
+                    // Only A on -> turn both on
                     isFanCh2Active = true;
-                    isFanCh1Active = false;
                 } else {
-                    isFanCh1Active = !isFanCh1Active;
-                }
-            } else {
-                if (!isFanCh1Active && isFanCh2Active) {
+                    // Only B on -> switch to A
                     isFanCh1Active = true;
                     isFanCh2Active = false;
+                }
+            } else {
+                if (isFanCh1Active && isFanCh2Active) {
+                    // Both on -> isolate B
+                    isFanCh1Active = false;
+                } else if (!isFanCh1Active && isFanCh2Active) {
+                    // Only B on -> turn both on
+                    isFanCh1Active = true;
                 } else {
-                    isFanCh2Active = !isFanCh2Active;
+                    // Only A on -> switch to B
+                    isFanCh1Active = false;
+                    isFanCh2Active = true;
                 }
             }
             
