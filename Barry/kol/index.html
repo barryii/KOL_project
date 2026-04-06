@@ -553,11 +553,16 @@
                                     <!-- 頻道切換按鈕群組 -->
                                     <div
                                         class="flex bg-surface-container rounded-full p-1 w-full xl:w-auto relative shadow-inner gap-[2px]">
+                                        <!-- 滑動背景指示器 -->
+                                        <div id="fan-ch-indicator"
+                                            class="absolute top-1 bottom-1 rounded-full bg-[#CF5800] transition-all duration-300 ease-out z-0 shadow-sm"
+                                            style="left: 4px; width: calc(100% - 8px);"></div>
+
                                         <button onclick="toggleFanChannel('ch1')" id="filter-name-a"
-                                            class="flex-1 xl:flex-none pl-5 pr-2 py-1.5 text-sm font-bold rounded-l-full transition-colors truncate bg-[#CF5800] text-white shadow-sm">YTer
+                                            class="z-10 relative flex-1 xl:flex-none pl-3 pr-1 py-1.5 text-sm font-bold rounded-l-full transition-colors truncate text-white">YTer
                                             A 粉絲</button>
                                         <button onclick="toggleFanChannel('ch2')" id="filter-name-b"
-                                            class="flex-1 xl:flex-none pl-2 pr-5 py-1.5 text-sm font-bold rounded-r-full transition-colors truncate bg-[#CF5800] text-white shadow-sm">YTer
+                                            class="z-10 relative flex-1 xl:flex-none pl-1 pr-3 py-1.5 text-sm font-bold rounded-r-full transition-colors truncate text-white">YTer
                                             B 粉絲</button>
                                     </div>
 
@@ -602,21 +607,26 @@
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div
                         class="lg:col-span-12 bg-surface-container-low rounded-lg p-8 shadow-xl border-none border border-outline-variant flex flex-col min-h-[400px]">
-                        <div class="flex flex-col gap-4 mb-6">
-                            <h3 class="font-headline font-bold text-lg flex items-center gap-2">
+                        <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-6">
+                            <h3 class="font-headline font-bold text-lg flex items-center gap-2 shrink-0">
                                 <span class="material-symbols-outlined text-primary-fixed">local_fire_department</span>
                                 歷史熱門表現影片 排行榜
                             </h3>
-                            <div class="flex gap-2 text-xs w-full flex-wrap">
-                                <select id="vidFilterCh"
-                                    class="bg-surface-container border-none shadow-sm rounded-lg p-2 flex-1 min-w-[20%] outline-none text-on-surface cursor-pointer font-bold"
-                                    onchange="updateTopVideosUI()">
-                                    <option value="all">👑 綜合榜單</option>
-                                    <option value="ch1" id="vid-filter-name-a">YTer A</option>
-                                    <option value="ch2" id="vid-filter-name-b">YTer B</option>
-                                </select>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <!-- 頻道切換按鈕群組 (極致優化寬度：px-4 -> px-2.5) -->
+                                <div class="flex bg-surface-container rounded-full p-1 relative shadow-inner gap-[2px]">
+                                    <div id="vid-ch-indicator"
+                                        class="absolute top-1 bottom-1 rounded-full bg-[#CF5800] transition-all duration-300 ease-out z-0 shadow-sm"
+                                        style="left: 4px; width: calc(100% - 8px);"></div>
+
+                                    <button onclick="toggleVidChannel('ch1')" id="vid-btn-name-a"
+                                        class="z-10 relative px-2.5 py-1.5 text-xs font-bold rounded-l-full transition-all text-white">YTer A</button>
+                                    <button onclick="toggleVidChannel('ch2')" id="vid-btn-name-b"
+                                        class="z-10 relative px-2.5 py-1.5 text-xs font-bold rounded-r-full transition-all text-white">YTer B</button>
+                                </div>
+                                
                                 <select id="vidFilterLimit"
-                                    class="bg-surface-container border-none shadow-sm rounded-lg p-2 flex-1 min-w-[20%] outline-none text-on-surface cursor-pointer font-bold"
+                                    class="bg-surface-container border-none shadow-sm rounded-full py-1.5 pl-4 pr-8 outline-none text-on-surface cursor-pointer font-bold text-xs hover:bg-surface-container-high transition-colors min-w-[110px]"
                                     onchange="updateTopVideosUI()">
                                     <option value="5">🏆 前 5 部</option>
                                     <option value="10">🏆 前 10 部</option>
@@ -770,20 +780,23 @@
             <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
                 <!-- 預測表單 -->
-                <div class="xl:col-span-2 bg-surface-container-low rounded-lg p-8 shadow-xl border border-outline-variant flex flex-col gap-6">
+                <div
+                    class="xl:col-span-2 bg-surface-container-low rounded-lg p-8 shadow-xl border border-outline-variant flex flex-col gap-6">
                     <h3 class="font-headline font-bold text-lg flex items-center gap-2">
                         <span class="material-symbols-outlined text-primary">auto_awesome</span>
                         標題點擊模擬器
                     </h3>
                     <div class="flex flex-col gap-4">
                         <div class="flex flex-col gap-1">
-                            <label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant">預計影片標題</label>
+                            <label
+                                class="text-xs font-bold uppercase tracking-wider text-on-surface-variant">預計影片標題</label>
                             <input id="predict-title" type="text" placeholder="例如：挑戰全台灣最大碗的巨無霸拉麵！"
                                 class="w-full bg-surface-container border border-outline-variant rounded-lg px-4 py-3 text-sm text-on-surface outline-none focus:border-primary transition-colors" />
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="flex flex-col gap-1">
-                                <label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant">執行 KOL</label>
+                                <label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant">執行
+                                    KOL</label>
                                 <select id="predict-kol"
                                     class="bg-surface-container border border-outline-variant rounded-lg px-3 py-3 text-sm text-on-surface outline-none cursor-pointer focus:border-primary transition-colors">
                                     <option value="Chienseating">千千 (Chienseating)</option>
@@ -791,7 +804,8 @@
                                 </select>
                             </div>
                             <div class="flex flex-col gap-1">
-                                <label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant">影片策略標籤</label>
+                                <label
+                                    class="text-xs font-bold uppercase tracking-wider text-on-surface-variant">影片策略標籤</label>
                                 <select id="predict-tag"
                                     class="bg-surface-container border border-outline-variant rounded-lg px-3 py-3 text-sm text-on-surface outline-none cursor-pointer focus:border-primary transition-colors">
                                     <option value="Long">長影片（>8 分鐘）</option>
@@ -811,11 +825,13 @@
                         <div class="flex items-end justify-between flex-wrap gap-4">
                             <div>
                                 <p class="text-xs font-bold uppercase tracking-wider text-primary mb-1">AI 預估觀看數</p>
-                                <p id="predict-views" class="text-5xl font-black font-headline text-on-surface leading-none">0</p>
+                                <p id="predict-views"
+                                    class="text-5xl font-black font-headline text-on-surface leading-none">0</p>
                                 <p id="predict-info" class="text-xs text-on-surface-variant mt-2"></p>
                             </div>
                             <div class="text-right">
-                                <p class="text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">情緒分數</p>
+                                <p class="text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">情緒分數
+                                </p>
                                 <p id="predict-sentiment" class="text-2xl font-black">-</p>
                             </div>
                         </div>
@@ -827,7 +843,8 @@
                 </div>
 
                 <!-- 流量紅利排行 -->
-                <div class="bg-surface-container-low rounded-lg p-6 shadow-xl border border-outline-variant flex flex-col gap-4">
+                <div
+                    class="bg-surface-container-low rounded-lg p-6 shadow-xl border border-outline-variant flex flex-col gap-4">
                     <h3 class="font-headline font-bold text-base flex items-center gap-2">
                         <span class="material-symbols-outlined text-primary-fixed">local_fire_department</span>
                         流量紅利關鍵字排行
@@ -835,7 +852,8 @@
                     <p class="text-xs text-on-surface-variant -mt-2">數值代表關鍵字對觀看數的影響權重</p>
                     <div id="predict-rank-list" class="flex flex-col gap-1 flex-1 overflow-y-auto hide-scrollbar">
                         <div class="flex justify-center p-8">
-                            <span class="material-symbols-outlined animate-spin text-2xl opacity-30">progress_activity</span>
+                            <span
+                                class="material-symbols-outlined animate-spin text-2xl opacity-30">progress_activity</span>
                         </div>
                     </div>
                     <p id="predict-rank-err" class="hidden text-xs text-error text-center py-2">無法連線 API</p>
@@ -1679,8 +1697,8 @@
 
                 const fA = document.getElementById('filter-name-a'); if (fA) fA.innerText = `${nameA} 粉絲`;
                 const fB = document.getElementById('filter-name-b'); if (fB) fB.innerText = `${nameB} 粉絲`;
-                const vA = document.getElementById('vid-filter-name-a'); if (vA) vA.innerText = nameA;
-                const vB = document.getElementById('vid-filter-name-b'); if (vB) vB.innerText = nameB;
+                const vA = document.getElementById('vid-btn-name-a'); if (vA) vA.innerText = nameA;
+                const vB = document.getElementById('vid-btn-name-b'); if (vB) vB.innerText = nameB;
 
                 overviewDataCache = overviewData;
 
@@ -1700,6 +1718,21 @@
 
                 // 觸發全域首次渲染
                 updateGlobalFilter('all');
+
+                // 初始化按鈕滑動背景位置
+                setTimeout(() => {
+                    const vidIndicator = document.getElementById('vid-ch-indicator');
+                    const fanIndicator = document.getElementById('fan-ch-indicator');
+                    
+                    if (vidIndicator) {
+                        vidIndicator.style.left = '4px';
+                        vidIndicator.style.width = 'calc(100% - 8px)';
+                    }
+                    if (fanIndicator) {
+                        fanIndicator.style.left = '4px';
+                        fanIndicator.style.width = 'calc(100% - 8px)';
+                    }
+                }, 100);
             } catch (error) {
                 console.error('Fetch Error:', error);
                 document.getElementById('loading-indicator').innerHTML = `<span class="material-symbols-outlined text-4xl text-error mb-4">error</span><p class="text-error font-bold text-base">錯誤原因: ${error.message} - ${error.stack}</p>`;
@@ -1872,12 +1905,65 @@
             updateTopVideosUI();
         }
 
+        let isVidCh1Active = true;
+        let isVidCh2Active = true;
+
+        function toggleVidChannel(ch) {
+            if (ch === 'ch1') {
+                if (isVidCh1Active && isVidCh2Active) {
+                    isVidCh2Active = false;
+                } else if (isVidCh1Active && !isVidCh2Active) {
+                    isVidCh2Active = true;
+                } else {
+                    isVidCh1Active = true;
+                    isVidCh2Active = false;
+                }
+            } else {
+                if (isVidCh1Active && isVidCh2Active) {
+                    isVidCh1Active = false;
+                } else if (!isVidCh1Active && isVidCh2Active) {
+                    isVidCh1Active = true;
+                } else {
+                    isVidCh1Active = false;
+                    isVidCh2Active = true;
+                }
+            }
+
+            const btnA = document.getElementById('vid-btn-name-a');
+            const btnB = document.getElementById('vid-btn-name-b');
+            const indicator = document.getElementById('vid-ch-indicator');
+
+            if (indicator) {
+                if (isVidCh1Active && isVidCh2Active) {
+                    indicator.style.left = '4px';
+                    indicator.style.width = 'calc(100% - 8px)';
+                } else if (isVidCh1Active) {
+                    indicator.style.left = btnA.offsetLeft + 'px';
+                    indicator.style.width = btnA.offsetWidth + 'px';
+                } else {
+                    indicator.style.left = btnB.offsetLeft + 'px';
+                    indicator.style.width = btnB.offsetWidth + 'px';
+                }
+            }
+
+            [btnA, btnB].forEach(b => {
+                b.classList.remove('text-white', 'text-on-surface-variant', 'opacity-60');
+                const isActive = (b === btnA && isVidCh1Active) || (b === btnB && isVidCh2Active);
+                if (isActive) {
+                    b.classList.add('text-white');
+                } else {
+                    b.classList.add('text-on-surface-variant', 'opacity-60');
+                }
+            });
+
+            updateTopVideosUI();
+        }
+
         function updateTopVideosUI() {
             const tbody = document.getElementById('top-videos-body');
             if (!globalVideosData || !tbody) return;
             tbody.innerHTML = '';
 
-            const chFilter = document.getElementById('vidFilterCh').value;
             const typeFilter = globalVideoType;
             const limitEl = document.getElementById('vidFilterLimit');
             const limitFilter = parseInt(limitEl ? limitEl.value : 10);
@@ -1887,8 +1973,8 @@
                 (globalVideosData[chId] || []).forEach(v => allVids.push({ ...v, labelName, badge }));
             };
 
-            if (chFilter === 'all' || chFilter === 'ch1') addVids(CHANNEL_1_ID, nameA, classBadgeA);
-            if (chFilter === 'all' || chFilter === 'ch2') addVids(CHANNEL_2_ID, nameB, classBadgeB);
+            if (isVidCh1Active) addVids(CHANNEL_1_ID, nameA, classBadgeA);
+            if (isVidCh2Active) addVids(CHANNEL_2_ID, nameB, classBadgeB);
 
             // 影片類型篩選
             if (typeFilter !== 'all') {
@@ -1948,25 +2034,19 @@
         function toggleFanChannel(ch) {
             if (ch === 'ch1') {
                 if (isFanCh1Active && isFanCh2Active) {
-                    // Both on -> isolate A
                     isFanCh2Active = false;
                 } else if (isFanCh1Active && !isFanCh2Active) {
-                    // Only A on -> turn both on
                     isFanCh2Active = true;
                 } else {
-                    // Only B on -> switch to A
                     isFanCh1Active = true;
                     isFanCh2Active = false;
                 }
             } else {
                 if (isFanCh1Active && isFanCh2Active) {
-                    // Both on -> isolate B
                     isFanCh1Active = false;
                 } else if (!isFanCh1Active && isFanCh2Active) {
-                    // Only B on -> turn both on
                     isFanCh1Active = true;
                 } else {
-                    // Only A on -> switch to B
                     isFanCh1Active = false;
                     isFanCh2Active = true;
                 }
@@ -1974,18 +2054,29 @@
 
             const btn1 = document.getElementById('filter-name-a');
             const btn2 = document.getElementById('filter-name-b');
+            const indicator = document.getElementById('fan-ch-indicator');
 
-            if (isFanCh1Active) {
-                btn1.className = "flex-1 xl:flex-none pl-5 pr-2 py-1.5 text-sm font-bold rounded-l-full transition-colors truncate bg-[#CF5800] text-white shadow-sm";
+            // 動態指示器控制
+            if (isFanCh1Active && isFanCh2Active) {
+                indicator.style.left = '4px';
+                indicator.style.width = 'calc(100% - 8px)';
+            } else if (isFanCh1Active) {
+                indicator.style.left = btn1.offsetLeft + 'px';
+                indicator.style.width = btn1.offsetWidth + 'px';
             } else {
-                btn1.className = "flex-1 xl:flex-none pl-5 pr-2 py-1.5 text-sm font-bold rounded-l-full transition-colors truncate hover:bg-surface-container-high text-on-surface-variant opacity-60 hover:opacity-100";
+                indicator.style.left = btn2.offsetLeft + 'px';
+                indicator.style.width = btn2.offsetWidth + 'px';
             }
 
-            if (isFanCh2Active) {
-                btn2.className = "flex-1 xl:flex-none pl-2 pr-5 py-1.5 text-sm font-bold rounded-r-full transition-colors truncate bg-[#CF5800] text-white shadow-sm";
-            } else {
-                btn2.className = "flex-1 xl:flex-none pl-2 pr-5 py-1.5 text-sm font-bold rounded-r-full transition-colors truncate hover:bg-surface-container-high text-on-surface-variant opacity-60 hover:opacity-100";
-            }
+            [btn1, btn2].forEach(b => {
+                b.classList.remove('text-white', 'text-on-surface-variant', 'opacity-60');
+                const isActive = (b === btn1 && isFanCh1Active) || (b === btn2 && isFanCh2Active);
+                if (isActive) {
+                    b.classList.add('text-white');
+                } else {
+                    b.classList.add('text-on-surface-variant', 'opacity-60');
+                }
+            });
 
             updateTopCommentersUI();
         }
