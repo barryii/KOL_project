@@ -1010,12 +1010,12 @@
             }
         }
 
-        function setScatterScale(scaleType) {
-            // ★ 已是當前模式就不做任何事
-            if (scatterScaleType === scaleType) return;
-            scatterScaleType = scaleType;
+        function setScatterScale() {
+            // 不論點哪一個按鈕，都切換到另一邊 (Toggle logic)
+            scatterScaleType = (scatterScaleType === 'linear') ? 'logarithmic' : 'linear';
+            
             document.querySelectorAll('.scatter-scale-btn').forEach(btn => btn.classList.remove('active'));
-            const activeBtn = document.getElementById(`btn-scatter-${scaleType === 'linear' ? 'linear' : 'log'}`);
+            const activeBtn = document.getElementById(`btn-scatter-${scatterScaleType === 'linear' ? 'linear' : 'log'}`);
             if (activeBtn) {
                 activeBtn.classList.add('active');
                 // 滑動動畫處理
