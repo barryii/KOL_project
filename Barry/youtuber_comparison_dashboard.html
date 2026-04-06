@@ -535,28 +535,32 @@
                                     class="material-symbols-outlined text-tertiary-container">forum</span>
                                 熱門鐵粉 <span id="fan-leaderboard-type-label" class="text-primary">頻道全量</span> 排行榜
                             </h3>
-                            <div class="flex gap-2 text-xs w-full flex-wrap">
-                                <select id="fanFilterCh"
-                                    class="bg-surface-container border-none shadow-sm rounded-lg p-2 flex-1 min-w-[25%] outline-none text-on-surface cursor-pointer font-bold"
-                                    onchange="updateTopCommentersUI()">
-                                    <option value="all">👑 綜合榜單</option>
-                                    <option value="ch1" id="filter-name-a">YTer A 粉絲</option>
-                                    <option value="ch2" id="filter-name-b">YTer B 粉絲</option>
-                                </select>
-                                <select id="fanFilterSort"
-                                    class="bg-surface-container border-none shadow-sm rounded-lg p-2 flex-1 min-w-[25%] outline-none text-on-surface cursor-pointer font-bold"
-                                    onchange="updateTopCommentersUI()">
-                                    <option value="comment_count">📝 留言數量</option>
-                                    <option value="total_likes">❤️ 獲愛心數</option>
-                                </select>
-                                <select id="fanFilterLimit"
-                                    class="bg-surface-container border-none shadow-sm rounded-lg p-2 flex-1 min-w-[20%] outline-none text-on-surface cursor-pointer font-bold"
-                                    onchange="updateTopCommentersUI()">
-                                    <option value="10">🏆 前 10 名</option>
-                                    <option value="20">🏆 前 20 名</option>
-                                    <option value="50">🏆 前 50 名</option>
-                                    <option value="100" selected>🏆 前 100 名</option>
-                                </select>
+                            <div class="flex flex-col gap-3 text-sm w-full">
+                                <div class="flex gap-3 w-full flex-col xl:flex-row flex-wrap">
+                                    <!-- 頻道切換按鈕群組 -->
+                                    <div class="flex bg-surface-container rounded-full p-1 w-full xl:w-auto relative shadow-inner gap-[2px]">
+                                        <button onclick="toggleFanChannel('ch1')" id="filter-name-a" class="flex-1 xl:flex-none pl-5 pr-2 py-1.5 text-sm font-bold rounded-l-full transition-colors truncate bg-[#CF5800] text-white shadow-sm">YTer A 粉絲</button>
+                                        <button onclick="toggleFanChannel('ch2')" id="filter-name-b" class="flex-1 xl:flex-none pl-2 pr-5 py-1.5 text-sm font-bold rounded-r-full transition-colors truncate bg-[#CF5800] text-white shadow-sm">YTer B 粉絲</button>
+                                    </div>
+
+                                    <!-- 排序切換按鈕群組 -->
+                                    <div class="flex bg-surface-container rounded-full p-1 w-full xl:w-auto relative shadow-inner shrink-0 min-w-[160px]">
+                                        <div id="fan-sort-indicator" class="absolute top-1 bottom-1 rounded-full bg-[#CF5800] transition-all duration-300 ease-out z-0 shadow-sm" style="left: 4px; width: calc(50% - 4px);"></div>
+                                        
+                                        <button onclick="setFanSort('comment_count', this)" class="fan-sort-btn dash-filter-active flex-1 text-center py-1.5 px-4 text-sm font-bold relative z-10 transition-colors text-white">📝 留言</button>
+                                        <button onclick="setFanSort('total_likes', this)" class="fan-sort-btn flex-1 text-center py-1.5 px-4 text-sm font-bold relative z-10 transition-colors text-on-surface-variant">❤️ 愛心</button>
+                                    </div>
+
+                                    <!-- 數量選單 -->
+                                    <select id="fanFilterLimit"
+                                        class="bg-surface-container border-none shadow-sm rounded-full py-1.5 px-4 w-full xl:flex-1 outline-none text-on-surface cursor-pointer font-bold text-sm hover:bg-surface-container-high transition-colors text-center xl:text-left"
+                                        onchange="updateTopCommentersUI()">
+                                        <option value="10">🏆 前 10 名</option>
+                                        <option value="20">🏆 前 20 名</option>
+                                        <option value="50">🏆 前 50 名</option>
+                                        <option value="100" selected>🏆 前 100 名</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                         <div class="space-y-3 flex-1 overflow-y-auto hide-scrollbar max-h-[880px]"
@@ -1625,14 +1629,69 @@
             }
         }
 
+        // ★ 粉絲排行榜過濾狀態與控制
+        let isFanCh1Active = true;
+        let isFanCh2Active = true;
+        let currentFanFilterSort = 'comment_count';
+
+        function toggleFanChannel(ch) {
+            if (ch === 'ch1') {
+                if (isFanCh1Active && !isFanCh2Active) {
+                    isFanCh2Active = true;
+                    isFanCh1Active = false;
+                } else {
+                    isFanCh1Active = !isFanCh1Active;
+                }
+            } else {
+                if (!isFanCh1Active && isFanCh2Active) {
+                    isFanCh1Active = true;
+                    isFanCh2Active = false;
+                } else {
+                    isFanCh2Active = !isFanCh2Active;
+                }
+            }
+            
+            const btn1 = document.getElementById('filter-name-a');
+            const btn2 = document.getElementById('filter-name-b');
+
+            if (isFanCh1Active) {
+                btn1.className = "flex-1 xl:flex-none pl-5 pr-2 py-1.5 text-sm font-bold rounded-l-full transition-colors truncate bg-[#CF5800] text-white shadow-sm";
+            } else {
+                btn1.className = "flex-1 xl:flex-none pl-5 pr-2 py-1.5 text-sm font-bold rounded-l-full transition-colors truncate hover:bg-surface-container-high text-on-surface-variant opacity-60 hover:opacity-100";
+            }
+
+            if (isFanCh2Active) {
+                btn2.className = "flex-1 xl:flex-none pl-2 pr-5 py-1.5 text-sm font-bold rounded-r-full transition-colors truncate bg-[#CF5800] text-white shadow-sm";
+            } else {
+                btn2.className = "flex-1 xl:flex-none pl-2 pr-5 py-1.5 text-sm font-bold rounded-r-full transition-colors truncate hover:bg-surface-container-high text-on-surface-variant opacity-60 hover:opacity-100";
+            }
+
+            updateTopCommentersUI();
+        }
+
+        function setFanSort(val, btn) {
+            currentFanFilterSort = val;
+            document.querySelectorAll('.fan-sort-btn').forEach(b => {
+                b.classList.remove('dash-filter-active', 'text-white');
+                b.classList.add('text-on-surface-variant');
+            });
+            btn.classList.add('dash-filter-active', 'text-white');
+            btn.classList.remove('text-on-surface-variant');
+
+            const indicator = document.getElementById('fan-sort-indicator');
+            indicator.style.left = btn.offsetLeft + 'px';
+            indicator.style.width = btn.offsetWidth + 'px';
+
+            updateTopCommentersUI();
+        }
+
         function updateTopCommentersUI() {
             const listContainer = document.getElementById('top-commenters-list');
             if (!globalFansData || !listContainer) return;
 
             listContainer.innerHTML = '';
 
-            const chFilter = document.getElementById('fanFilterCh').value;
-            const sortFilter = document.getElementById('fanFilterSort').value;
+            const sortFilter = currentFanFilterSort;
             const limitEl = document.getElementById('fanFilterLimit');
             const limitFilter = parseInt(limitEl ? limitEl.value : 10);
 
@@ -1650,9 +1709,9 @@
                 });
             };
 
-            // 依據頻道篩選器挑選陣列
-            if (chFilter === 'all' || chFilter === 'ch1') addFans(CHANNEL_1_ID, nameA, 'bg-primary-fixed/20 text-primary-container');
-            if (chFilter === 'all' || chFilter === 'ch2') addFans(CHANNEL_2_ID, nameB, 'bg-secondary-fixed-dim/20 text-secondary-fixed-dim');
+            // 依據頻道狀態進行陣列添加
+            if (isFanCh1Active) addFans(CHANNEL_1_ID, nameA, 'bg-primary-fixed/20 text-primary-container');
+            if (isFanCh2Active) addFans(CHANNEL_2_ID, nameB, 'bg-secondary-fixed-dim/20 text-secondary-fixed-dim');
 
             // 根據指標進行排序
             if (sortFilter === 'total_likes') {
