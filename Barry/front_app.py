@@ -8,7 +8,15 @@ from datetime import datetime
 import os, re
 import joblib
 import numpy as np
+import pandas as pd
 from pydantic import BaseModel
+
+try:
+    from prophet import Prophet
+    HAS_PROPHET = True
+except ImportError:
+    HAS_PROPHET = False
+    print("⚠️ Prophet 未安裝，/api/forecast 不可用。請執行: pip install prophet")
 
 # ============ Jieba ============
 try:
@@ -353,7 +361,6 @@ async def predict(req: PredictRequest):
         hit_count  = len(matched)
 
         if MODEL_VERSION in ("V8", "V7"):
-            import pandas as pd
             input_df = pd.DataFrame(0.0, index=[0], columns=_model_columns)
             input_df['kol_name']     = input_df['kol_name'].astype(object)
             input_df['strategic_tag'] = input_df['strategic_tag'].astype(object)
@@ -373,7 +380,6 @@ async def predict(req: PredictRequest):
                     if col in input_df.columns:
                         input_df.at[0, col] = val
         else:
-            import pandas as pd
             input_df = pd.DataFrame(0.0, index=[0], columns=_model_columns, dtype=float)
             if 'base_performance_log' in input_df.columns:
                 input_df.at[0, 'base_performance_log'] = base_log
@@ -411,7 +417,6 @@ async def get_features_ranking():
     if _model is None or _model_columns is None:
         return {"status": "error", "message": "模型未載入"}
     try:
-        import pandas as pd
         if MODEL_VERSION in ("V8", "V7"):
             imp = _model.get_feature_importance()
             fs  = pd.Series(imp, index=_model_columns)
@@ -528,6 +533,66 @@ def get_video_scatter(
 
 
 # http://localhost:8000/api/fan_sentiment_scatter?channel1_id=UC9i2Qgd5lizhVgJrdnxunKw&channel2_id=UCa2YiSXNTkmOA-QTKdzzbSQ
+# http://localhost:8000/api/forecast?channel1_id=...&channel2_id=...&periods=6
+@app.get("/api/forecast")
+def get_forecast(
+    channel1_id: str = Query(...),
+    channel2_id: str = Query(...),
+    periods: int = Query(6, description="預測未來幾個月"),
+    metric: str = Query("avg_views", description="avg_views 或 total_views"),
+):
+    if not HAS_PROPHET:
+        return {"status": "error", "message": "請先安裝 prophet: pip install prophet"}
+
+    with DBManager().connect_to_db_readonly() as connection:
+        with connection.cursor(dictionary=True) as cursor:
+            sql = """
+                SELECT
+                    channel_id,
+                    DATE_FORMAT(published_at, '%Y-%m-01') AS ds,
+                    COUNT(video_id)              AS video_count,
+                    AVG(view_count)              AS avg_views,
+                    SUM(view_count)              AS total_views
+                FROM videos
+                WHERE channel_id IN (%s, %s)
+                GROUP BY channel_id, ds
+                ORDER BY ds ASC
+            """
+            cursor.execute(sql, (channel1_id, channel2_id))
+            rows = cursor.fetchall()
+
+    result = {}
+    for ch_id in [channel1_id, channel2_id]:
+        ch_rows = [r for r in rows if r["channel_id"] == ch_id]
+        if len(ch_rows) < 3:
+            result[ch_id] = {"status": "error", "message": "資料不足"}
+            continue
+
+        df = pd.DataFrame(ch_rows)[["ds", metric]].rename(columns={metric: "y"})
+        df["ds"] = pd.to_datetime(df["ds"])
+        df["y"] = pd.to_numeric(df["y"], errors="coerce").fillna(0)
+
+        m = Prophet(yearly_seasonality=True, weekly_seasonality=False, daily_seasonality=False)
+        m.fit(df)
+        future = m.make_future_dataframe(periods=periods, freq="MS")
+        forecast = m.predict(future)
+
+        hist_ds = set(df["ds"].dt.strftime("%Y-%m"))
+        out = []
+        for _, row in forecast.iterrows():
+            ds_str = row["ds"].strftime("%Y-%m")
+            out.append({
+                "ds": ds_str,
+                "yhat":       max(0, int(round(row["yhat"]))),
+                "yhat_lower": max(0, int(round(row["yhat_lower"]))),
+                "yhat_upper": max(0, int(round(row["yhat_upper"]))),
+                "is_forecast": ds_str not in hist_ds,
+            })
+        result[ch_id] = {"status": "success", "data": out}
+
+    return result
+
+
 @app.get("/api/fan_sentiment_scatter")
 def get_fan_sentiment_scatter(
     channel1_id: str = Query(..., description="第一個頻道的 ID"),
