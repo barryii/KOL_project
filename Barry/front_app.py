@@ -326,3 +326,35 @@ def get_video_scatter(
             
             return data
 
+
+# http://localhost:8000/api/fan_sentiment_scatter?channel1_id=UC9i2Qgd5lizhVgJrdnxunKw&channel2_id=UCa2YiSXNTkmOA-QTKdzzbSQ
+@app.get("/api/fan_sentiment_scatter")
+def get_fan_sentiment_scatter(
+    channel1_id: str = Query(..., description="第一個頻道的 ID"),
+    channel2_id: str = Query(..., description="第二個頻道的 ID"),
+):
+    with DBManager().connect_to_db_readonly() as connection:
+        with connection.cursor(dictionary=True) as cursor:
+            sql = """
+                SELECT 
+                    channel_id,
+                    author_name,
+                    text_content,
+                    like_count,
+                    reply_count,
+                    sentiment,
+                    sentiment_score
+                FROM topN_comments_seperate
+                WHERE channel_id IN (%s, %s)
+                  AND sentiment IS NOT NULL
+            """
+            cursor.execute(sql, (channel1_id, channel2_id))
+            results = cursor.fetchall()
+            
+            data = {channel1_id: [], channel2_id: []}
+            for row in results:
+                c_id = row['channel_id']
+                if c_id in data:
+                    data[c_id].append(row)
+            
+            return data

@@ -227,7 +227,7 @@
     <!-- TopNavBar -->
     <nav
         class="fixed top-0 w-full z-50 bg-ffffff/80 backdrop-blur-[20px] flex justify-between items-center px-8 h-12 shadow-lg">
-        <div class="text-2xl font-black tracking-tighter text-primary font-headline leading-none">Youtuber Compare</div>
+        <a href="https://barryyy.com/kol" class="text-2xl font-black tracking-tighter text-primary font-headline leading-none hover:opacity-80 transition-opacity">Youtuber Compare</a>
         <div class="flex items-center space-x-4">
             <button onclick="toggleCursorFollower(this)" title="開關報告用雷射筆"
                 class="text-on-surface-variant hover:bg-surface-container-highest transition-all p-2 rounded-full active:scale-95 duration-200 flex items-center justify-center">
@@ -709,6 +709,42 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- 鐵粉情緒分佈 -->
+                <div id="scatter-section-fan">
+                    <div class="mt-12 mb-6 border-t border-outline-variant/30 pt-8">
+                        <h3 class="font-headline font-bold text-xl mb-1 flex items-center gap-2 text-on-surface">
+                            <span class="material-symbols-outlined text-tertiary">mood</span>
+                            鐵粉留言情緒分佈 (Top Fans Sentiment)
+                        </h3>
+                        <p class="text-sm text-on-surface-variant">根據鐵粉的留言情緒分數與獲得的按讚數進行分佈，觀察正面/負面情緒的互動差異。</p>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- YTer A 鐵粉情緒 -->
+                        <div class="bg-surface-container-low rounded-xl p-6 shadow-xl border border-outline-variant/30 relative">
+                            <h4 class="font-headline font-bold text-base mb-1 flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full inline-block" style="background: #a24a35;"></span>
+                                <span id="fan-scatter-title-a">YTer A</span> 鐵粉情緒
+                            </h4>
+                            <p class="text-xs text-on-surface-variant mb-4">X軸: 情緒分數 (Score) | Y軸: 留言按讚數 (Likes) (稍微抖動處理以防重疊)</p>
+                            <div class="relative h-[480px] w-full">
+                                <canvas id="fanScatterA"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- YTer B 鐵粉情緒 -->
+                        <div class="bg-surface-container-low rounded-xl p-6 shadow-xl border border-outline-variant/30 relative">
+                            <h4 class="font-headline font-bold text-base mb-1 flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full inline-block" style="background: #5c7368;"></span>
+                                <span id="fan-scatter-title-b">YTer B</span> 鐵粉情緒
+                            </h4>
+                            <p class="text-xs text-on-surface-variant mb-4">X軸: 情緒分數 (Score) | Y軸: 留言按讚數 (Likes) (稍微抖動處理以防重疊)</p>
+                            <div class="relative h-[480px] w-full">
+                                <canvas id="fanScatterB"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -717,8 +753,8 @@
 
     <script>
         // ★ API 基礎路徑變數
-        // const API_BASE_URL = 'http://localhost:8000';
-        const API_BASE_URL = 'https://kol-api.barryyy.com';
+        const API_BASE_URL = 'http://localhost:8000';
+        // const API_BASE_URL = 'https://kol-api.barryyy.com';
         const CHANNEL_1_ID = 'UC9i2Qgd5lizhVgJrdnxunKw';
         const CHANNEL_2_ID = 'UCa2YiSXNTkmOA-QTKdzzbSQ';
 
@@ -782,6 +818,7 @@
         let currentZoomMax = null;
         let scatterScaleType = 'linear';
         let globalScatterCache = null;  // { type, data } — avoids re-fetching on scale toggle
+        let globalFanSentimentCache = null; // caches fan sentiment data
         let hiddenClustersA = new Set();
         let hiddenClustersB = new Set();
 
@@ -842,6 +879,7 @@
             Object.values(charts).forEach(chart => { if (chart) chart.resize(); });
             if (targetId === 'tab-analysis') {
                 renderClusteringCharts(globalVideoType);
+                fetchAndRenderFanSentiment();
                 // 初始化尺度切換指示器位置
                 setTimeout(() => {
                     const activeBtn = document.querySelector('.scatter-scale-btn.active');
@@ -879,6 +917,17 @@
                 chart.options.scales.x.title.text = '觀看次數 (Views)' + (scatterScaleType === 'logarithmic' ? ' (Log)' : '');
                 chart.options.scales.y.beginAtZero = scatterScaleType !== 'logarithmic';
                 // 使用預設 update 觸發順滑動畫
+                chart.update();
+            });
+
+            const fanScatterIds = ['fanScatterA', 'fanScatterB'];
+            fanScatterIds.forEach(id => {
+                const chart = charts[id];
+                if (!chart) return;
+                // Only change Y axis for fan sentiment (Score is always linear)
+                chart.options.scales.y.type = scatterScaleType;
+                chart.options.scales.y.title.text = '留言按讚數 (Likes)' + (scatterScaleType === 'logarithmic' ? ' (Log)' : '');
+                chart.options.scales.y.beginAtZero = scatterScaleType !== 'logarithmic';
                 chart.update();
             });
         }
@@ -1056,6 +1105,120 @@
                 globalScatterCache = { type, data: rawData };
                 renderScatterFromCache();
             } catch (err) { console.error("渲染散佈圖失敗", err); }
+        }
+
+        // ================= Fan Sentiment Scatter =================
+
+        function getSentimentColor(sentiment) {
+            if (!sentiment) return '#888888';
+            const s = sentiment.toLowerCase();
+            if (s.includes('positive')) return '#5ec962'; // green
+            if (s.includes('negative')) return '#e15759'; // red
+            return '#b0bec5'; // neutral gray
+        }
+
+        function drawFanSentimentChart(canvasId, chartId, list, channelTag) {
+            const ctx = document.getElementById(canvasId);
+            if (!ctx) return;
+            const clusters = {};
+            list.forEach(v => {
+                const sLabel = v.sentiment || 'Unknown';
+                if (!clusters[sLabel]) clusters[sLabel] = [];
+                // slight jitter trick to avoid points overlapping perfectly
+                const jitterX = (Math.random() - 0.5) * 0.2; 
+                clusters[sLabel].push({ 
+                    x: (v.sentiment_score !== undefined ? v.sentiment_score : 0) + jitterX, 
+                    y: v.like_count || 0, 
+                    title: v.author_name || 'Anonymous', 
+                    text: v.text_content || '' 
+                });
+            });
+
+            // ensure ordering of labels: Positive, Neutral, Negative
+            const order = ['Positive', 'Neutral', 'Negative', 'Unknown'];
+            const sortedLabels = Object.keys(clusters).sort((a, b) => {
+                let ia = order.indexOf(a); if(ia === -1) ia = 99;
+                let ib = order.indexOf(b); if(ib === -1) ib = 99;
+                return ia - ib;
+            });
+
+            const datasets = sortedLabels.map(sLabel => ({
+                label: sLabel,
+                data: clusters[sLabel],
+                backgroundColor: getSentimentColor(sLabel),
+                borderColor: 'rgba(255,255,255,0.8)',
+                borderWidth: 1,
+                pointStyle: 'circle',
+                radius: 6, hoverRadius: 9
+            }));
+
+            if (charts[chartId]) {
+                const chart = charts[chartId];
+                datasets.forEach((newDs, i) => {
+                    if (chart.data.datasets[i]) {
+                         chart.data.datasets[i].data = newDs.data;
+                         chart.data.datasets[i].label = newDs.label;
+                         chart.data.datasets[i].backgroundColor = newDs.backgroundColor;
+                    } else {
+                         chart.data.datasets.push(newDs);
+                    }
+                });
+                if (chart.data.datasets.length > datasets.length) {
+                    chart.data.datasets.splice(datasets.length);
+                }
+                chart.options.scales.x.type = 'linear';
+                chart.options.scales.y.beginAtZero = scatterScaleType !== 'logarithmic';
+                chart.options.scales.y.type = scatterScaleType;
+                chart.update();
+            } else {
+                charts[chartId] = new Chart(ctx, {
+                    type: 'scatter',
+                    data: { datasets },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        animation: { duration: 600, easing: 'easeOutQuart' },
+                        plugins: {
+                            legend: { position: 'top', labels: { boxWidth: 12 } },
+                            tooltip: {
+                                callbacks: {
+                                    label: c => [` 粉絲: ${c.raw.title}`, ` 留言: ${c.raw.text}`, ` 情緒: ${c.dataset.label} (Score: ${c.raw.x.toFixed(1)})`, ` 按讚數: ${formatNum(c.raw.y)}`]
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { type: 'linear', title: { display: true, text: '情緒分數 (Sentiment Score)' }, grid: { color: gridColor } },
+                            y: { type: scatterScaleType, title: { display: true, text: '留言按讚數 (Likes)' + (scatterScaleType === 'logarithmic' ? ' (Log)' : '') }, grid: { color: gridColor }, beginAtZero: scatterScaleType !== 'logarithmic' }
+                        }
+                    }
+                });
+            }
+        }
+
+        function renderFanSentimentFromCache() {
+            if (!globalFanSentimentCache) return;
+            const rawData = globalFanSentimentCache;
+            const listA = rawData[CHANNEL_1_ID] || [];
+            const listB = rawData[CHANNEL_2_ID] || [];
+
+            const titleA = document.getElementById('fan-scatter-title-a');
+            const titleB = document.getElementById('fan-scatter-title-b');
+            if (titleA) titleA.textContent = nameA;
+            if (titleB) titleB.textContent = nameB;
+
+            drawFanSentimentChart('fanScatterA', 'fanScatterA', listA, 'A');
+            drawFanSentimentChart('fanScatterB', 'fanScatterB', listB, 'B');
+        }
+
+        async function fetchAndRenderFanSentiment() {
+            if (globalFanSentimentCache) {
+                 renderFanSentimentFromCache();
+                 return;
+            }
+            try {
+                 const res = await fetch(`${API_BASE_URL}/api/fan_sentiment_scatter?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}`);
+                 globalFanSentimentCache = await res.json();
+                 renderFanSentimentFromCache();
+            } catch (err) { console.error("渲染鐵粉情緒失敗", err); }
         }
 
         function syncChartsTooltip(index, skipChartId = null) {
