@@ -357,15 +357,50 @@
                         (Log)</button>
                 </div>
 
-                <div id="header-tab-predict"
-                    class="header-tab-section hidden flex-col mt-4 pt-4 border-t border-outline-variant/30">
-                    <h2 class="text-xl font-bold font-headline text-on-surface">流量預測 Predict</h2>
-                </div>
+            </div>
 
-                <div id="header-tab-forecast"
-                    class="header-tab-section hidden flex-col mt-4 pt-4 border-t border-outline-variant/30">
-                    <h2 class="text-xl font-bold font-headline text-on-surface">趨勢預測 Forecast</h2>
-                    <p class="text-sm text-on-surface-variant mt-1">根據歷史觀看數曲線，以 Prophet 預測未來走勢</p>
+            <div id="header-tab-predict"
+                class="header-tab-section hidden flex-col mt-4 pt-4 border-t border-outline-variant/30">
+                <h2 class="text-xl font-bold font-headline text-on-surface">流量預測 Predict</h2>
+            </div>
+
+            <div id="header-tab-forecast"
+                class="header-tab-section hidden flex-col mt-4 pt-4 border-t border-outline-variant/30 gap-3">
+                    <div>
+                        <h2 class="text-xl font-bold font-headline text-on-surface">趨勢預測 Forecast</h2>
+                        <p class="text-sm text-on-surface-variant mt-1">根據歷史觀看數曲線，以 Prophet 預測未來走勢</p>
+                    </div>
+                    <div class="flex flex-wrap gap-3 items-center">
+                        <!-- 指標 -->
+                        <div class="flex flex-col gap-1">
+                            <span class="text-xs font-bold uppercase tracking-wider text-on-surface-variant px-1">指標</span>
+                            <div onclick="advanceForecastGroup('metric')" class="relative flex p-1 bg-surface-container-high rounded-full border border-outline-variant/30 cursor-pointer select-none shadow-sm">
+                                <div id="fc-metric-indicator" class="absolute h-[calc(100%-8px)] bg-white shadow-md rounded-full transition-all duration-300 ease-out z-0 top-1"></div>
+                                <span class="fc-metric-btn relative z-10 px-4 py-1.5 text-xs font-bold rounded-full text-primary transition-colors" data-val="avg_views">平均觀看數</span>
+                                <span class="fc-metric-btn relative z-10 px-4 py-1.5 text-xs font-bold rounded-full text-on-surface-variant transition-colors" data-val="total_views">月總觀看數</span>
+                            </div>
+                        </div>
+                        <!-- 預測月數 -->
+                        <div class="flex flex-col gap-1">
+                            <span class="text-xs font-bold uppercase tracking-wider text-on-surface-variant px-1">預測月數</span>
+                            <div onclick="advanceForecastGroup('periods')" class="relative flex p-1 bg-surface-container-high rounded-full border border-outline-variant/30 cursor-pointer select-none shadow-sm">
+                                <div id="fc-periods-indicator" class="absolute h-[calc(100%-8px)] bg-white shadow-md rounded-full transition-all duration-300 ease-out z-0 top-1"></div>
+                                <span class="fc-periods-btn relative z-10 px-4 py-1.5 text-xs font-bold rounded-full text-on-surface-variant transition-colors" data-val="3">3 個月</span>
+                                <span class="fc-periods-btn relative z-10 px-4 py-1.5 text-xs font-bold rounded-full text-primary transition-colors" data-val="6">6 個月</span>
+                                <span class="fc-periods-btn relative z-10 px-4 py-1.5 text-xs font-bold rounded-full text-on-surface-variant transition-colors" data-val="12">12 個月</span>
+                            </div>
+                        </div>
+                        <!-- 歷史範圍 -->
+                        <div class="flex flex-col gap-1">
+                            <span class="text-xs font-bold uppercase tracking-wider text-on-surface-variant px-1">歷史範圍</span>
+                            <div onclick="advanceForecastGroup('range')" class="relative flex p-1 bg-surface-container-high rounded-full border border-outline-variant/30 cursor-pointer select-none shadow-sm">
+                                <div id="fc-range-indicator" class="absolute h-[calc(100%-8px)] bg-white shadow-md rounded-full transition-all duration-300 ease-out z-0 top-1"></div>
+                                <span class="fc-range-btn relative z-10 px-4 py-1.5 text-xs font-bold rounded-full text-on-surface-variant transition-colors" data-val="12">1 年</span>
+                                <span class="fc-range-btn relative z-10 px-4 py-1.5 text-xs font-bold rounded-full text-primary transition-colors" data-val="24">2 年</span>
+                                <span class="fc-range-btn relative z-10 px-4 py-1.5 text-xs font-bold rounded-full text-on-surface-variant transition-colors" data-val="0">全部</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </header>
@@ -878,29 +913,8 @@
         <div id="tab-forecast" class="tab-section hidden mt-0">
             <div class="flex flex-col gap-6">
 
-                <!-- 控制列 -->
-                <div class="flex flex-wrap items-center gap-3">
-                    <select id="forecast-metric"
-                        class="bg-surface-container border-none shadow-sm rounded-lg p-2 outline-none text-on-surface cursor-pointer font-bold text-sm"
-                        onchange="renderForecast()">
-                        <option value="avg_views">單支平均觀看數</option>
-                        <option value="total_views">月總觀看數</option>
-                    </select>
-                    <select id="forecast-periods"
-                        class="bg-surface-container border-none shadow-sm rounded-lg p-2 outline-none text-on-surface cursor-pointer font-bold text-sm"
-                        onchange="renderForecast()">
-                        <option value="3">預測 3 個月</option>
-                        <option value="6" selected>預測 6 個月</option>
-                        <option value="12">預測 12 個月</option>
-                    </select>
-                    <button onclick="loadForecast(true)"
-                        class="flex items-center gap-1 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:opacity-90 active:scale-95 transition-all">
-                        <span class="material-symbols-outlined text-base">refresh</span>重新預測
-                    </button>
-                </div>
-
-                <!-- 圖表區 -->
-                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <!-- 圖表區（上下疊排，各佔全寬）-->
+                <div class="flex flex-col gap-6">
                     <div class="bg-surface-container-low rounded-xl p-6 shadow-xl border border-outline-variant">
                         <h4 class="font-headline font-bold text-base mb-4 flex items-center gap-2">
                             <span class="w-3 h-3 rounded-full inline-block" style="background:#a24a35"></span>
@@ -909,8 +923,8 @@
                         <div id="forecast-loading-a" class="flex justify-center p-10">
                             <span class="material-symbols-outlined animate-spin text-2xl opacity-30">progress_activity</span>
                         </div>
-                        <p id="forecast-err-a" class="text-xs text-error text-center py-4" style="display:none"></p>
-                        <div class="relative h-[340px] w-full">
+                        <p id="forecast-err-a" class="text-xl font-bold text-error" style="display:none; width:100%; height:10rem; align-items:center; justify-content:center; text-align:center;"></p>
+                        <div class="relative h-[400px] w-full">
                             <canvas id="forecastChartA"></canvas>
                         </div>
                     </div>
@@ -922,14 +936,13 @@
                         <div id="forecast-loading-b" class="flex justify-center p-10">
                             <span class="material-symbols-outlined animate-spin text-2xl opacity-30">progress_activity</span>
                         </div>
-                        <p id="forecast-err-b" class="text-xs text-error text-center py-4" style="display:none"></p>
-                        <div class="relative h-[340px] w-full">
+                        <p id="forecast-err-b" class="text-xl font-bold text-error" style="display:none; width:100%; height:10rem; align-items:center; justify-content:center; text-align:center;"></p>
+                        <div class="relative h-[400px] w-full">
                             <canvas id="forecastChartB"></canvas>
                         </div>
                     </div>
                 </div>
 
-                <!-- 說明 -->
                 <p class="text-xs text-on-surface-variant text-center opacity-60">
                     預測基於歷史月份資料，使用 Facebook Prophet 時間序列模型。陰影帶為 80% 信賴區間。
                 </p>
@@ -1069,6 +1082,15 @@
                 loadPredictRanking();
             }
             if (targetId === 'tab-forecast') {
+                // 初始化指示器位置
+                setTimeout(() => {
+                    ['fc-metric-btn','fc-periods-btn','fc-range-btn'].forEach(cls => {
+                        const activeBtn = document.querySelector(`.${cls}.text-primary`);
+                        const map = {'fc-metric-btn':'fc-metric-indicator','fc-periods-btn':'fc-periods-indicator','fc-range-btn':'fc-range-indicator'};
+                        const ind = document.getElementById(map[cls]);
+                        if (activeBtn && ind) { ind.style.left = activeBtn.offsetLeft+'px'; ind.style.width = activeBtn.offsetWidth+'px'; }
+                    });
+                }, 10);
                 loadForecast(false);
             }
             if (targetId === 'tab-analysis') {
@@ -1476,6 +1498,8 @@
             globalVideoType = type;
             globalScatterCache = null;  // ★ 影片類型變更時清除 scatter 快取，強制重新拉取
             globalFanSentimentCache = null; // ★ 清除鐵粉情緒快取
+            forecastLoaded = false;     // ★ 清除預測快取，影片類型改變需重新預測
+            if (currentTabId === 'tab-forecast') loadForecast(false);
             const theme = THEME_CONFIG[type] || THEME_CONFIG.all;
             const root = document.documentElement;
             root.style.setProperty('--yter-a-color', theme.a.primary);
@@ -2314,11 +2338,61 @@
         let forecastLoaded = false;
         let forecastData = null;
         const forecastCharts = { A: null, B: null };
+        let fcMetric  = 'avg_views';
+        let fcPeriods = '6';
+        let fcRange   = '24';  // 預設顯示 2 年歷史
+
+        function advanceForecastGroup(group) {
+            const btnClass = `fc-${group}-btn`;
+            const btns = [...document.querySelectorAll(`.${btnClass}`)];
+            const currentIdx = btns.findIndex(b => b.classList.contains('text-primary'));
+            const nextIdx = (currentIdx + 1) % btns.length;
+            const nextBtn = btns[nextIdx];
+            const val = nextBtn.dataset.val;
+            if (group === 'metric')  setForecastMetric(val, nextBtn);
+            if (group === 'periods') setForecastPeriods(val, nextBtn);
+            if (group === 'range')   setForecastRange(val, nextBtn);
+        }
+
+        function setForecastMetric(val, btn) {
+            if (val === fcMetric) return;
+            fcMetric = val;
+            _fcActivate('fc-metric-btn', 'fc-metric-indicator', btn);
+            forecastLoaded = false;
+            loadForecast(false);
+        }
+        function setForecastPeriods(val, btn) {
+            if (val === fcPeriods) return;
+            fcPeriods = val;
+            _fcActivate('fc-periods-btn', 'fc-periods-indicator', btn);
+            forecastLoaded = false;
+            loadForecast(false);
+        }
+        function setForecastRange(val, btn) {
+            if (val === fcRange) return;
+            fcRange = val;
+            _fcActivate('fc-range-btn', 'fc-range-indicator', btn);
+            renderForecast();
+        }
+        function _fcActivate(btnClass, indicatorId, activeBtn) {
+            document.querySelectorAll('.' + btnClass).forEach(b => {
+                b.classList.remove('text-primary');
+                b.classList.add('text-on-surface-variant');
+            });
+            activeBtn.classList.remove('text-on-surface-variant');
+            activeBtn.classList.add('text-primary');
+            // 滑動指示器
+            const indicator = document.getElementById(indicatorId);
+            if (indicator) {
+                indicator.style.left  = activeBtn.offsetLeft + 'px';
+                indicator.style.width = activeBtn.offsetWidth + 'px';
+            }
+        }
 
         async function loadForecast(force = false) {
             if (forecastLoaded && !force) { renderForecast(); return; }
-            const metric  = document.getElementById('forecast-metric').value;
-            const periods = document.getElementById('forecast-periods').value;
+            const metric  = fcMetric;
+            const periods = fcPeriods;
             ['a','b'].forEach(k => {
                 const el = document.getElementById(`forecast-loading-${k}`);
                 if (el) el.style.display = 'flex';
@@ -2327,7 +2401,7 @@
             });
             try {
                 const res = await fetch(
-                    `${API_BASE_URL}/api/forecast?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}&periods=${periods}&metric=${metric}`
+                    `${API_BASE_URL}/api/forecast?channel1_id=${CHANNEL_1_ID}&channel2_id=${CHANNEL_2_ID}&periods=${periods}&metric=${metric}&video_type=${globalVideoType || 'all'}`
                 );
                 forecastData = await res.json();
                 // 頂層 error（如 Prophet 未安裝）
@@ -2335,7 +2409,7 @@
                     ['a','b'].forEach(k => {
                         document.getElementById(`forecast-loading-${k}`).style.display = 'none';
                         const errEl = document.getElementById(`forecast-err-${k}`);
-                        if (errEl) { errEl.textContent = forecastData.message; errEl.style.display = 'block'; }
+                        if (errEl) { errEl.textContent = forecastData.message; errEl.style.display = 'flex'; }
                     });
                     return;
                 }
@@ -2345,37 +2419,51 @@
                 ['a','b'].forEach(k => {
                     document.getElementById(`forecast-loading-${k}`).style.display = 'none';
                     const errEl = document.getElementById(`forecast-err-${k}`);
-                    if (errEl) { errEl.textContent = 'API 連線失敗：' + e.message; errEl.style.display = 'block'; }
+                    if (errEl) { errEl.textContent = 'API 連線失敗：' + e.message; errEl.style.display = 'flex'; }
                 });
             }
         }
 
         function renderForecast() {
             if (!forecastData) return;
-            const metricLabel = document.getElementById('forecast-metric').value === 'avg_views'
-                ? '平均觀看數' : '月總觀看數';
+            const metricLabel = fcMetric === 'avg_views' ? '平均觀看數' : '月總觀看數';
 
             [[CHANNEL_1_ID, 'A', '#a24a35'], [CHANNEL_2_ID, 'B', '#5c7368']].forEach(([chId, key, color]) => {
                 const loadEl = document.getElementById(`forecast-loading-${key.toLowerCase()}`);
                 if (loadEl) loadEl.style.display = 'none';
 
                 const cd = forecastData[chId];
-                const errEl = document.getElementById(`forecast-err-${key.toLowerCase()}`);
+                const errEl   = document.getElementById(`forecast-err-${key.toLowerCase()}`);
+                const chartCanvas = document.getElementById(`forecastChart${key}`);
                 if (!cd || cd.status !== 'success') {
-                    if (errEl) { errEl.textContent = cd?.message || '資料不足，無法預測'; errEl.style.display = 'block'; }
+                    if (errEl)       { errEl.textContent = cd?.message || '資料不足，無法預測'; errEl.style.display = 'flex'; }
+                    if (chartCanvas) chartCanvas.style.display = 'none';
                     return;
                 }
+                // 有資料時確保 canvas 顯示
+                if (chartCanvas) chartCanvas.style.display = 'block';
+                if (errEl)       errEl.style.display = 'none';
 
-                const allPts = cd.data;
+                // 套用歷史範圍篩選（fcRange = 顯示幾個月歷史，0 = 全部）
+                let allPts = cd.data;
+                if (parseInt(fcRange) > 0) {
+                    const histPts  = allPts.filter(d => !d.is_forecast);
+                    const fcastPts = allPts.filter(d =>  d.is_forecast);
+                    const trimmed  = histPts.slice(-parseInt(fcRange));
+                    allPts = [...trimmed, ...fcastPts];
+                }
                 const labels = allPts.map(d => d.ds);
 
-                // 歷史實線（預測點補 null）
-                const histLine = allPts.map(d => d.is_forecast ? null : d.yhat);
-                // 預測虛線（接歷史最後一點）
+                // 歷史實線：用 actual（真實觀看數），預測點補 null
+                const histLine = allPts.map(d => d.is_forecast ? null : (d.actual ?? d.yhat));
+                // 預測虛線：從歷史最後一點接上（用 actual 值接，讓線段不斷開）
                 const splitIdx = allPts.findIndex(d => d.is_forecast);
-                const fcastLine = allPts.map((d, i) =>
-                    (d.is_forecast || i === splitIdx - 1) ? d.yhat : null
-                );
+                const bridgeVal = splitIdx > 0 ? (allPts[splitIdx - 1].actual ?? allPts[splitIdx - 1].yhat) : null;
+                const fcastLine = allPts.map((d, i) => {
+                    if (i === splitIdx - 1) return bridgeVal;   // 接點用實際值
+                    if (d.is_forecast) return d.yhat;
+                    return null;
+                });
                 // 信賴帶：用兩個 dataset 夾住，用相同背景色填充
                 const upper = allPts.map(d => d.is_forecast ? d.yhat_upper : null);
                 const lower = allPts.map(d => d.is_forecast ? d.yhat_lower : null);
@@ -2465,7 +2553,7 @@
                         },
                         scales: {
                             x: { ticks: { maxTicksLimit: 12, maxRotation: 45 } },
-                            y: { ticks: { callback: v => formatNum(v) }, beginAtZero: false }
+                            y: { ticks: { callback: v => formatNum(v) }, beginAtZero: true }
                         }
                     }
                 });
