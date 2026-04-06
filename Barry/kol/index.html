@@ -621,6 +621,7 @@
                                 <thead>
                                     <tr
                                         class="text-on-surface-variant text-xs font-bold uppercase tracking-wider border-b border-outline-variant">
+                                        <th class="py-3 px-2 whitespace-nowrap text-center w-8">#</th>
                                         <th class="py-3 px-2 whitespace-nowrap text-center w-28">創作者</th>
                                         <th class="py-3 px-2">影片標題</th>
                                         <th class="py-3 px-6 whitespace-nowrap text-center w-32">影片類型</th>
@@ -1825,6 +1826,7 @@
                 const videoUrl = `https://www.youtube.com/watch?v=${v.video_id}`;
                 const tr = document.createElement('tr'); tr.className = 'border-b border-outline-variant hover:bg-surface-container transition-colors';
                 tr.innerHTML = `
+                    <td class="py-3 px-2 text-center whitespace-nowrap text-on-surface-variant font-bold">${idx + 1}</td>
                     <td class="py-3 px-2 text-center whitespace-nowrap"><span class="text-xs font-bold px-2 py-1 rounded-full ${v.badge}">${v.labelName}</span></td>
                     <td class="py-3 px-2">
                         <a href="${videoUrl}" target="_blank" rel="noopener" class="flex items-center gap-3 group/vid">
