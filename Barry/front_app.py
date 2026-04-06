@@ -5,6 +5,109 @@ from collections import defaultdict
 from database import DBManager
 from youtuber_info import Chienseating, HowHowEat
 from datetime import datetime
+import os, re
+import joblib
+import numpy as np
+from pydantic import BaseModel
+
+# ============ Jieba ============
+try:
+    import jieba
+    DICT_PATH = os.path.join(os.path.dirname(__file__), '..', 'Nick', 'dict.txt')
+    if os.path.exists(DICT_PATH):
+        jieba.load_userdict(DICT_PATH)
+    HAS_JIEBA = True
+except ImportError:
+    HAS_JIEBA = False
+
+# ============ SnowNLP ============
+try:
+    from snownlp import SnowNLP
+    HAS_SNOWNLP = True
+except ImportError:
+    HAS_SNOWNLP = False
+
+# ============ Model Loading ============
+_MODEL_DIR = os.path.join(os.path.dirname(__file__), '..', 'Nick', 'models')
+MODEL_VERSION = None
+_model = None
+_vectorizer = None
+_model_columns = None
+_kol_list = None
+_kol_base_stats = None
+_exclude_words = set()
+
+try:
+    from catboost import CatBoostRegressor
+    v8 = os.path.join(_MODEL_DIR, 'view_predictor_v8.cbm')
+    v7 = os.path.join(_MODEL_DIR, 'view_predictor_v7.cbm')
+    if os.path.exists(v8):
+        _model = CatBoostRegressor(); _model.load_model(v8); MODEL_VERSION = "V8"
+    elif os.path.exists(v7):
+        _model = CatBoostRegressor(); _model.load_model(v7); MODEL_VERSION = "V7"
+    else:
+        raise FileNotFoundError("V8/V7 not found")
+except Exception:
+    try:
+        _model = joblib.load(os.path.join(_MODEL_DIR, 'view_predictor.pkl')); MODEL_VERSION = "V6"
+    except Exception:
+        pass
+
+try:
+    _vectorizer   = joblib.load(os.path.join(_MODEL_DIR, 'vectorizer.pkl'))
+    _model_columns = joblib.load(os.path.join(_MODEL_DIR, 'model_columns.pkl'))
+    _kol_list     = joblib.load(os.path.join(_MODEL_DIR, 'kol_list.pkl'))
+    _kol_base_stats = joblib.load(os.path.join(_MODEL_DIR, 'kol_base_stats.pkl'))
+    _exclude_words  = joblib.load(os.path.join(_MODEL_DIR, 'exclude_words.pkl'))
+    _exclude_words.update({'美食', '食物', '吃東西'})
+except Exception:
+    pass
+
+_KOL_NAME_MAP = {
+    "HowHowEat": "豪豪", "howhoweat": "豪豪",
+    "Chienseating": "千千", "chienseating": "千千", "千千進食中": "千千",
+}
+
+# ============ Predict Helpers ============
+def _find_real_kol(name):
+    if name in _KOL_NAME_MAP:
+        return _KOL_NAME_MAP[name]
+    for real in (_kol_list or []):
+        if name in real or real in name:
+            return real
+    return name
+
+def _clean_title(title):
+    if not HAS_JIEBA:
+        return re.sub(r'[^\u4e00-\u9fa5a-zA-Z0-9]', ' ', title).lower()
+    text = re.sub(r'[^\u4e00-\u9fa5a-zA-Z0-9]', ' ', title).lower()
+    words = jieba.lcut(text)
+    return " ".join(w for w in words if len(w) > 1 and w not in _exclude_words)
+
+def _sentiment(text):
+    import math
+    t = str(text)
+    raw = SnowNLP(t).sentiments if HAS_SNOWNLP else 0.5
+    try:
+        raw = float(raw)
+    except Exception:
+        raw = 0.5
+    x = (raw - 0.5) * 6
+    cal = 1 / (1 + math.exp(-x * 0.45))
+    adj = 0.0
+    boosts = {'挑戰':0.04,'地獄':0.04,'傷害':0.03,'暗黑':0.03,'恐怖':0.03,'崩潰':0.03,
+              '超級':0.02,'終極':0.02,'史上':0.02,'第一次':0.02,'居然':0.02,'竟然':0.02,
+              '瘋狂':0.03,'爆':0.02,'狂':0.02,'嚇':0.02,
+              '好吃':0.06,'超好吃':0.08,'美味':0.06,'推薦':0.05,'必吃':0.06,'最愛':0.05,
+              '幸福':0.05,'天堂':0.05,'銷魂':0.06,'豪華':0.04,'頂級':0.04,'夢幻':0.04,
+              '完美':0.04,'驚喜':0.04,'超讚':0.06,'神級':0.06,
+              '難吃':-0.08,'踩雷':-0.07,'失望':-0.06,'後悔':-0.06,
+              '踩坑':-0.06,'噁心':-0.07,'最差':-0.06,'雷':-0.04}
+    for word, delta in boosts.items():
+        if word in t:
+            adj += delta
+    adj += min((t.count('！') + t.count('!')) * 0.015, 0.05)
+    return round(max(0.08, min(0.92, cal + adj)), 4)
 
 # 本機執行指令： uvicorn front_app:app --reload
 # localhost:8000
@@ -228,6 +331,103 @@ def get_top_videos(
                 channel1_id: channel1_results,
                 channel2_id: channel2_results
             }
+
+# http://localhost:8000/predict
+class PredictRequest(BaseModel):
+    title: str
+    kol_name: str
+    strategic_tag: str
+
+@app.post("/predict")
+async def predict(req: PredictRequest):
+    if _model is None or _vectorizer is None:
+        return {"status": "error", "message": "預測模型未載入"}
+    try:
+        real_name  = _find_real_kol(req.kol_name)
+        base_val   = _kol_base_stats.get(real_name, np.median(list(_kol_base_stats.values())))
+        base_log   = np.log1p(float(base_val))
+        clean      = _clean_title(req.title)
+        title_vec  = _vectorizer.transform([clean]).toarray()
+        feat_names = _vectorizer.get_feature_names_out()
+        matched    = [feat_names[i] for i in range(len(feat_names)) if title_vec[0][i] > 0]
+        hit_count  = len(matched)
+
+        if MODEL_VERSION in ("V8", "V7"):
+            import pandas as pd
+            input_df = pd.DataFrame(0.0, index=[0], columns=_model_columns)
+            input_df['kol_name']     = input_df['kol_name'].astype(object)
+            input_df['strategic_tag'] = input_df['strategic_tag'].astype(object)
+            for i, name in enumerate(feat_names):
+                col = f"feat_{name}"
+                if col in input_df.columns:
+                    input_df.at[0, col] = float(title_vec[0][i])
+            input_df.at[0, 'base_performance_log'] = base_log
+            input_df.at[0, 'kol_name']     = real_name
+            input_df.at[0, 'strategic_tag'] = req.strategic_tag
+            if MODEL_VERSION == "V8":
+                s = _sentiment(req.title)
+                for col, val in [('sentiment_score', s), ('keyword_hit_count', float(hit_count)),
+                                 ('title_length', float(len(req.title))),
+                                 ('has_number', 1.0 if re.search(r'\d+', req.title) else 0.0),
+                                 ('exclamation_count', float(req.title.count('！') + req.title.count('!')))]:
+                    if col in input_df.columns:
+                        input_df.at[0, col] = val
+        else:
+            import pandas as pd
+            input_df = pd.DataFrame(0.0, index=[0], columns=_model_columns, dtype=float)
+            if 'base_performance_log' in input_df.columns:
+                input_df.at[0, 'base_performance_log'] = base_log
+            kol_col = f"kol_name_{real_name}"
+            if kol_col in input_df.columns:
+                input_df.at[0, kol_col] = 1.0
+            tag_col = f"strategic_tag_{req.strategic_tag}"
+            if tag_col in input_df.columns:
+                input_df.at[0, tag_col] = 1.0
+            for i, name in enumerate(feat_names):
+                col = f"feat_{name}"
+                if col in input_df.columns:
+                    input_df.at[0, col] = float(title_vec[0][i])
+
+        log_pred = _model.predict(input_df)[0]
+        if MODEL_VERSION == "V7" and hit_count >= 2:
+            log_pred *= 1.0 + (hit_count - 1) * 0.05
+        final_view = max(0, int(round(np.expm1(log_pred))))
+        sentiment  = _sentiment(req.title)
+        return {
+            "status": "success", "prediction": final_view,
+            "base_value": int(base_val), "identified_as": real_name,
+            "cleaned_title": clean, "matched": matched,
+            "keyword_hit_count": hit_count,
+            "sentiment_score": sentiment, "model_version": MODEL_VERSION,
+        }
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        return {"status": "error", "message": str(e)}
+
+
+# http://localhost:8000/api/features/ranking
+@app.get("/api/features/ranking")
+async def get_features_ranking():
+    if _model is None or _model_columns is None:
+        return {"status": "error", "message": "模型未載入"}
+    try:
+        import pandas as pd
+        if MODEL_VERSION in ("V8", "V7"):
+            imp = _model.get_feature_importance()
+            fs  = pd.Series(imp, index=_model_columns)
+        else:
+            fs = pd.Series(_model.feature_importances_, index=_model_columns)
+        cf = fs[[c for c in fs.index if c.startswith('feat_')]]
+        hidden = {'美食', '食物', '吃東西'}
+        cf = cf[[c for c in cf.index if c.replace('feat_', '') not in hidden]]
+        if cf.sum() > 0:
+            cf = cf / cf.sum()
+        cf = cf.sort_values(ascending=False)
+        ranking = [{"keyword": n.replace('feat_', ''), "score": round(float(v), 4)} for n, v in cf.items()]
+        return {"status": "success", "top_features": ranking[:15]}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 
 # http://localhost:8000/api/channel_info
 @app.get("/api/channel_info")

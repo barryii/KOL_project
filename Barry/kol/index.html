@@ -270,6 +270,11 @@
                 <span class="material-symbols-outlined">analytics</span>
                 <span class="font-medium text-sm">內容分聚 Analysis</span>
             </button>
+            <button onclick="switchTab('tab-predict', this)"
+                class="nav-item w-full flex items-center space-x-3 px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface rounded-lg transition-all duration-300">
+                <span class="material-symbols-outlined">bolt</span>
+                <span class="font-medium text-sm">AI 流量預測</span>
+            </button>
         </nav>
     </aside>
 
@@ -324,6 +329,11 @@
             <div id="header-tab-content"
                 class="header-tab-section hidden flex-col mt-4 pt-4 border-t border-outline-variant/30">
                 <h2 class="text-xl font-bold font-headline text-on-surface">影片表現 Content</h2>
+            </div>
+
+            <div id="header-tab-predict"
+                class="header-tab-section hidden flex-col mt-4 pt-4 border-t border-outline-variant/30">
+                <h2 class="text-xl font-bold font-headline text-on-surface">AI 流量預測</h2>
             </div>
 
             <div id="header-tab-analysis"
@@ -755,13 +765,91 @@
             </div>
         </div>
 
+        <!-- 分頁 5 : AI 流量預測 -->
+        <div id="tab-predict" class="tab-section hidden mt-0">
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+                <!-- 預測表單 -->
+                <div class="xl:col-span-2 bg-surface-container-low rounded-lg p-8 shadow-xl border border-outline-variant flex flex-col gap-6">
+                    <h3 class="font-headline font-bold text-lg flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">auto_awesome</span>
+                        標題點擊模擬器
+                    </h3>
+                    <div class="flex flex-col gap-4">
+                        <div class="flex flex-col gap-1">
+                            <label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant">預計影片標題</label>
+                            <input id="predict-title" type="text" placeholder="例如：挑戰全台灣最大碗的巨無霸拉麵！"
+                                class="w-full bg-surface-container border border-outline-variant rounded-lg px-4 py-3 text-sm text-on-surface outline-none focus:border-primary transition-colors" />
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="flex flex-col gap-1">
+                                <label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant">執行 KOL</label>
+                                <select id="predict-kol"
+                                    class="bg-surface-container border border-outline-variant rounded-lg px-3 py-3 text-sm text-on-surface outline-none cursor-pointer focus:border-primary transition-colors">
+                                    <option value="Chienseating">千千 (Chienseating)</option>
+                                    <option value="HowHowEat">豪豪 (HowHowEat)</option>
+                                </select>
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant">影片策略標籤</label>
+                                <select id="predict-tag"
+                                    class="bg-surface-container border border-outline-variant rounded-lg px-3 py-3 text-sm text-on-surface outline-none cursor-pointer focus:border-primary transition-colors">
+                                    <option value="Long">長影片（>8 分鐘）</option>
+                                    <option value="Mid">中等長度</option>
+                                    <option value="Shorts">Shorts 短影音</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button id="predict-btn" onclick="doPredict()"
+                            class="flex items-center justify-center gap-2 bg-primary text-white font-bold py-3 px-6 rounded-lg hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span class="material-symbols-outlined text-base">bolt</span>開始 AI 流量預測
+                        </button>
+                    </div>
+
+                    <!-- 預測結果 -->
+                    <div id="predict-result" class="hidden flex flex-col gap-4 border-t border-outline-variant pt-6">
+                        <div class="flex items-end justify-between flex-wrap gap-4">
+                            <div>
+                                <p class="text-xs font-bold uppercase tracking-wider text-primary mb-1">AI 預估觀看數</p>
+                                <p id="predict-views" class="text-5xl font-black font-headline text-on-surface leading-none">0</p>
+                                <p id="predict-info" class="text-xs text-on-surface-variant mt-2"></p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">情緒分數</p>
+                                <p id="predict-sentiment" class="text-2xl font-black">-</p>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2">命中關鍵字</p>
+                            <div id="predict-tags" class="flex flex-wrap gap-1.5"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 流量紅利排行 -->
+                <div class="bg-surface-container-low rounded-lg p-6 shadow-xl border border-outline-variant flex flex-col gap-4">
+                    <h3 class="font-headline font-bold text-base flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary-fixed">local_fire_department</span>
+                        流量紅利關鍵字排行
+                    </h3>
+                    <p class="text-xs text-on-surface-variant -mt-2">數值代表關鍵字對觀看數的影響權重</p>
+                    <div id="predict-rank-list" class="flex flex-col gap-1 flex-1 overflow-y-auto hide-scrollbar">
+                        <div class="flex justify-center p-8">
+                            <span class="material-symbols-outlined animate-spin text-2xl opacity-30">progress_activity</span>
+                        </div>
+                    </div>
+                    <p id="predict-rank-err" class="hidden text-xs text-error text-center py-2">無法連線 API</p>
+                </div>
+            </div>
+        </div>
+
         </div>
     </main>
 
     <script>
         // ★ API 基礎路徑變數
-        // const API_BASE_URL = 'http://localhost:8000';
-        const API_BASE_URL = 'https://kol-api.barryyy.com';
+        const API_BASE_URL = 'http://localhost:8000';
+        // const API_BASE_URL = 'https://kol-api.barryyy.com';
         const CHANNEL_1_ID = 'UC9i2Qgd5lizhVgJrdnxunKw';
         const CHANNEL_2_ID = 'UCa2YiSXNTkmOA-QTKdzzbSQ';
 
@@ -884,6 +972,9 @@
             });
             btnElement.classList.add('active', 'bg-[rgba(162,74,53,0.1)]');
             Object.values(charts).forEach(chart => { if (chart) chart.resize(); });
+            if (targetId === 'tab-predict') {
+                loadPredictRanking();
+            }
             if (targetId === 'tab-analysis') {
                 renderClusteringCharts(globalVideoType);
                 fetchAndRenderFanSentiment(globalVideoType);
@@ -1990,6 +2081,65 @@
         }
 
         window.addEventListener('DOMContentLoaded', fetchAndRenderDashboard);
+
+        // ==================== AI 流量預測 ====================
+        let predictRankLoaded = false;
+
+        async function loadPredictRanking() {
+            if (predictRankLoaded) return;
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/features/ranking`);
+                const data = await res.json();
+                if (data.status !== 'success') throw new Error(data.message);
+                document.getElementById('predict-rank-list').innerHTML = data.top_features.map((it, i) => `
+                    <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors">
+                        <span class="text-xs font-bold text-on-surface-variant w-5 text-center">${i + 1}</span>
+                        <span class="flex-1 text-sm font-semibold text-on-surface"># ${it.keyword}</span>
+                        <span class="text-sm font-black text-primary">${(it.score * 100).toFixed(1)}%</span>
+                    </div>`).join('');
+                document.getElementById('predict-rank-err').classList.add('hidden');
+                predictRankLoaded = true;
+            } catch {
+                document.getElementById('predict-rank-list').innerHTML = '';
+                document.getElementById('predict-rank-err').classList.remove('hidden');
+            }
+        }
+
+        async function doPredict() {
+            const title = document.getElementById('predict-title').value.trim();
+            if (!title) { alert('請輸入標題'); return; }
+            const btn = document.getElementById('predict-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-base">progress_activity</span> 計算中...';
+            try {
+                const res = await fetch(`${API_BASE_URL}/predict`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title,
+                        kol_name: document.getElementById('predict-kol').value,
+                        strategic_tag: document.getElementById('predict-tag').value
+                    })
+                });
+                const d = await res.json();
+                if (d.status !== 'success') throw new Error(d.message);
+                document.getElementById('predict-result').classList.remove('hidden');
+                document.getElementById('predict-views').textContent = d.prediction.toLocaleString();
+                document.getElementById('predict-info').textContent =
+                    `基數: ${formatNum(d.base_value)} · 命中 ${d.keyword_hit_count} 個關鍵字 · ${d.model_version}`;
+                document.getElementById('predict-tags').innerHTML =
+                    d.matched.map(t => `<span class="text-xs font-bold px-2 py-0.5 rounded-full bg-primary-container text-primary">#${t}</span>`).join('');
+                const s = d.sentiment_score;
+                const sEl = document.getElementById('predict-sentiment');
+                sEl.textContent = (s * 100).toFixed(0) + ' 分';
+                sEl.style.color = s > 0.6 ? '#10b981' : s < 0.4 ? '#ef4444' : '#a24a35';
+            } catch (e) {
+                alert('預測失敗：' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span class="material-symbols-outlined text-base">bolt</span>開始 AI 流量預測';
+            }
+        }
 
         // ★ 報告用鼠標開關邏輯
         let isCursorFollowerEnabled = false;
