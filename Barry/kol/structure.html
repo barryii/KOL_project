@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube KOL 數據分析平台 - 架構與 ER 模型</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+    <!-- svg-pan-zoom: 讓 Mermaid SVG 可拖曳與縮放 -->
+    <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: 'Noto Sans TC', sans-serif;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ── 頁首 ── */
+        header {
+            flex-shrink: 0;
+            padding: 16px 28px 0;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        /* ── Tab 列 ── */
+        .tab-bar {
+            display: flex;
+            gap: 4px;
+            padding: 0 28px;
+            background: #0f172a;
+            border-bottom: 1px solid #1e293b;
+            flex-shrink: 0;
+        }
+        .tab-btn {
+            padding: 10px 22px;
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: color .2s, border-color .2s;
+            font-weight: 500;
+        }
+        .tab-btn.active {
+            color: #38bdf8;
+            border-bottom-color: #38bdf8;
+        }
+        .tab-btn:hover:not(.active) { color: #e2e8f0; }
+
+        /* ── 主內容區 ── */
+        .main-area {
+            flex: 1;
+            display: flex;
+            min-height: 0;
+        }
+
+        /* ── 圖表畫布 ── */
+        .canvas-wrap {
+            flex: 1;
+            position: relative;
+            background: #0f172a;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .diagram-panel {
+            display: none;
+            width: 100%;
+            height: 100%;
+        }
+        .diagram-panel.active { display: block; }
+
+        /* Mermaid 容器：撐滿畫布 */
+        .mermaid-wrap {
+            width: 100%;
+            height: 100%;
+            background: #1e293b;
+            border-radius: 0;
+        }
+
+        /* 隱藏原始 mermaid 節點，等 SVG 渲染後才顯示 */
+        .mermaid { visibility: hidden; }
+
+        /* svg-pan-zoom 注入的 SVG 容器 */
+        .mermaid-wrap svg {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* ── 縮放控制鈕 ── */
+        .zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 10;
+        }
+        .zoom-btn {
+            width: 36px;
+            height: 36px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #94a3b8;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background .15s, color .15s;
+        }
+        .zoom-btn:hover { background: #334155; color: #f8fafc; }
+
+        /* 拖曳提示 */
+        .drag-hint {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15,23,42,0.75);
+            border: 1px solid #334155;
+            border-radius: 20px;
+            padding: 4px 14px;
+            font-size: 12px;
+            color: #64748b;
+            pointer-events: none;
+            white-space: nowrap;
+            backdrop-filter: blur(4px);
+            z-index: 10;
+        }
+
+        /* ── 右側資訊面板 ── */
+        .info-panel {
+            width: 300px;
+            flex-shrink: 0;
+            background: #0f172a;
+            border-left: 1px solid #1e293b;
+            overflow-y: auto;
+            padding: 20px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .info-card {
+            background: #1e293b;
+            border-radius: 10px;
+            padding: 16px;
+            border: 1px solid #334155;
+            position: relative;
+            overflow: hidden;
+        }
+        .info-card .accent {
+            position: absolute;
+            top: 0; left: 0;
+            width: 3px; height: 100%;
+        }
+        .info-card h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #f8fafc;
+            margin: 0 0 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .info-card p, .info-card ul {
+            font-size: 13px;
+            color: #94a3b8;
+            line-height: 1.6;
+            margin: 0;
+        }
+        .info-card ul { padding-left: 16px; }
+        .info-card li { margin-bottom: 4px; }
+        .info-card code {
+            background: #0f172a;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #7dd3fc;
+        }
+
+        /* 滾動條 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* ── 載入遮罩 ── */
+        .loading-mask {
+            position: absolute;
+            inset: 0;
+            background: #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .loading-mask.hidden { display: none; }
+        .spinner {
+            width: 36px; height: 36px;
+            border: 3px solid #334155;
+            border-top-color: #38bdf8;
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+
+<body>
+
+    <!-- 頁首 -->
+    <header>
+        <h1 style="font-size:20px;font-weight:700;color:#f8fafc;margin:0 0 4px;">
+            <i class="fa-brands fa-youtube" style="color:#ef4444;margin-right:8px;"></i>YouTube KOL 數據分析平台
+        </h1>
+        <p style="font-size:13px;color:#64748b;margin:0 0 12px;">系統架構概觀與資料庫實體關聯模型 (ER Model)</p>
+    </header>
+
+    <!-- Tab 列 -->
+    <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('arch', this)">
+            <i class="fa-solid fa-network-wired mr-2" style="color:#38bdf8;"></i>系統架構圖
+        </button>
+        <button class="tab-btn" onclick="switchTab('er', this)">
+            <i class="fa-solid fa-database mr-2" style="color:#10b981;"></i>ER Model
+        </button>
+    </div>
+
+    <!-- 主內容 -->
+    <div class="main-area">
+
+        <!-- 圖表畫布 -->
+        <div class="canvas-wrap">
+
+            <!-- 系統架構圖 -->
+            <div id="panel-arch" class="diagram-panel active">
+                <div class="loading-mask" id="loading-arch">
+                    <div class="spinner"></div>
+                    <span style="color:#64748b;font-size:13px;">渲染中...</span>
+                </div>
+                <div class="drag-hint">
+                    <i class="fa-solid fa-hand" style="margin-right:6px;"></i>拖曳平移・滾輪縮放・雙擊重置
+                </div>
+                <div class="mermaid-wrap" id="wrap-arch">
+                    <div class="mermaid" id="mermaid-arch">
+flowchart TB
+    classDef client fill:#0369a1,stroke:#38bdf8,stroke-width:2px,color:#fff;
+    classDef server fill:#1e293b,stroke:#94a3b8,stroke-width:2px,color:#fff;
+    classDef service fill:#0f172a,stroke:#8b5cf6,stroke-width:2px,color:#fff;
+    classDef database fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#fff;
+    classDef external fill:#7f1d1d,stroke:#ef4444,stroke-width:2px,color:#fff;
+
+    Client("🧑‍💻 使用者\n(品牌端/創作者)"):::client
+
+    subgraph FrontendLayer ["前端展示層 (Frontend)"]
+        UI["📊 Web 儀表板\n(barryyy.com/kol/)"]:::client
+    end
+
+    subgraph BackendLayer ["後端 API 層 (Backend)"]
+        API["⚙️ FastAPI 伺服器\n(kol-api.barryyy.com)"]:::server
+    end
+
+    subgraph PipelineLayer ["非同步處理與 AI 管線 (Data Pipeline)"]
+        Scheduler["⏱️ 排程任務\n(Cron/Tasks)"]:::service
+        YT_Fetcher["📥 YouTube 數據擷取\n(獲取影片/留言)"]:::service
+        NLP_Engine["🧠 NLP 分析引擎\n(情緒評分/意圖標籤)"]:::service
+        ML_Engine["📊 機器學習分群\n(影片屬性 Cluster)"]:::service
+        Aggregator["👥 社群數據聚合\n(計算 Top N 鐵粉)"]:::service
+    end
+
+    DB[("🗄️ 關聯式資料庫\n(PostgreSQL / MySQL)")]:::database
+    ExtYT["📺 YouTube Data API v3"]:::external
+
+    Client -->|瀏覽視覺化圖表| UI
+    UI -->|API 請求| API
+    API -->|回傳 JSON| UI
+    API -->|查詢寫入| DB
+    DB -->|回傳結果| API
+    Scheduler -->|定時觸發 ETL 流程| YT_Fetcher
+    YT_Fetcher -->|API 呼叫| ExtYT
+    ExtYT -->|回傳資料| YT_Fetcher
+    YT_Fetcher -->|寫入原始數據| DB
+    DB -.->|1. 讀取未處理留言| NLP_Engine
+    NLP_Engine -->|寫入 Sentiment & Score| DB
+    DB -.->|2. 讀取影片特徵| ML_Engine
+    ML_Engine -->|寫入 Cluster Label| DB
+    DB -.->|3. 讀取使用者互動| Aggregator
+    Aggregator -->|寫入 TopN 統計資料| DB
+                    </div>
+                </div>
+                <!-- 縮放控制 -->
+                <div class="zoom-controls">
+                    <button class="zoom-btn" title="放大" onclick="zoomIn('arch')"><i class="fa-solid fa-plus"></i></button>
+                    <button class="zoom-btn" title="縮小" onclick="zoomOut('arch')"><i class="fa-solid fa-minus"></i></button>
+                    <button class="zoom-btn" title="重置" onclick="zoomReset('arch')"><i class="fa-solid fa-arrows-to-circle"></i></button>
+                </div>
+            </div>
+
+            <!-- ER Model -->
+            <div id="panel-er" class="diagram-panel">
+                <div class="loading-mask" id="loading-er">
+                    <div class="spinner"></div>
+                    <span style="color:#64748b;font-size:13px;">渲染中...</span>
+                </div>
+                <div class="drag-hint">
+                    <i class="fa-solid fa-hand" style="margin-right:6px;"></i>拖曳平移・滾輪縮放・雙擊重置
+                </div>
+                <div class="mermaid-wrap" id="wrap-er">
+                    <div class="mermaid" id="mermaid-er">
+erDiagram
+    channels {
+        varchar_24 channel_id PK
+        varchar_100 channel_name
+        bigint subscriber_count
+        bigint total_view_count
+        datetime last_updated
+    }
+
+    videos {
+        varchar_11 video_id PK
+        varchar_50 channel_id FK
+        varchar_255 title
+        text description
+        datetime published_at
+        varchar_20 type
+        time duration
+        int duration_sec
+        bigint view_count
+        int like_count
+        int comment_count
+        int actual_comment_count
+        int cluster_label
+    }
+
+    video_comments {
+        varchar_50 comment_id PK
+        varchar_11 video_id FK
+        varchar_24 channel_id
+        varchar_24 author_id
+        varchar_100 author_name
+        text text_content
+        int like_count
+        int reply_count
+        varchar_20 sentiment
+        int sentiment_score
+        varchar_50 topic_tag
+        datetime published_at
+    }
+
+    topN_comments {
+        varchar_24 channel_id PK
+        varchar_24 author_id PK
+        varchar_100 author_name
+        text author_display_name
+        varchar_20 type PK
+        int comment_count
+        int total_likes
+        datetime updated_at
+    }
+
+    topN_comments_separate {
+        varchar_50 comment_id PK
+        varchar_11 video_id FK
+        varchar_24 channel_id FK
+        varchar_24 author_id FK
+        varchar_100 author_name
+        varchar_20 type
+        text text_content
+        int like_count
+        int reply_count
+        varchar_20 sentiment
+        int sentiment_score
+        varchar_50 topic_tag
+        datetime published_at
+    }
+
+    channels ||--o{ videos : "包含"
+    channels ||--o{ topN_comments : "擁有"
+    channels ||--o{ topN_comments_separate : "擁有"
+    videos ||--o{ video_comments : "包含"
+    videos ||--o{ topN_comments_separate : "包含"
+    video_comments ||--o{ topN_comments : "歸屬"
+    video_comments ||--o{ topN_comments_separate : "歸屬"
+                    </div>
+                </div>
+                <div class="zoom-controls">
+                    <button class="zoom-btn" title="放大" onclick="zoomIn('er')"><i class="fa-solid fa-plus"></i></button>
+                    <button class="zoom-btn" title="縮小" onclick="zoomOut('er')"><i class="fa-solid fa-minus"></i></button>
+                    <button class="zoom-btn" title="重置" onclick="zoomReset('er')"><i class="fa-solid fa-arrows-to-circle"></i></button>
+                </div>
+            </div>
+
+        </div><!-- /canvas-wrap -->
+
+        <!-- 右側說明面板（arch） -->
+        <div class="info-panel" id="info-arch">
+            <div class="info-card">
+                <div class="accent" style="background:#38bdf8;"></div>
+                <h3><i class="fa-solid fa-display" style="color:#38bdf8;"></i> 前端與 API 介接</h3>
+                <p>透過 <strong style="color:#f8fafc;">FastAPI</strong> 處理前端儀表板的請求，即時撈取各頻道健康度、情緒分析與社群鐵粉清單的統計結果。</p>
+            </div>
+            <div class="info-card">
+                <div class="accent" style="background:#8b5cf6;"></div>
+                <h3><i class="fa-solid fa-microchip" style="color:#8b5cf6;"></i> AI 與資料管線</h3>
+                <ul>
+                    <li><strong style="color:#f8fafc;">NLP 分析：</strong>處理留言並標註情緒分數與意圖</li>
+                    <li><strong style="color:#f8fafc;">機器學習：</strong>影片內容屬性自動 Cluster 分群</li>
+                    <li><strong style="color:#f8fafc;">社群聚合：</strong>計算 Top N 鐵粉排行</li>
+                </ul>
+            </div>
+            <div class="info-card">
+                <div class="accent" style="background:#ef4444;"></div>
+                <h3><i class="fa-brands fa-youtube" style="color:#ef4444;"></i> YouTube Data API v3</h3>
+                <p>由排程任務定時觸發，透過官方 API 擷取影片清單、留言、頻道統計等原始數據並寫入資料庫。</p>
+            </div>
+        </div>
+
+        <!-- 右側說明面板（er） -->
+        <div class="info-panel" id="info-er" style="display:none;">
+            <div class="info-card">
+                <div class="accent" style="background:#10b981;"></div>
+                <h3><i class="fa-solid fa-table" style="color:#10b981;"></i> 核心基礎資料表</h3>
+                <p><strong style="color:#f8fafc;">channels</strong> 與 <strong style="color:#f8fafc;">videos</strong> 儲存從 YouTube API 擷取的基礎指標。videos 表含 <code>cluster_label</code> 欄位，用於歸類影片屬性。</p>
+            </div>
+            <div class="info-card">
+                <div class="accent" style="background:#ec4899;"></div>
+                <h3><i class="fa-solid fa-comment-dots" style="color:#ec4899;"></i> AI 擴充欄位</h3>
+                <p style="margin-bottom:8px;">在 <strong style="color:#f8fafc;">video_comments</strong> 中，除原始文字外皆有 AI 處理後的擴充標籤：</p>
+                <ul>
+                    <li><code>sentiment</code>: 正向 / 負向 / 中立</li>
+                    <li><code>sentiment_score</code>: 1–5 分量化</li>
+                    <li><code>topic_tag</code>: 意圖標籤</li>
+                </ul>
+            </div>
+            <div class="info-card">
+                <div class="accent" style="background:#f59e0b;"></div>
+                <h3><i class="fa-solid fa-crown" style="color:#f59e0b;"></i> 核心鐵粉分析表</h3>
+                <p><strong style="color:#f8fafc;">topN_comments</strong> 系列資料表彙總高頻率互動的 <code>author_id</code>，計算 <code>comment_count</code> 與 <code>total_likes</code>，精準識別忠實 VIP 觀眾。</p>
+            </div>
+        </div>
+
+    </div><!-- /main-area -->
+
+    <script>
+        // ── Tab 切換 ──────────────────────────────
+        function switchTab(name, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            document.querySelectorAll('.diagram-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('panel-' + name).classList.add('active');
+
+            document.getElementById('info-arch').style.display = name === 'arch' ? '' : 'none';
+            document.getElementById('info-er').style.display   = name === 'er'   ? '' : 'none';
+
+            // 切換時觸發 resize，讓 svg-pan-zoom 重新適應大小
+            if (panZoomInstances[name]) {
+                setTimeout(() => panZoomInstances[name].resize().fit().center(), 50);
+            }
+        }
+
+        // ── svg-pan-zoom 實例管理 ─────────────────
+        const panZoomInstances = {};
+
+        function initPanZoom(id) {
+            const wrap = document.getElementById('wrap-' + id);
+            const svg  = wrap.querySelector('svg');
+            if (!svg || panZoomInstances[id]) return;
+
+            svg.style.width  = '100%';
+            svg.style.height = '100%';
+
+            panZoomInstances[id] = svgPanZoom(svg, {
+                zoomEnabled:   true,
+                panEnabled:    true,
+                controlIconsEnabled: false,
+                dblClickZoomEnabled: true,  // 雙擊重置
+                mouseWheelZoomEnabled: true,
+                zoomScaleSensitivity: 0.3,
+                minZoom: 0.2,
+                maxZoom: 5,
+                fit: true,
+                center: true,
+                onDblClick: function() {
+                    panZoomInstances[id].fit().center();
+                }
+            });
+
+            document.getElementById('loading-' + id).classList.add('hidden');
+        }
+
+        function zoomIn(id)    { panZoomInstances[id]?.zoomIn(); }
+        function zoomOut(id)   { panZoomInstances[id]?.zoomOut(); }
+        function zoomReset(id) { panZoomInstances[id]?.fit().center(); }
+
+        // ── Mermaid 初始化 ────────────────────────
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'dark',
+            themeVariables: {
+                fontFamily: '"Noto Sans TC", sans-serif',
+                background:          '#1e293b',
+                primaryColor:        '#0f172a',
+                primaryBorderColor:  '#475569',
+                lineColor:           '#94a3b8',
+                fontSize:            '14px'
+            },
+            flowchart: { curve: 'basis', padding: 20 },
+            er:        { diagramPadding: 30, layoutDirection: 'TB', minEntityWidth: 100 }
+        });
+
+        // 渲染所有 mermaid 節點，完成後啟動 pan-zoom
+        async function renderAll() {
+            const nodes = document.querySelectorAll('.mermaid');
+            for (const node of nodes) {
+                const id   = node.id.replace('mermaid-', '');
+                const code = node.textContent.trim();
+                const uid  = 'mg-' + id;
+
+                try {
+                    const { svg } = await mermaid.render(uid, code);
+                    const wrap = document.getElementById('wrap-' + id);
+                    wrap.innerHTML = svg;
+                    // 等 DOM 更新後再初始化 pan-zoom
+                    requestAnimationFrame(() => initPanZoom(id));
+                } catch(e) {
+                    console.error('Mermaid render error:', e);
+                    document.getElementById('loading-' + id).classList.add('hidden');
+                }
+            }
+        }
+
+        renderAll();
+
+        // 視窗 resize 時更新所有 pan-zoom 實例
+        window.addEventListener('resize', () => {
+            Object.entries(panZoomInstances).forEach(([id, inst]) => {
+                const panel = document.getElementById('panel-' + id);
+                if (panel.classList.contains('active')) {
+                    inst.resize().fit().center();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
