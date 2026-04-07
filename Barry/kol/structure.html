@@ -11,8 +11,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
-    <!-- svg-pan-zoom: 讓 Mermaid SVG 可拖曳與縮放 -->
-    <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
     <style>
         * { box-sizing: border-box; }
 
@@ -84,21 +82,27 @@
         }
         .diagram-panel.active { display: block; }
 
-        /* Mermaid 容器：撐滿畫布 */
+        /* Mermaid 容器：撐滿畫布，SVG 在內部用 transform 縮放 */
         .mermaid-wrap {
             width: 100%;
             height: 100%;
             background: #1e293b;
-            border-radius: 0;
+            position: relative;
+            overflow: hidden;
+            cursor: grab;
         }
+        .mermaid-wrap.grabbing { cursor: grabbing; }
 
         /* 隱藏原始 mermaid 節點，等 SVG 渲染後才顯示 */
-        .mermaid { visibility: hidden; }
+        .mermaid { visibility: hidden; position: absolute; }
 
-        /* svg-pan-zoom 注入的 SVG 容器 */
+        /* SVG 定位在左上角，由 JS transform 驅動 */
         .mermaid-wrap svg {
-            width: 100% !important;
-            height: 100% !important;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform-origin: 0 0;
+            user-select: none;
         }
 
         /* ── 縮放控制鈕 ── */
@@ -286,16 +290,23 @@ flowchart TB
         NLP_Engine["🧠 NLP 分析引擎\n(情緒評分/意圖標籤)"]:::service
         ML_Engine["📊 機器學習分群\n(影片屬性 Cluster)"]:::service
         Aggregator["👥 社群數據聚合\n(計算 Top N 鐵粉)"]:::service
+        ExtYT["📺 YouTube Data API v3"]:::external
     end
 
-    DB[("🗄️ 關聯式資料庫\n(PostgreSQL / MySQL)")]:::database
-    ExtYT["📺 YouTube Data API v3"]:::external
+    subgraph DBLayer ["資料庫層"]
+        direction LR
+        DB[("🗄️ 主資料庫\n(PostgreSQL / MySQL)")]:::database
+        BackupDB[("🗄️ 備援資料庫\n(Read Replica)")]:::database
+    end
 
     Client -->|瀏覽視覺化圖表| UI
     UI -->|API 請求| API
     API -->|回傳 JSON| UI
-    API -->|查詢寫入| DB
-    DB -->|回傳結果| API
+    API -->|查詢 / 寫入| DB
+    DB -->|✅ 正常回傳| API
+    DB ==>|主從同步 Replication| BackupDB
+    DB -.->|❌ 主DB失聯| API
+    BackupDB -.->|⚡ Failover 備援回傳| API
     Scheduler -->|定時觸發 ETL 流程| YT_Fetcher
     YT_Fetcher -->|API 呼叫| ExtYT
     ExtYT -->|回傳資料| YT_Fetcher
@@ -429,6 +440,11 @@ erDiagram
                 </ul>
             </div>
             <div class="info-card">
+                <div class="accent" style="background:#10b981;"></div>
+                <h3><i class="fa-solid fa-database" style="color:#10b981;"></i> 主從資料庫架構</h3>
+                <p><strong style="color:#f8fafc;">主資料庫</strong>負責所有寫入操作，透過 Replication 即時同步至<strong style="color:#f8fafc;">備援資料庫 (Read Replica)</strong>，讀寫分離提升可用性與查詢效能。</p>
+            </div>
+            <div class="info-card">
                 <div class="accent" style="background:#ef4444;"></div>
                 <h3><i class="fa-brands fa-youtube" style="color:#ef4444;"></i> YouTube Data API v3</h3>
                 <p>由排程任務定時觸發，透過官方 API 擷取影片清單、留言、頻道統計等原始數據並寫入資料庫。</p>
@@ -462,102 +478,185 @@ erDiagram
     </div><!-- /main-area -->
 
     <script>
-        // ── Tab 切換 ──────────────────────────────
-        function switchTab(name, btn) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+        // ══════════════════════════════════════════════════════
+        //  自製 Pan / Zoom（CSS transform，不依賴第三方函式庫）
+        //  原理：從 SVG viewBox 取得實際內容大小，
+        //        用 translate + scale 驅動，確保不截斷。
+        // ══════════════════════════════════════════════════════
 
-            document.querySelectorAll('.diagram-panel').forEach(p => p.classList.remove('active'));
-            document.getElementById('panel-' + name).classList.add('active');
+        const diagrams = {}; // { id: { svg, wrap, contentW, contentH, scale, panX, panY } }
+        const rendered = {};
 
-            document.getElementById('info-arch').style.display = name === 'arch' ? '' : 'none';
-            document.getElementById('info-er').style.display   = name === 'er'   ? '' : 'none';
-
-            // 切換時觸發 resize，讓 svg-pan-zoom 重新適應大小
-            if (panZoomInstances[name]) {
-                setTimeout(() => panZoomInstances[name].resize().fit().center(), 50);
-            }
+        // ── 套用 transform ──────────────────────────────────
+        function applyTransform(id) {
+            const d = diagrams[id];
+            if (!d) return;
+            d.svg.style.transform = `translate(${d.panX}px,${d.panY}px) scale(${d.scale})`;
         }
 
-        // ── svg-pan-zoom 實例管理 ─────────────────
-        const panZoomInstances = {};
+        // ── 適合容器（viewBox 已內建留白，直接 fit 到容器） ─
+        function fitDiagram(id) {
+            const d = diagrams[id];
+            if (!d) return;
+            const cw = d.wrap.clientWidth;
+            const ch = d.wrap.clientHeight;
+            if (!cw || !ch) return;
+            const s = Math.min(cw / d.contentW, ch / d.contentH);
+            d.scale = s;
+            d.panX  = (cw - d.contentW * s) / 2;
+            d.panY  = (ch - d.contentH * s) / 2;
+            applyTransform(id);
+        }
 
-        function initPanZoom(id) {
+        // 對外 API（按鈕用）
+        function zoomIn(id)    { const d=diagrams[id]; if(!d) return; const c=center(d); zoom(d,c.x,c.y,1.2); }
+        function zoomOut(id)   { const d=diagrams[id]; if(!d) return; const c=center(d); zoom(d,c.x,c.y,1/1.2); }
+        function zoomReset(id) { fitDiagram(id); }
+
+        function center(d) {
+            return { x: d.wrap.clientWidth/2, y: d.wrap.clientHeight/2 };
+        }
+        function zoom(d, mx, my, factor) {
+            const ns = Math.max(0.05, Math.min(12, d.scale * factor));
+            d.panX = mx - (mx - d.panX) * (ns / d.scale);
+            d.panY = my - (my - d.panY) * (ns / d.scale);
+            d.scale = ns;
+            applyTransform(d.id);
+        }
+
+        // ── 掛載滑鼠事件 ────────────────────────────────────
+        function bindEvents(id) {
+            const d = diagrams[id];
+            const wrap = d.wrap;
+            let isPan = false, ox, oy, opx, opy;
+
+            wrap.addEventListener('mousedown', e => {
+                if (e.button !== 0) return;
+                isPan = true; ox = e.clientX; oy = e.clientY;
+                opx = d.panX; opy = d.panY;
+                wrap.classList.add('grabbing');
+                e.preventDefault();
+            });
+            window.addEventListener('mousemove', e => {
+                if (!isPan) return;
+                d.panX = opx + (e.clientX - ox);
+                d.panY = opy + (e.clientY - oy);
+                applyTransform(id);
+            });
+            window.addEventListener('mouseup', () => {
+                if (isPan) { isPan = false; wrap.classList.remove('grabbing'); }
+            });
+
+            wrap.addEventListener('wheel', e => {
+                e.preventDefault();
+                const rect = wrap.getBoundingClientRect();
+                const mx = e.clientX - rect.left;
+                const my = e.clientY - rect.top;
+                zoom(d, mx, my, e.deltaY < 0 ? 1.12 : 1/1.12);
+            }, { passive: false });
+
+            // 雙擊重置
+            wrap.addEventListener('dblclick', () => fitDiagram(id));
+        }
+
+        // ── 初始化單一 diagram ──────────────────────────────
+        function initDiagram(id) {
             const wrap = document.getElementById('wrap-' + id);
             const svg  = wrap.querySelector('svg');
-            if (!svg || panZoomInstances[id]) return;
+            if (!svg) return;
 
-            svg.style.width  = '100%';
-            svg.style.height = '100%';
+            // Mermaid 的 viewBox 幾乎貼著內容邊緣，需要手動擴展留白
+            const internalPad = 60;
+            let cw, ch;
+            const vb = svg.viewBox?.baseVal;
+            if (vb && vb.width) {
+                // 把 viewBox 四邊各外擴 internalPad，製造內部留白
+                const nx = vb.x - internalPad;
+                const ny = vb.y - internalPad;
+                const nw = vb.width  + internalPad * 2;
+                const nh = vb.height + internalPad * 2;
+                svg.setAttribute('viewBox', `${nx} ${ny} ${nw} ${nh}`);
+                cw = nw;
+                ch = nh;
+            } else {
+                cw = parseFloat(svg.getAttribute('width'))  || 1200;
+                ch = parseFloat(svg.getAttribute('height')) || 900;
+            }
 
-            panZoomInstances[id] = svgPanZoom(svg, {
-                zoomEnabled:   true,
-                panEnabled:    true,
-                controlIconsEnabled: false,
-                dblClickZoomEnabled: true,  // 雙擊重置
-                mouseWheelZoomEnabled: true,
-                zoomScaleSensitivity: 0.3,
-                minZoom: 0.2,
-                maxZoom: 5,
-                fit: true,
-                center: true,
-                onDblClick: function() {
-                    panZoomInstances[id].fit().center();
-                }
-            });
+            // 移除 SVG 自身的寬高限制，讓 CSS transform 完全接管
+            svg.removeAttribute('width');
+            svg.removeAttribute('height');
+            svg.style.width  = cw + 'px';
+            svg.style.height = ch + 'px';
+
+            const d = { id, svg, wrap, contentW: cw, contentH: ch, scale: 1, panX: 0, panY: 0 };
+            diagrams[id] = d;
+
+            bindEvents(id);
+            fitDiagram(id);
 
             document.getElementById('loading-' + id).classList.add('hidden');
         }
 
-        function zoomIn(id)    { panZoomInstances[id]?.zoomIn(); }
-        function zoomOut(id)   { panZoomInstances[id]?.zoomOut(); }
-        function zoomReset(id) { panZoomInstances[id]?.fit().center(); }
-
-        // ── Mermaid 初始化 ────────────────────────
+        // ── 渲染 Mermaid（懶加載，panel 可見後才執行） ─────
         mermaid.initialize({
             startOnLoad: false,
             theme: 'dark',
             themeVariables: {
                 fontFamily: '"Noto Sans TC", sans-serif',
-                background:          '#1e293b',
-                primaryColor:        '#0f172a',
-                primaryBorderColor:  '#475569',
-                lineColor:           '#94a3b8',
-                fontSize:            '14px'
+                background:         '#1e293b',
+                primaryColor:       '#0f172a',
+                primaryBorderColor: '#475569',
+                lineColor:          '#94a3b8',
+                fontSize:           '14px'
             },
             flowchart: { curve: 'basis', padding: 20 },
-            er:        { diagramPadding: 30, layoutDirection: 'TB', minEntityWidth: 100 }
+            er: { diagramPadding: 30, layoutDirection: 'LR', minEntityWidth: 120 }
         });
 
-        // 渲染所有 mermaid 節點，完成後啟動 pan-zoom
-        async function renderAll() {
-            const nodes = document.querySelectorAll('.mermaid');
-            for (const node of nodes) {
-                const id   = node.id.replace('mermaid-', '');
-                const code = node.textContent.trim();
-                const uid  = 'mg-' + id;
+        async function renderDiagram(id) {
+            if (rendered[id]) return;
+            rendered[id] = true;
 
-                try {
-                    const { svg } = await mermaid.render(uid, code);
-                    const wrap = document.getElementById('wrap-' + id);
-                    wrap.innerHTML = svg;
-                    // 等 DOM 更新後再初始化 pan-zoom
-                    requestAnimationFrame(() => initPanZoom(id));
-                } catch(e) {
-                    console.error('Mermaid render error:', e);
-                    document.getElementById('loading-' + id).classList.add('hidden');
-                }
+            const node = document.getElementById('mermaid-' + id);
+            const code = node.textContent.trim();
+            try {
+                const { svg } = await mermaid.render('mg-' + id, code);
+                const wrap = document.getElementById('wrap-' + id);
+                wrap.innerHTML = svg;
+                // 等兩幀讓瀏覽器完成 layout 再初始化
+                requestAnimationFrame(() => requestAnimationFrame(() => initDiagram(id)));
+            } catch (e) {
+                console.error('Mermaid error [' + id + ']:', e);
+                document.getElementById('loading-' + id).classList.add('hidden');
             }
         }
 
-        renderAll();
+        // ── Tab 切換 ────────────────────────────────────────
+        function switchTab(name, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.diagram-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('panel-' + name).classList.add('active');
+            document.getElementById('info-arch').style.display = name === 'arch' ? '' : 'none';
+            document.getElementById('info-er').style.display   = name === 'er'   ? '' : 'none';
 
-        // 視窗 resize 時更新所有 pan-zoom 實例
+            if (!rendered[name]) {
+                requestAnimationFrame(() => renderDiagram(name));
+            } else if (diagrams[name]) {
+                // 重新 fit（視窗可能被調整過）
+                requestAnimationFrame(() => fitDiagram(name));
+            }
+        }
+
+        // 頁面載入後渲染預設 tab
+        window.addEventListener('load', () => renderDiagram('arch'));
+
+        // 視窗 resize 時重新 fit 可見的圖
         window.addEventListener('resize', () => {
-            Object.entries(panZoomInstances).forEach(([id, inst]) => {
-                const panel = document.getElementById('panel-' + id);
-                if (panel.classList.contains('active')) {
-                    inst.resize().fit().center();
+            ['arch', 'er'].forEach(id => {
+                if (document.getElementById('panel-' + id)?.classList.contains('active')) {
+                    fitDiagram(id);
                 }
             });
         });
