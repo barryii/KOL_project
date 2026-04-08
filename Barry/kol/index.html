@@ -657,17 +657,13 @@
 
                                     <!-- 排序切換按鈕群組 -->
                                     <div
-                                        class="flex bg-surface-container rounded-full p-1 relative shadow-inner shrink-0 min-w-[160px]">
+                                        class="flex bg-surface-container rounded-full p-1 relative shadow-inner shrink-0 min-w-[160px] cursor-pointer select-none" onclick="toggleFanSort()">
                                         <div id="fan-sort-indicator"
                                             class="absolute top-1 bottom-1 rounded-full bg-[#CF5800] transition-all duration-300 ease-out z-0 shadow-sm"
                                             style="left: 4px; width: calc(50% - 4px);"></div>
 
-                                        <button onclick="setFanSort('comment_count', this)"
-                                            class="fan-sort-btn dash-filter-active flex-1 text-center py-1.5 px-4 text-sm font-bold relative z-10 transition-colors text-white">📝
-                                            留言</button>
-                                        <button onclick="setFanSort('total_likes', this)"
-                                            class="fan-sort-btn flex-1 text-center py-1.5 px-4 text-sm font-bold relative z-10 transition-colors text-on-surface-variant">❤️
-                                            愛心</button>
+                                        <span data-val="comment_count" class="fan-sort-btn dash-filter-active flex-1 text-center py-1.5 px-4 text-sm font-bold relative z-10 transition-colors text-white">📝 留言</span>
+                                        <span data-val="total_likes" class="fan-sort-btn flex-1 text-center py-1.5 px-4 text-sm font-bold relative z-10 transition-colors text-on-surface-variant">❤️ 愛心</span>
                                     </div>
 
                                     <!-- 數量選單 -->
@@ -2249,6 +2245,13 @@
             });
 
             updateTopCommentersUI();
+        }
+
+        function toggleFanSort() {
+            const btns = [...document.querySelectorAll('.fan-sort-btn')];
+            const current = btns.find(b => b.classList.contains('dash-filter-active'));
+            const next = btns.find(b => b !== current);
+            setFanSort(next.dataset.val, next);
         }
 
         function setFanSort(val, btn) {
