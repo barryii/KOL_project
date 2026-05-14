@@ -7,10 +7,11 @@ dotenv.load_dotenv()
 class DBManager:
     def __init__(self):
         self.config = {
-            'host': 'dv108.aiturn.fun',
+            'host': 'p.aiturn.fun',
+            'port': 33062,
             'user': 'barry',
             'password': os.getenv('KOL_DB_PW'),
-            'database': 'db_kol'
+            'database': 'kol'
         }
         self.config_backup = {
             'host': '136.113.125.99',

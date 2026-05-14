@@ -1,5 +1,4 @@
 from database import DBManager
-import os
 import dotenv
 
 dotenv.load_dotenv()
@@ -29,8 +28,8 @@ table_queries = [
         comment_count INT,
         actual_comment_count INT,
         cluster_label INT,
-        INDEX channel_id ON videos(channel_id),
-        INDEX idx_actual_comments ON videos(actual_comment_count),
+        INDEX idx_channel_id (channel_id),
+        INDEX idx_actual_comments (actual_comment_count),
         INDEX idx_v_type (`type`),
         FOREIGN KEY (channel_id) REFERENCES channels(channel_id) ON DELETE CASCADE
     )
